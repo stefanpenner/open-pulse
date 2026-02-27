@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0F1628"/>
+      <stop offset="100%" stop-color="#1A2340"/>
+    </linearGradient>
+    <!-- Teal glow gradient -->
+    <radialGradient id="glow" cx="0.5" cy="0.48" r="0.45">
+      <stop offset="0%" stop-color="#00E5CC" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#00E5CC" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Pulse line gradient -->
+    <linearGradient id="pulse" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00E5CC" stop-opacity="0.3"/>
+      <stop offset="20%" stop-color="#00E5CC" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#00FFE0"/>
+      <stop offset="80%" stop-color="#00E5CC" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#00E5CC" stop-opacity="0.3"/>
+    </linearGradient>
+    <!-- Subtle inner shadow -->
+    <filter id="innerGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+    </filter>
+    <!-- Drop shadow for nerve paths -->
+    <filter id="nerveShadow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+    </filter>
+    <!-- Stronger glow for pulse -->
+    <filter id="pulseGlow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+
+  <!-- Subtle radial glow behind center -->
+  <rect width="1024" height="1024" rx="224" fill="url(#glow)"/>
+
+  <!-- Vagus nerve branches - subtle, organic paths from top -->
+  <!-- Main trunk -->
+  <path d="M 512 140 Q 508 240, 505 320 Q 500 420, 512 480"
+        stroke="#00E5CC" stroke-opacity="0.12" stroke-width="28" fill="none"
+        stroke-linecap="round"/>
+  <!-- Left branch -->
+  <path d="M 505 300 Q 460 380, 380 440 Q 320 490, 300 560 Q 285 620, 310 680"
+        stroke="#00E5CC" stroke-opacity="0.10" stroke-width="16" fill="none"
+        stroke-linecap="round"/>
+  <!-- Right branch -->
+  <path d="M 515 300 Q 560 380, 640 440 Q 700 490, 720 560 Q 735 620, 710 680"
+        stroke="#00E5CC" stroke-opacity="0.10" stroke-width="16" fill="none"
+        stroke-linecap="round"/>
+  <!-- Smaller sub-branches left -->
+  <path d="M 430 400 Q 390 450, 360 520"
+        stroke="#00E5CC" stroke-opacity="0.07" stroke-width="8" fill="none"
+        stroke-linecap="round"/>
+  <path d="M 340 490 Q 310 540, 330 600"
+        stroke="#00E5CC" stroke-opacity="0.06" stroke-width="6" fill="none"
+        stroke-linecap="round"/>
+  <!-- Smaller sub-branches right -->
+  <path d="M 590 400 Q 630 450, 660 520"
+        stroke="#00E5CC" stroke-opacity="0.07" stroke-width="8" fill="none"
+        stroke-linecap="round"/>
+  <path d="M 680 490 Q 710 540, 690 600"
+        stroke="#00E5CC" stroke-opacity="0.06" stroke-width="6" fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Main pulse/heartbeat line - the hero element -->
+  <!-- Glow layer -->
+  <path d="M 130 512
+           L 320 512
+           L 370 512
+           L 400 480
+           L 430 512
+           L 455 512
+           L 475 560
+           L 512 380
+           L 548 600
+           L 575 460
+           L 595 512
+           L 630 512
+           L 660 490
+           L 690 512
+           L 894 512"
+        stroke="#00E5CC" stroke-opacity="0.4" stroke-width="10" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"
+        filter="url(#pulseGlow)"/>
+  <!-- Main line -->
+  <path d="M 130 512
+           L 320 512
+           L 370 512
+           L 400 480
+           L 430 512
+           L 455 512
+           L 475 560
+           L 512 380
+           L 548 600
+           L 575 460
+           L 595 512
+           L 630 512
+           L 660 490
+           L 690 512
+           L 894 512"
+        stroke="url(#pulse)" stroke-width="6" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Small dot accents on the pulse peaks -->
+  <circle cx="512" cy="380" r="5" fill="#00FFE0" opacity="0.8"/>
+  <circle cx="548" cy="600" r="4" fill="#00E5CC" opacity="0.6"/>
+
+  <!-- "PL" monogram - clean, modern -->
+  <text x="512" y="800" text-anchor="middle"
+        font-family="-apple-system, SF Pro Display, Helvetica Neue, sans-serif"
+        font-size="120" font-weight="300" letter-spacing="16"
+        fill="#FFFFFF" opacity="0.85">PL</text>
+
+  <!-- Subtle bottom tagline -->
+  <text x="512" y="850" text-anchor="middle"
+        font-family="-apple-system, SF Pro Display, Helvetica Neue, sans-serif"
+        font-size="36" font-weight="300" letter-spacing="8"
+        fill="#00E5CC" opacity="0.4">LIBRE</text>
+</svg>
