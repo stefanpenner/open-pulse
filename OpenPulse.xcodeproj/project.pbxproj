@@ -22,7 +22,18 @@
 		B1000000000000000000000D /* ModeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000E /* ModeEngine.swift */; };
 		B1000000000000000000000E /* ModePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000F /* ModePicker.swift */; };
 		B1000000000000000000000F /* BreathingGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* BreathingGuideView.swift */; };
+		B20000000000000000000001 /* ModeEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* ModeEngineTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CC0000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 330000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E10000000000000000000001;
+			remoteInfo = OpenPulse;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		A10000000000000000000001 /* OpenPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPulseApp.swift; sourceTree = "<group>"; };
@@ -41,11 +52,20 @@
 		A1000000000000000000000E /* ModeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngine.swift; sourceTree = "<group>"; };
 		A1000000000000000000000F /* ModePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModePicker.swift; sourceTree = "<group>"; };
 		A10000000000000000000010 /* BreathingGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingGuideView.swift; sourceTree = "<group>"; };
+		A20000000000000000000001 /* ModeEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngineTests.swift; sourceTree = "<group>"; };
 		D10000000000000000000001 /* OpenPulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D20000000000000000000001 /* OpenPulseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenPulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		220000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		220000000000000000000013 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -59,6 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				C10000000000000000000002 /* OpenPulse */,
+				C10000000000000000000008 /* OpenPulseTests */,
 				C10000000000000000000007 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -122,8 +143,17 @@
 			isa = PBXGroup;
 			children = (
 				D10000000000000000000001 /* OpenPulse.app */,
+				D20000000000000000000001 /* OpenPulseTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000008 /* OpenPulseTests */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000001 /* ModeEngineTests.swift */,
+			);
+			path = OpenPulseTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -146,6 +176,23 @@
 			productReference = D10000000000000000000001 /* OpenPulse.app */;
 			productType = "com.apple.product-type.application";
 		};
+		E20000000000000000000001 /* OpenPulseTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F20000000000000000000001 /* Build configuration list for PBXNativeTarget "OpenPulseTests" */;
+			buildPhases = (
+				220000000000000000000011 /* Sources */,
+				220000000000000000000013 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DD0000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = OpenPulseTests;
+			productName = OpenPulseTests;
+			productReference = D20000000000000000000001 /* OpenPulseTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -155,6 +202,11 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					E20000000000000000000001 = {
+						TestTargetID = E10000000000000000000001;
+					};
+				};
 			};
 			buildConfigurationList = F10000000000000000000001 /* Build configuration list for PBXProject "OpenPulse" */;
 			developmentRegion = en;
@@ -171,6 +223,7 @@
 			projectRoot = "";
 			targets = (
 				E10000000000000000000001 /* OpenPulse */,
+				E20000000000000000000001 /* OpenPulseTests */,
 			);
 		};
 /* End PBXProject section */
@@ -208,7 +261,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		220000000000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B20000000000000000000001 /* ModeEngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DD0000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E10000000000000000000001 /* OpenPulse */;
+			targetProxy = CC0000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		110000000000000000000001 /* Debug */ = {
@@ -400,6 +469,50 @@
 			};
 			name = Release;
 		};
+		110000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = T93925EZUT;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenPulse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OpenPulse";
+			};
+			name = Debug;
+		};
+		110000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = T93925EZUT;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenPulse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OpenPulse";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -417,6 +530,15 @@
 			buildConfigurations = (
 				110000000000000000000003 /* Debug */,
 				110000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F20000000000000000000001 /* Build configuration list for PBXNativeTarget "OpenPulseTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				110000000000000000000005 /* Debug */,
+				110000000000000000000006 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
