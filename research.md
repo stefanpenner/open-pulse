@@ -1,4 +1,4 @@
-# PulseLibre Stimulation Modes — Research Summary
+# Stimulation Modes — Research Summary
 
 ## BLE Protocol Reality
 
