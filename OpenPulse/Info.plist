@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>PulseLibre needs Bluetooth to connect to your Pulsetto device for vagal stimulation sessions.</string>
+	<string>Open Pulse needs Bluetooth to connect to your Pulsetto device for vagal stimulation sessions.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>PulseLibre needs Bluetooth to connect to your Pulsetto device for vagal stimulation sessions.</string>
+	<string>Open Pulse needs Bluetooth to connect to your Pulsetto device for vagal stimulation sessions.</string>
 </dict>
 </plist>

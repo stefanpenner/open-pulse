@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct PulseLibreApp: App {
+struct OpenPulseApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

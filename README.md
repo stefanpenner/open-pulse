@@ -54,11 +54,11 @@ The device has no mode awareness — all mode behavior (channel rotation, duty c
 
 ## Building
 
-Open `PulseLibre.xcodeproj` in Xcode 26+, select your development team, and build for your iOS device.
+Open `OpenPulse.xcodeproj` in Xcode 26+, select your development team, and build for your iOS device.
 
 ```bash
-xcodebuild -project PulseLibre.xcodeproj \
-  -scheme PulseLibre \
+xcodebuild -project OpenPulse.xcodeproj \
+  -scheme OpenPulse \
   -destination 'generic/platform=iOS' \
   build
 ```
@@ -66,7 +66,7 @@ xcodebuild -project PulseLibre.xcodeproj \
 ## Project Structure
 
 ```
-PulseLibre/
+OpenPulse/
 ├── Models/
 │   ├── BLEConstants.swift       # BLE UUIDs, commands, intervals
 │   ├── StimulationMode.swift    # Mode enum with metadata
@@ -84,7 +84,7 @@ PulseLibre/
 │   ├── ActionButtonView.swift   # Start/Pause/Resume/Stop
 │   ├── StatusBarView.swift      # Connection + battery
 │   └── Theme.swift              # Colors + type scale
-└── PulseLibreApp.swift          # App entry point
+└── OpenPulseApp.swift           # App entry point
 ```
 
 ## Attribution

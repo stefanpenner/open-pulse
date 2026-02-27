@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B10000000000000000000001 /* PulseLibreApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* PulseLibreApp.swift */; };
+		B10000000000000000000001 /* OpenPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* OpenPulseApp.swift */; };
 		B10000000000000000000002 /* BLEConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* BLEConstants.swift */; };
 		B10000000000000000000003 /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* BluetoothManager.swift */; };
 		B10000000000000000000004 /* SessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* SessionViewModel.swift */; };
@@ -25,7 +25,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A10000000000000000000001 /* PulseLibreApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PulseLibreApp.swift; sourceTree = "<group>"; };
+		A10000000000000000000001 /* OpenPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPulseApp.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* BLEConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEConstants.swift; sourceTree = "<group>"; };
 		A10000000000000000000003 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* SessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModel.swift; sourceTree = "<group>"; };
@@ -41,7 +41,7 @@
 		A1000000000000000000000E /* ModeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngine.swift; sourceTree = "<group>"; };
 		A1000000000000000000000F /* ModePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModePicker.swift; sourceTree = "<group>"; };
 		A10000000000000000000010 /* BreathingGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingGuideView.swift; sourceTree = "<group>"; };
-		D10000000000000000000001 /* PulseLibre.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PulseLibre.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D10000000000000000000001 /* OpenPulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,15 +58,15 @@
 		C10000000000000000000001 /* Root */ = {
 			isa = PBXGroup;
 			children = (
-				C10000000000000000000002 /* PulseLibre */,
+				C10000000000000000000002 /* OpenPulse */,
 				C10000000000000000000007 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		C10000000000000000000002 /* PulseLibre */ = {
+		C10000000000000000000002 /* OpenPulse */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000001 /* PulseLibreApp.swift */,
+				A10000000000000000000001 /* OpenPulseApp.swift */,
 				A1000000000000000000000C /* Info.plist */,
 				A1000000000000000000000B /* Assets.xcassets */,
 				C10000000000000000000003 /* Models */,
@@ -74,7 +74,7 @@
 				C10000000000000000000005 /* ViewModels */,
 				C10000000000000000000006 /* Views */,
 			);
-			path = PulseLibre;
+			path = OpenPulse;
 			sourceTree = "<group>";
 		};
 		C10000000000000000000003 /* Models */ = {
@@ -121,7 +121,7 @@
 		C10000000000000000000007 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D10000000000000000000001 /* PulseLibre.app */,
+				D10000000000000000000001 /* OpenPulse.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -129,9 +129,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E10000000000000000000001 /* PulseLibre */ = {
+		E10000000000000000000001 /* OpenPulse */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F10000000000000000000002 /* Build configuration list for PBXNativeTarget "PulseLibre" */;
+			buildConfigurationList = F10000000000000000000002 /* Build configuration list for PBXNativeTarget "OpenPulse" */;
 			buildPhases = (
 				220000000000000000000001 /* Sources */,
 				220000000000000000000002 /* Resources */,
@@ -141,9 +141,9 @@
 			);
 			dependencies = (
 			);
-			name = PulseLibre;
-			productName = PulseLibre;
-			productReference = D10000000000000000000001 /* PulseLibre.app */;
+			name = OpenPulse;
+			productName = OpenPulse;
+			productReference = D10000000000000000000001 /* OpenPulse.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -156,7 +156,7 @@
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 			};
-			buildConfigurationList = F10000000000000000000001 /* Build configuration list for PBXProject "PulseLibre" */;
+			buildConfigurationList = F10000000000000000000001 /* Build configuration list for PBXProject "OpenPulse" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -170,7 +170,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E10000000000000000000001 /* PulseLibre */,
+				E10000000000000000000001 /* OpenPulse */,
 			);
 		};
 /* End PBXProject section */
@@ -191,7 +191,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B10000000000000000000001 /* PulseLibreApp.swift in Sources */,
+				B10000000000000000000001 /* OpenPulseApp.swift in Sources */,
 				B10000000000000000000002 /* BLEConstants.swift in Sources */,
 				B10000000000000000000003 /* BluetoothManager.swift in Sources */,
 				B10000000000000000000004 /* SessionViewModel.swift in Sources */,
@@ -341,10 +341,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = T93925EZUT;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = PulseLibre/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = PulseLibre;
+				INFOPLIST_FILE = OpenPulse/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Open Pulse";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "PulseLibre needs Bluetooth to connect to your Pulsetto device for vagal stimulation sessions.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Open Pulse needs Bluetooth to connect to your Pulsetto device for vagal stimulation sessions.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -355,7 +355,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.jooray.PulseLibreNative;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -375,10 +375,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = T93925EZUT;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = PulseLibre/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = PulseLibre;
+				INFOPLIST_FILE = OpenPulse/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Open Pulse";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "PulseLibre needs Bluetooth to connect to your Pulsetto device for vagal stimulation sessions.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Open Pulse needs Bluetooth to connect to your Pulsetto device for vagal stimulation sessions.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -389,7 +389,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.jooray.PulseLibreNative;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -403,7 +403,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F10000000000000000000001 /* Build configuration list for PBXProject "PulseLibre" */ = {
+		F10000000000000000000001 /* Build configuration list for PBXProject "OpenPulse" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				110000000000000000000001 /* Debug */,
@@ -412,7 +412,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F10000000000000000000002 /* Build configuration list for PBXNativeTarget "PulseLibre" */ = {
+		F10000000000000000000002 /* Build configuration list for PBXNativeTarget "OpenPulse" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				110000000000000000000003 /* Debug */,

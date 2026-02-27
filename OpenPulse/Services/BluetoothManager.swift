@@ -13,7 +13,7 @@ final class BluetoothManager: NSObject, ObservableObject {
 
     var onDisconnect: (@MainActor () -> Void)?
 
-    private let logger = Logger(subsystem: "io.github.jooray.PulseLibreNative", category: "BLE")
+    private let logger = Logger(subsystem: "io.github.stefanpenner.OpenPulse", category: "BLE")
     private var centralManager: CBCentralManager!
     private var peripheral: CBPeripheral?
     private var rxCharacteristic: CBCharacteristic?
