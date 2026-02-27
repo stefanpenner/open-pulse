@@ -1,8 +1,16 @@
 # Open Pulse
 
+<p align="center">
+  <img src="icon.svg" width="128" height="128" alt="Open Pulse app icon">
+</p>
+
 A native iOS app for controlling [Pulsetto](https://pulsetto.tech) tVNS (transcutaneous vagus nerve stimulation) devices via Bluetooth Low Energy.
 
 Built with Swift 6 and SwiftUI. Requires iOS 26+.
+
+<p align="center">
+  <img src="screenshot.png" width="300" alt="Open Pulse screenshot">
+</p>
 
 ## Features
 
