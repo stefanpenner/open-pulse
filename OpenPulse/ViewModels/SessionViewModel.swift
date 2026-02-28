@@ -210,17 +210,7 @@ final class SessionViewModel: ObservableObject {
         let clamped = max(1, min(9, value))
         strength = clamped
         guard isRunning, ble.isConnected, stimulationActive else { return }
-
-        if let engine {
-            let cmds = engine.reconnectCommands(
-                elapsed: elapsed,
-                totalDuration: sessionTotalDuration,
-                baseStrength: clamped
-            )
-            for cmd in cmds { ble.sendCommand(cmd) }
-        } else {
-            ble.sendCommand(BLEConstants.strengthCommand(clamped))
-        }
+        ble.sendCommand(BLEConstants.strengthCommand(clamped))
     }
 
     // MARK: - Timers

@@ -101,9 +101,8 @@ struct SetStrengthTests {
 
         vm.setStrength(7)
         #expect(vm.strength == 7)
-        // StressRelief reconnect sends: activate + strength
-        #expect(spy.commands.contains(BLEConstants.activateCommand))
-        #expect(spy.commands.contains("7\n"))
+        // Just sends strength command — no channel reactivation
+        #expect(spy.commands == ["7\n"])
     }
 
     @Test("Sends strength command mid-session in custom mode")
