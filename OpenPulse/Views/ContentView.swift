@@ -31,10 +31,10 @@ struct ContentView: View {
                 Group {
                     if isActive {
                         ActiveSessionLayout(vm: vm)
-                            .transition(.scale(scale: 0.95).combined(with: .opacity))
+                            .transition(.blurReplace)
                     } else {
                         IdleSessionLayout(vm: vm)
-                            .transition(.move(edge: .top).combined(with: .opacity))
+                            .transition(.blurReplace)
                     }
                 }
                 .padding(.horizontal, 16)
