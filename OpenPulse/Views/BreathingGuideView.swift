@@ -6,10 +6,15 @@ struct BreathingGuideView: View {
     private var phaseText: String {
         guard let phase = vm.breathingPhase else { return "" }
         switch phase {
-        case .inhale: return "Inhale"
-        case .hold: return "Hold"
-        case .exhale: return "Exhale"
+        case .inhale(let p): return "Inhale \(secsLeft(progress: p, duration: 4))"
+        case .hold(let p): return "Hold \(secsLeft(progress: p, duration: 2))"
+        case .exhale(let p): return "Exhale \(secsLeft(progress: p, duration: 4))"
         }
+    }
+
+    private func secsLeft(progress: Double, duration: Int) -> String {
+        let remaining = max(1, Int(ceil(Double(duration) * (1.0 - progress))))
+        return "\(remaining)"
     }
 
     private var circleScale: CGFloat {

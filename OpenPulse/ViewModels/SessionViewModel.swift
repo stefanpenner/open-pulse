@@ -196,6 +196,17 @@ final class SessionViewModel: ObservableObject {
         ble.stopScan()
     }
 
+    @Published var debugActiveChannel: String = ""
+
+    func sendDebugCommand(_ cmd: String) {
+        guard ble.isConnected else { return }
+        ble.sendCommand(cmd + "\n")
+        debugActiveChannel = cmd
+        if cmd != "0" {
+            ble.sendCommand(BLEConstants.strengthCommand(strength))
+        }
+    }
+
     func increaseTimer() {
         guard !isRunning, !isPaused else { return }
         timerMinutes += 1

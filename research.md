@@ -4,17 +4,18 @@
 
 Reverse engineering (PulseLibre, hydrasparx, parallaxintelligencepartnership) confirms that the Pulsetto device receives **no mode-specific parameters** over BLE. The official app's "modes" (Stress, Anxiety, Sleep, Burnout, Pain) are purely app-side presentation — the device itself only accepts:
 
-| Command | Purpose |
-|---------|---------|
-| `D\n` | Start both channels |
-| `A\n` | Start left channel only |
-| `C\n` | Start right channel only |
-| `0\n` | Stop |
-| `1-9\n` | Set intensity level |
-| `Q\n` | Query battery |
-| `u\n` | Query charging |
-| `i\n` | Query device ID |
-| `v\n` | Query firmware version |
+| Command | Purpose | Verified |
+|---------|---------|----------|
+| `0\n` | Stop (off) | Yes |
+| `A\n` | Left channel only | Yes |
+| `B\n` | Gradual ramp to set intensity | Yes |
+| `C\n` | Right channel only | Yes |
+| `D\n` | Both channels (bilateral) | Yes |
+| `1-9\n` | Set intensity level | Yes |
+| `Q\n` | Query battery | |
+| `u\n` | Query charging | |
+| `i\n` | Query device ID | |
+| `v\n` | Query firmware version | |
 
 Pulsetto claims different carrier frequencies per mode (4,500–5,200 Hz), but these are either fixed in firmware or marketing claims — the app sends no frequency parameters.
 

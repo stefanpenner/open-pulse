@@ -6,16 +6,25 @@ struct ChannelIndicatorView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            // Left ear
-            Image(systemName: "ear.fill")
-                .font(.body)
+            // Left neck
+            Image(systemName: "bolt.fill")
+                .font(.caption)
                 .foregroundStyle(leftActive ? accentColor : Theme.textTertiary)
                 .opacity(leftActive ? 1.0 : 0.3)
 
-            // Right ear (mirrored)
-            Image(systemName: "ear.fill")
-                .font(.body)
-                .scaleEffect(x: -1, y: 1)
+            Text("L")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(leftActive ? accentColor : Theme.textTertiary)
+                .opacity(leftActive ? 1.0 : 0.3)
+
+            Text("R")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(rightActive ? accentColor : Theme.textTertiary)
+                .opacity(rightActive ? 1.0 : 0.3)
+
+            // Right neck
+            Image(systemName: "bolt.fill")
+                .font(.caption)
                 .foregroundStyle(rightActive ? accentColor : Theme.textTertiary)
                 .opacity(rightActive ? 1.0 : 0.3)
         }

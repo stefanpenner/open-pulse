@@ -19,10 +19,12 @@ enum BLEConstants {
     static let statusPollInterval: TimeInterval = 30
     static let reconnectDelay: TimeInterval = 1
 
-    // Commands
+    // Commands (verified on device)
+    // 0 = off, A = left only, B = ramp-up to intensity, C = right only, D = bilateral
     static let activateCommand = "D\n"       // bilateral
     static let leftChannelCommand = "A\n"    // left only
     static let rightChannelCommand = "C\n"   // right only
+    static let rampCommand = "B\n"           // gradual ramp to set intensity
     static let deactivateCommand = "0\n"
     static let batteryQueryCommand = "Q\n"
     static let chargingQueryCommand = "u\n"
