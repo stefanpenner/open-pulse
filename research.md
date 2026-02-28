@@ -214,6 +214,24 @@ Full manual control: user sets timer, intensity, no programmatic pattern. Curren
 
 ---
 
+## Polyvagal Framework — Mode Mapping
+
+The autonomic ladder (Porges, Polyvagal Theory) describes three nervous system states.
+OpenPulse modes target specific state transitions:
+
+| Current State | Experience | Goal | Suggested Mode |
+|---|---|---|---|
+| Sympathetic (fight/flight) | Wired, tense, anxious, restless | Downregulate to ventral-vagal | **Stress Relief** or **Calm/Breathe** |
+| Dorsal vagal (freeze) | Foggy, stuck, numb, shut down | Gently mobilize toward ventral-vagal | **Focus** (LC-NE activation) |
+| Ventral-vagal (regulated) | Calm, present, balanced | Maintain or transition to rest | **Sleep** or **Calm/Breathe** |
+| Any state + pain | — | Pain modulation | **Pain Relief** |
+
+Key insight: you cannot skip ladder rungs. Someone in dorsal vagal freeze needs gentle
+activation (Focus) before calming modes become useful — calming an already-shutdown
+system is counterproductive.
+
+---
+
 ## Evidence Grading Summary
 
 | Mode | Channel | Intensity | Duty Cycle | Overall |

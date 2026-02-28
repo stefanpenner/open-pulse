@@ -12,6 +12,7 @@ final class SessionViewModel: ObservableObject {
 
     // Mode support
     @Published var selectedMode: StimulationMode = .custom
+    @Published var selectedFeeling: AutonomicState? = nil
     @Published var stimulationActive = false
     @Published var effectiveStrength: Int? = nil
     @Published var breathingPhase: BreathingPhase? = nil
@@ -66,8 +67,15 @@ final class SessionViewModel: ObservableObject {
     func selectMode(_ mode: StimulationMode) {
         guard !isRunning, !isPaused else { return }
         selectedMode = mode
+        selectedFeeling = nil
         timerMinutes = mode.defaultDurationMinutes
         strength = mode.defaultStrength
+    }
+
+    func selectFeeling(_ state: AutonomicState) {
+        guard !isRunning, !isPaused else { return }
+        selectMode(state.primaryMode)
+        selectedFeeling = state
     }
 
     // MARK: - Actions
@@ -182,6 +190,10 @@ final class SessionViewModel: ObservableObject {
         ble.scan()
     }
 
+    func stopScan() {
+        ble.stopScan()
+    }
+
     func increaseTimer() {
         guard !isRunning, !isPaused else { return }
         timerMinutes += 1
@@ -196,7 +208,18 @@ final class SessionViewModel: ObservableObject {
         let clamped = max(1, min(9, value))
         strength = clamped
         if isRunning, ble.isConnected, stimulationActive {
-            ble.sendCommand(BLEConstants.strengthCommand(clamped))
+            if let engine {
+                let cmds = engine.reconnectCommands(
+                    elapsed: elapsed,
+                    totalDuration: sessionTotalDuration,
+                    baseStrength: clamped
+                )
+                for cmd in cmds {
+                    ble.sendCommand(cmd)
+                }
+            } else {
+                ble.sendCommand(BLEConstants.strengthCommand(clamped))
+            }
         }
     }
 

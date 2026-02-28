@@ -70,7 +70,8 @@ struct StrengthCardView: View {
                     .foregroundStyle(Theme.textTertiary)
             }
         }
-        .padding(24)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20))
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
     }
 }

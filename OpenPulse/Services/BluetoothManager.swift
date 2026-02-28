@@ -12,6 +12,7 @@ final class BluetoothManager: NSObject, ObservableObject {
     @Published var isCharging: Bool?
 
     var onDisconnect: (@MainActor () -> Void)?
+    var onCommandSent: ((String) -> Void)?
 
     private let logger = Logger(subsystem: "io.github.stefanpenner.OpenPulse", category: "BLE")
     private var centralManager: CBCentralManager!
@@ -56,6 +57,7 @@ final class BluetoothManager: NSObject, ObservableObject {
     }
 
     func sendCommand(_ command: String) {
+        onCommandSent?(command)
         guard let peripheral, let rxCharacteristic,
               let data = command.data(using: .utf8) else {
             logger.warning("Cannot send — not ready")
@@ -67,7 +69,7 @@ final class BluetoothManager: NSObject, ObservableObject {
 
     // MARK: - Private
 
-    private func stopScan() {
+    func stopScan() {
         centralManager.stopScan()
         isScanning = false
         scanTimeoutTask?.cancel()

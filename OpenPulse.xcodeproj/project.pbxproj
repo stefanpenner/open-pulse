@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3EBD0C7EDD800FA443D888BA /* AutonomicState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87518493F691B82D92474E8 /* AutonomicState.swift */; };
 		B10000000000000000000001 /* OpenPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* OpenPulseApp.swift */; };
 		B10000000000000000000002 /* BLEConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* BLEConstants.swift */; };
 		B10000000000000000000003 /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* BluetoothManager.swift */; };
@@ -23,6 +24,7 @@
 		B1000000000000000000000E /* ModePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000F /* ModePicker.swift */; };
 		B1000000000000000000000F /* BreathingGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* BreathingGuideView.swift */; };
 		B20000000000000000000001 /* ModeEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* ModeEngineTests.swift */; };
+		B20000000000000000000002 /* SessionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* SessionViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,8 +55,10 @@
 		A1000000000000000000000F /* ModePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModePicker.swift; sourceTree = "<group>"; };
 		A10000000000000000000010 /* BreathingGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingGuideView.swift; sourceTree = "<group>"; };
 		A20000000000000000000001 /* ModeEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngineTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* SessionViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModelTests.swift; sourceTree = "<group>"; };
 		D10000000000000000000001 /* OpenPulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D20000000000000000000001 /* OpenPulseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenPulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E87518493F691B82D92474E8 /* AutonomicState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutonomicState.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,7 +79,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C10000000000000000000001 /* Root */ = {
+		C10000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
 				C10000000000000000000002 /* OpenPulse */,
@@ -104,6 +108,7 @@
 				A10000000000000000000002 /* BLEConstants.swift */,
 				A1000000000000000000000D /* StimulationMode.swift */,
 				A1000000000000000000000E /* ModeEngine.swift */,
+				E87518493F691B82D92474E8 /* AutonomicState.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -152,6 +157,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000001 /* ModeEngineTests.swift */,
+				A20000000000000000000002 /* SessionViewModelTests.swift */,
 			);
 			path = OpenPulseTests;
 			sourceTree = "<group>";
@@ -215,7 +221,7 @@
 				en,
 				Base,
 			);
-			mainGroup = C10000000000000000000001 /* Root */;
+			mainGroup = C10000000000000000000001;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C10000000000000000000007 /* Products */;
@@ -258,6 +264,7 @@
 				B1000000000000000000000D /* ModeEngine.swift in Sources */,
 				B1000000000000000000000E /* ModePicker.swift in Sources */,
 				B1000000000000000000000F /* BreathingGuideView.swift in Sources */,
+				3EBD0C7EDD800FA443D888BA /* AutonomicState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -266,6 +273,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B20000000000000000000001 /* ModeEngineTests.swift in Sources */,
+				B20000000000000000000002 /* SessionViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -544,7 +552,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = 330000000000000000000001 /* Project object */;
 }

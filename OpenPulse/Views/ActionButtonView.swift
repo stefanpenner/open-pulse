@@ -15,7 +15,7 @@ struct ActionButtonView: View {
                     }
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 56)
+                    .frame(height: 50)
                 }
                 .glassEffect(
                     .regular.tint(vm.isPaused ? Theme.accentTeal : Theme.accentAmber).interactive(),
@@ -32,47 +32,21 @@ struct ActionButtonView: View {
                     }
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 56)
+                    .frame(height: 50)
                 }
                 .glassEffect(.regular.tint(Theme.accentRed).interactive(), in: .capsule)
             }
         } else {
-            Button(action: handleTap) {
-                HStack(spacing: 10) {
-                    if vm.ble.isScanning {
-                        ProgressView()
-                            .tint(.white)
-                    }
-                    Text(buttonLabel)
-                        .font(Theme.buttonLabel)
-                        .foregroundStyle(.white)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
+            Button(action: { vm.start() }) {
+                Text("Start")
+                    .font(Theme.buttonLabel)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
             }
-            .glassEffect(.regular.tint(buttonTint).interactive(), in: .capsule)
-            .disabled(vm.ble.isScanning)
-            .opacity(vm.ble.isScanning ? 0.7 : 1)
-        }
-    }
-
-    private var buttonLabel: String {
-        if !vm.ble.isConnected {
-            return vm.ble.isScanning ? "Scanning..." : "Scan for Device"
-        }
-        return "Start"
-    }
-
-    private var buttonTint: Color {
-        if !vm.ble.isConnected { return Theme.accentBlue }
-        return Theme.accentTeal
-    }
-
-    private func handleTap() {
-        if !vm.ble.isConnected {
-            vm.scan()
-        } else {
-            vm.start()
+            .glassEffect(.regular.tint(Theme.accentTeal).interactive(), in: .capsule)
+            .disabled(!vm.ble.isReady)
+            .opacity(vm.ble.isReady ? 1 : 0.4)
         }
     }
 }

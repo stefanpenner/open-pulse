@@ -8,9 +8,9 @@ A native iOS app for controlling [Pulsetto](https://pulsetto.tech) tVNS (transcu
 
 Built with Swift 6 and SwiftUI. Requires iOS 26+.
 
-<p align="center">
-  <img src="screenshot.png" width="300" alt="Open Pulse screenshot">
-</p>
+| Dark mode | Light mode |
+|---|---|
+| <img src="screenshot-dark.png" width="300" alt="Dark mode"> | <img src="screenshot-light.png" width="300" alt="Light mode"> |
 
 ## Features
 
