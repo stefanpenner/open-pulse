@@ -62,6 +62,15 @@ struct StressReliefEngineTests {
         let cmds = engine.reconnectCommands(elapsed: 100, totalDuration: 360, baseStrength: 7)
         #expect(cmds == ["D\n", "7\n"])
     }
+
+    @Test("Active channel is always bilateral")
+    func activeChannelBilateral() {
+        var engine = StressReliefEngine()
+        _ = engine.start(baseStrength: 5, totalDuration: 360)
+
+        let result = engine.tick(elapsed: 10, totalDuration: 360, baseStrength: 5)
+        #expect(result.activeChannel == .bilateral)
+    }
 }
 
 // MARK: - Sleep Engine Tests
@@ -151,6 +160,31 @@ struct SleepEngineTests {
         #expect(cmds.contains("A\n"))
         #expect(cmds.contains("5\n"))
     }
+
+    @Test("Active channel maps to phase correctly")
+    func activeChannelPerPhase() {
+        var engine = SleepEngine()
+        _ = engine.start(baseStrength: 5, totalDuration: 600)
+        // Phase 0: bilateral
+        let r0 = engine.tick(elapsed: 10, totalDuration: 600, baseStrength: 5)
+        #expect(r0.activeChannel == .bilateral)
+
+        // Phase 1: left
+        let r1 = engine.tick(elapsed: 120, totalDuration: 600, baseStrength: 5)
+        #expect(r1.activeChannel == .left)
+
+        // Phase 2: bilateral
+        let r2 = engine.tick(elapsed: 240, totalDuration: 600, baseStrength: 5)
+        #expect(r2.activeChannel == .bilateral)
+
+        // Phase 3: right
+        let r3 = engine.tick(elapsed: 360, totalDuration: 600, baseStrength: 5)
+        #expect(r3.activeChannel == .right)
+
+        // Phase 4: bilateral
+        let r4 = engine.tick(elapsed: 480, totalDuration: 600, baseStrength: 5)
+        #expect(r4.activeChannel == .bilateral)
+    }
 }
 
 // MARK: - Focus Engine Tests
@@ -194,34 +228,20 @@ struct FocusEngineTests {
         #expect(r60.commands.contains("A\n"))
     }
 
-    @Test("Midpoint bump increases strength by 1")
-    func midpointBump() {
+    @Test("Constant intensity throughout session")
+    func constantIntensity() {
         var engine = FocusEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 360)
-        // Midpoint = 180
 
-        // Tick to just before midpoint
+        // Tick past midpoint
         for t in 1...179 {
             _ = engine.tick(elapsed: t, totalDuration: 360, baseStrength: 5)
         }
 
-        // At t=180 (on phase, since 180%60=0 < 30), bump should occur
+        // At t=180 (on phase), strength remains at base
         let r = engine.tick(elapsed: 180, totalDuration: 360, baseStrength: 5)
-        #expect(r.commands.contains("6\n"))
-    }
-
-    @Test("Midpoint bump capped at 9")
-    func midpointBumpCapped() {
-        var engine = FocusEngine()
-        _ = engine.start(baseStrength: 9, totalDuration: 360)
-
-        for t in 1...179 {
-            _ = engine.tick(elapsed: t, totalDuration: 360, baseStrength: 9)
-        }
-
-        let r = engine.tick(elapsed: 180, totalDuration: 360, baseStrength: 9)
-        // min(9, 9+1) = 9, so no effective change — command should still be "9\n"
-        #expect(r.commands.contains("9\n"))
+        #expect(r.isStimulationActive)
+        #expect(!r.commands.contains("6\n"))
     }
 
     @Test("Reconnect during off phase sends deactivate")
@@ -241,13 +261,30 @@ struct FocusEngineTests {
         #expect(cmds.contains("5\n"))
     }
 
-    @Test("Reconnect after midpoint uses bumped strength")
+    @Test("Reconnect after midpoint uses base strength")
     func reconnectAfterMidpoint() {
         let engine = FocusEngine()
-        // t=190: on phase after midpoint (190%60=10 < 30, elapsed >= 180)
+        // t=190: on phase after midpoint (190%60=10 < 30)
         let cmds = engine.reconnectCommands(elapsed: 190, totalDuration: 360, baseStrength: 5)
         #expect(cmds.contains("A\n"))
-        #expect(cmds.contains("6\n"))
+        #expect(cmds.contains("5\n"))
+    }
+
+    @Test("Active channel is left when on, off when resting")
+    func activeChannelLeftOrOff() {
+        var engine = FocusEngine()
+        _ = engine.start(baseStrength: 5, totalDuration: 360)
+
+        let rOn = engine.tick(elapsed: 10, totalDuration: 360, baseStrength: 5)
+        #expect(rOn.activeChannel == .left)
+
+        // Tick to t=29
+        for t in 11...29 {
+            _ = engine.tick(elapsed: t, totalDuration: 360, baseStrength: 5)
+        }
+
+        let rOff = engine.tick(elapsed: 30, totalDuration: 360, baseStrength: 5)
+        #expect(rOff.activeChannel == .off)
     }
 }
 
@@ -321,6 +358,15 @@ struct PainReliefEngineTests {
         #expect(cmds.first == "D\n")
         #expect(cmds.count == 2)
     }
+
+    @Test("Active channel is always bilateral")
+    func activeChannelBilateral() {
+        var engine = PainReliefEngine()
+        _ = engine.start(baseStrength: 5, totalDuration: 480)
+
+        let result = engine.tick(elapsed: 10, totalDuration: 480, baseStrength: 5)
+        #expect(result.activeChannel == .bilateral)
+    }
 }
 
 // MARK: - Calm Engine Tests
@@ -350,8 +396,8 @@ struct CalmEngineTests {
         }
     }
 
-    @Test("Exhale phase activates stimulation at t=4")
-    func exhaleActivation() {
+    @Test("Hold phase follows inhale at t=4 and t=5")
+    func holdPhase() {
         var engine = CalmEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 300)
 
@@ -360,8 +406,36 @@ struct CalmEngineTests {
             _ = engine.tick(elapsed: t, totalDuration: 300, baseStrength: 5)
         }
 
-        // t=4: transition to exhale
-        let r = engine.tick(elapsed: 4, totalDuration: 300, baseStrength: 5)
+        // t=4: hold phase starts
+        let r4 = engine.tick(elapsed: 4, totalDuration: 300, baseStrength: 5)
+        #expect(!r4.isStimulationActive)
+        if case .hold(let p) = r4.breathingPhase {
+            #expect(p == 0.0)
+        } else {
+            Issue.record("Expected hold at t=4")
+        }
+
+        let r5 = engine.tick(elapsed: 5, totalDuration: 300, baseStrength: 5)
+        #expect(!r5.isStimulationActive)
+        if case .hold(let p) = r5.breathingPhase {
+            #expect(p == 0.5)
+        } else {
+            Issue.record("Expected hold at t=5")
+        }
+    }
+
+    @Test("Exhale phase activates stimulation at t=6")
+    func exhaleActivation() {
+        var engine = CalmEngine()
+        _ = engine.start(baseStrength: 5, totalDuration: 300)
+
+        // Tick through inhale + hold
+        for t in 0...5 {
+            _ = engine.tick(elapsed: t, totalDuration: 300, baseStrength: 5)
+        }
+
+        // t=6: transition to exhale
+        let r = engine.tick(elapsed: 6, totalDuration: 300, baseStrength: 5)
         #expect(r.isStimulationActive)
         #expect(r.commands.contains("D\n"))
         #expect(r.commands.contains("5\n"))
@@ -388,7 +462,7 @@ struct CalmEngineTests {
         var engine = CalmEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 300)
 
-        // Inhale progress: t=0 → 0/4=0.0, t=1 → 1/4=0.25, t=2 → 0.5, t=3 → 0.75
+        // Inhale progress: t=0 → 0/4=0.0, t=2 → 2/4=0.5
         let r0 = engine.tick(elapsed: 0, totalDuration: 300, baseStrength: 5)
         let r2 = engine.tick(elapsed: 2, totalDuration: 300, baseStrength: 5)
 
@@ -403,8 +477,8 @@ struct CalmEngineTests {
     @Test("Reconnect during exhale sends activate")
     func reconnectExhale() {
         let engine = CalmEngine()
-        // t=5: exhale (5%10=5 >= 4)
-        let cmds = engine.reconnectCommands(elapsed: 5, totalDuration: 300, baseStrength: 5)
+        // t=7: exhale (7%10=7 >= 6)
+        let cmds = engine.reconnectCommands(elapsed: 7, totalDuration: 300, baseStrength: 5)
         #expect(cmds.contains("D\n"))
         #expect(cmds.contains("5\n"))
     }
@@ -414,6 +488,14 @@ struct CalmEngineTests {
         let engine = CalmEngine()
         // t=1: inhale (1%10=1 < 4)
         let cmds = engine.reconnectCommands(elapsed: 1, totalDuration: 300, baseStrength: 5)
+        #expect(cmds == ["0\n"])
+    }
+
+    @Test("Reconnect during hold sends deactivate")
+    func reconnectHold() {
+        let engine = CalmEngine()
+        // t=5: hold (5%10=5, >= 4 but < 6)
+        let cmds = engine.reconnectCommands(elapsed: 5, totalDuration: 300, baseStrength: 5)
         #expect(cmds == ["0\n"])
     }
 
@@ -432,11 +514,28 @@ struct CalmEngineTests {
             if r.commands.contains("0\n") { deactivations += 1 }
         }
 
-        // 3 cycles: each has 1 activation (at t=4,14,24) and 1 deactivation (at t=10,20)
-        // First cycle: no deactivation at t=0 (start is inhale), activation at t=4
-        // So: 3 activations, 2 deactivations in first 30s
+        // 3 cycles: activation at t=6,16,26; deactivation at t=10,20
         #expect(activations == 3)
         #expect(deactivations == 2)
+    }
+
+    @Test("Active channel is bilateral during exhale, off otherwise")
+    func activeChannelCalmMode() {
+        var engine = CalmEngine()
+        _ = engine.start(baseStrength: 5, totalDuration: 300)
+
+        // Inhale: off
+        let rInhale = engine.tick(elapsed: 1, totalDuration: 300, baseStrength: 5)
+        #expect(rInhale.activeChannel == .off)
+
+        // Tick through
+        for t in 2...5 {
+            _ = engine.tick(elapsed: t, totalDuration: 300, baseStrength: 5)
+        }
+
+        // Exhale: bilateral
+        let rExhale = engine.tick(elapsed: 6, totalDuration: 300, baseStrength: 5)
+        #expect(rExhale.activeChannel == .bilateral)
     }
 }
 

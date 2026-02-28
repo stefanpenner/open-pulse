@@ -1,7 +1,15 @@
 import Foundation
 
+enum ActiveChannel: Equatable {
+    case bilateral
+    case left
+    case right
+    case off
+}
+
 enum BreathingPhase: Equatable {
     case inhale(progress: Double)   // 0…1
+    case hold(progress: Double)     // 0…1
     case exhale(progress: Double)   // 0…1
 }
 
@@ -10,6 +18,7 @@ struct ModeTickResult {
     var isStimulationActive: Bool = true
     var effectiveStrength: Int? = nil
     var breathingPhase: BreathingPhase? = nil
+    var activeChannel: ActiveChannel = .bilateral
     var statusText: String = ""
 }
 
@@ -33,7 +42,7 @@ struct StressReliefEngine: ModeEngine {
     }
 
     mutating func tick(elapsed: Int, totalDuration: Int, baseStrength: Int) -> ModeTickResult {
-        ModeTickResult(isStimulationActive: true, statusText: "Bilateral · Continuous")
+        ModeTickResult(isStimulationActive: true, activeChannel: .bilateral, statusText: "Bilateral · Continuous")
     }
 
     func reconnectCommands(elapsed: Int, totalDuration: Int, baseStrength: Int) -> [String] {
@@ -106,10 +115,13 @@ struct SleepEngine: ModeEngine {
         let fadeNote = fade < baseStrength ? " · Fading" : ""
         let status = "\(channelName) channel\(fadeNote)"
 
+        let activeChannels: [ActiveChannel] = [.bilateral, .left, .bilateral, .right, .bilateral]
+
         return ModeTickResult(
             commands: commands,
             isStimulationActive: true,
             effectiveStrength: fade != baseStrength ? fade : nil,
+            activeChannel: activeChannels[phase],
             statusText: status
         )
     }
@@ -126,7 +138,6 @@ struct SleepEngine: ModeEngine {
 
 struct FocusEngine: ModeEngine {
     private var wasOn = false
-    private var didBump = false
 
     private func isOnPhase(elapsed: Int) -> Bool {
         (elapsed % 60) < 30
@@ -134,7 +145,6 @@ struct FocusEngine: ModeEngine {
 
     mutating func start(baseStrength: Int, totalDuration: Int) -> [String] {
         wasOn = true
-        didBump = false
         return [BLEConstants.leftChannelCommand, BLEConstants.strengthCommand(baseStrength)]
     }
 
@@ -145,24 +155,12 @@ struct FocusEngine: ModeEngine {
         // Transition detection
         if on && !wasOn {
             commands.append(BLEConstants.leftChannelCommand)
-            let s = currentStrength(elapsed: elapsed, totalDuration: totalDuration, baseStrength: baseStrength)
-            commands.append(BLEConstants.strengthCommand(s))
+            commands.append(BLEConstants.strengthCommand(baseStrength))
         } else if !on && wasOn {
             commands.append(BLEConstants.deactivateCommand)
         }
         wasOn = on
 
-        // Midpoint bump
-        let midpoint = totalDuration / 2
-        if !didBump && elapsed >= midpoint {
-            didBump = true
-            if on {
-                let s = currentStrength(elapsed: elapsed, totalDuration: totalDuration, baseStrength: baseStrength)
-                commands.append(BLEConstants.strengthCommand(s))
-            }
-        }
-
-        let effectiveS = currentStrength(elapsed: elapsed, totalDuration: totalDuration, baseStrength: baseStrength)
         let cyclePos = elapsed % 60
         let secsLeft = on ? 30 - cyclePos : 60 - cyclePos
         let status = on
@@ -171,24 +169,16 @@ struct FocusEngine: ModeEngine {
         return ModeTickResult(
             commands: commands,
             isStimulationActive: on,
-            effectiveStrength: on ? (effectiveS != baseStrength ? effectiveS : nil) : 0,
+            effectiveStrength: on ? nil : 0,
+            activeChannel: on ? .left : .off,
             statusText: status
         )
-    }
-
-    private func currentStrength(elapsed: Int, totalDuration: Int, baseStrength: Int) -> Int {
-        let midpoint = totalDuration / 2
-        if elapsed >= midpoint {
-            return min(9, baseStrength + 1)
-        }
-        return baseStrength
     }
 
     func reconnectCommands(elapsed: Int, totalDuration: Int, baseStrength: Int) -> [String] {
         let on = isOnPhase(elapsed: elapsed)
         if on {
-            let s = currentStrength(elapsed: elapsed, totalDuration: totalDuration, baseStrength: baseStrength)
-            return [BLEConstants.leftChannelCommand, BLEConstants.strengthCommand(s)]
+            return [BLEConstants.leftChannelCommand, BLEConstants.strengthCommand(baseStrength)]
         } else {
             return [BLEConstants.deactivateCommand]
         }
@@ -227,6 +217,7 @@ struct PainReliefEngine: ModeEngine {
             commands: commands,
             isStimulationActive: true,
             effectiveStrength: currentS != baseStrength ? currentS : nil,
+            activeChannel: .bilateral,
             statusText: "Bilateral · \(trend) wave"
         )
     }
@@ -244,7 +235,8 @@ struct PainReliefEngine: ModeEngine {
 struct CalmEngine: ModeEngine {
     private static let cycleLength = 10
     private static let inhaleDuration = 4
-    private static let exhaleDuration = 6
+    private static let holdDuration = 2
+    private static let exhaleDuration = 4
 
     private var wasExhaling = false
 
@@ -253,15 +245,18 @@ struct CalmEngine: ModeEngine {
     }
 
     private func isExhaling(elapsed: Int) -> Bool {
-        cyclePosition(elapsed: elapsed) >= Self.inhaleDuration
+        cyclePosition(elapsed: elapsed) >= Self.inhaleDuration + Self.holdDuration
     }
 
     private func breathingPhase(elapsed: Int) -> BreathingPhase {
         let pos = cyclePosition(elapsed: elapsed)
         if pos < Self.inhaleDuration {
             return .inhale(progress: Double(pos) / Double(Self.inhaleDuration))
+        } else if pos < Self.inhaleDuration + Self.holdDuration {
+            let holdPos = pos - Self.inhaleDuration
+            return .hold(progress: Double(holdPos) / Double(Self.holdDuration))
         } else {
-            let exhalePos = pos - Self.inhaleDuration
+            let exhalePos = pos - Self.inhaleDuration - Self.holdDuration
             return .exhale(progress: Double(exhalePos) / Double(Self.exhaleDuration))
         }
     }
@@ -277,7 +272,7 @@ struct CalmEngine: ModeEngine {
         let exhaling = isExhaling(elapsed: elapsed)
 
         if exhaling && !wasExhaling {
-            // Inhale → exhale: activate
+            // Hold → exhale: activate
             commands.append(BLEConstants.activateCommand)
             commands.append(BLEConstants.strengthCommand(baseStrength))
         } else if !exhaling && wasExhaling {
@@ -286,11 +281,19 @@ struct CalmEngine: ModeEngine {
         }
         wasExhaling = exhaling
 
-        let status = exhaling ? "Exhale · Stimulating" : "Inhale · Paused"
+        let phase = breathingPhase(elapsed: elapsed)
+        let status: String
+        switch phase {
+        case .inhale: status = "Inhale · Paused"
+        case .hold: status = "Hold · Paused"
+        case .exhale: status = "Exhale · Stimulating"
+        }
+
         return ModeTickResult(
             commands: commands,
             isStimulationActive: exhaling,
-            breathingPhase: breathingPhase(elapsed: elapsed),
+            breathingPhase: phase,
+            activeChannel: exhaling ? .bilateral : .off,
             statusText: status
         )
     }

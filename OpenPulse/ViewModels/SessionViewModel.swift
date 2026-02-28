@@ -17,6 +17,7 @@ final class SessionViewModel: ObservableObject {
     @Published var effectiveStrength: Int? = nil
     @Published var breathingPhase: BreathingPhase? = nil
     @Published var modeStatus: String = ""
+    @Published var activeChannel: ActiveChannel = .off
 
     let ble = BluetoothManager()
 
@@ -94,24 +95,26 @@ final class SessionViewModel: ObservableObject {
         if var engine {
             let cmds = engine.start(baseStrength: strength, totalDuration: sessionTotalDuration)
             self.engine = engine
-            for cmd in cmds {
-                ble.sendCommand(cmd)
-            }
+            ble.sendCommands(cmds)
             // Set initial state from engine
             stimulationActive = true
+            activeChannel = .bilateral
             if selectedMode == .calm {
                 // Calm starts with inhale (stim off)
                 stimulationActive = false
+                activeChannel = .off
                 breathingPhase = .inhale(progress: 0)
                 modeStatus = "Inhale · Paused"
+            } else if selectedMode == .focus {
+                activeChannel = .left
             } else {
                 modeStatus = "Starting"
             }
         } else {
             // Custom mode: original behavior
-            ble.sendCommand(BLEConstants.activateCommand)
-            ble.sendCommand(BLEConstants.strengthCommand(strength))
+            ble.sendCommands([BLEConstants.activateCommand, BLEConstants.strengthCommand(strength)])
             stimulationActive = true
+            activeChannel = .bilateral
             modeStatus = "Bilateral · Continuous"
         }
 
@@ -131,6 +134,7 @@ final class SessionViewModel: ObservableObject {
         stimulationActive = false
         effectiveStrength = nil
         breathingPhase = nil
+        activeChannel = .off
         modeStatus = ""
 
         stopCountdown()
@@ -159,6 +163,7 @@ final class SessionViewModel: ObservableObject {
         stimulationActive = false
         effectiveStrength = nil
         breathingPhase = nil
+        activeChannel = .off
     }
 
     func resume() {
@@ -173,12 +178,9 @@ final class SessionViewModel: ObservableObject {
                 totalDuration: sessionTotalDuration,
                 baseStrength: strength
             )
-            for cmd in cmds {
-                ble.sendCommand(cmd)
-            }
+            ble.sendCommands(cmds)
         } else {
-            ble.sendCommand(BLEConstants.activateCommand)
-            ble.sendCommand(BLEConstants.strengthCommand(strength))
+            ble.sendCommands([BLEConstants.activateCommand, BLEConstants.strengthCommand(strength)])
         }
 
         stimulationActive = true
@@ -207,19 +209,17 @@ final class SessionViewModel: ObservableObject {
     func setStrength(_ value: Int) {
         let clamped = max(1, min(9, value))
         strength = clamped
-        if isRunning, ble.isConnected, stimulationActive {
-            if let engine {
-                let cmds = engine.reconnectCommands(
-                    elapsed: elapsed,
-                    totalDuration: sessionTotalDuration,
-                    baseStrength: clamped
-                )
-                for cmd in cmds {
-                    ble.sendCommand(cmd)
-                }
-            } else {
-                ble.sendCommand(BLEConstants.strengthCommand(clamped))
-            }
+        guard isRunning, ble.isConnected, stimulationActive else { return }
+
+        if let engine {
+            let cmds = engine.reconnectCommands(
+                elapsed: elapsed,
+                totalDuration: sessionTotalDuration,
+                baseStrength: clamped
+            )
+            for cmd in cmds { ble.sendCommand(cmd) }
+        } else {
+            ble.sendCommand(BLEConstants.strengthCommand(clamped))
         }
     }
 
@@ -251,16 +251,15 @@ final class SessionViewModel: ObservableObject {
         self.engine = engine
 
         // Send BLE commands
-        if ble.isConnected {
-            for cmd in result.commands {
-                ble.sendCommand(cmd)
-            }
+        if ble.isConnected, !result.commands.isEmpty {
+            ble.sendCommands(result.commands)
         }
 
         // Update published state
         stimulationActive = result.isStimulationActive
         effectiveStrength = result.effectiveStrength
         breathingPhase = result.breathingPhase
+        activeChannel = result.activeChannel
         modeStatus = result.statusText
     }
 
@@ -326,13 +325,10 @@ final class SessionViewModel: ObservableObject {
                 totalDuration: sessionTotalDuration,
                 baseStrength: strength
             )
-            for cmd in cmds {
-                ble.sendCommand(cmd)
-            }
+            ble.sendCommands(cmds)
         } else {
             // Custom mode
-            ble.sendCommand(BLEConstants.activateCommand)
-            ble.sendCommand(BLEConstants.strengthCommand(strength))
+            ble.sendCommands([BLEConstants.activateCommand, BLEConstants.strengthCommand(strength)])
         }
 
         startKeepalive()

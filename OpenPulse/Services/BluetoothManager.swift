@@ -10,6 +10,8 @@ final class BluetoothManager: NSObject, ObservableObject {
     @Published var batteryPercentage: Int?
     @Published var batteryVoltage: Double?
     @Published var isCharging: Bool?
+    @Published var isBluetoothOff = false
+    @Published var scanTimedOut = false
 
     var onDisconnect: (@MainActor () -> Void)?
     var onCommandSent: ((String) -> Void)?
@@ -30,11 +32,14 @@ final class BluetoothManager: NSObject, ObservableObject {
     func scan() {
         guard centralManager.state == .poweredOn else {
             logger.warning("Cannot scan — Bluetooth not powered on")
+            isBluetoothOff = true
             return
         }
         guard !isScanning, !isConnected else { return }
 
         logger.info("Starting scan...")
+        isBluetoothOff = false
+        scanTimedOut = false
         isScanning = true
         centralManager.scanForPeripherals(
             withServices: nil,
@@ -47,6 +52,7 @@ final class BluetoothManager: NSObject, ObservableObject {
             guard !Task.isCancelled, let self, self.isScanning else { return }
             self.logger.info("Scan timed out")
             self.stopScan()
+            self.scanTimedOut = true
         }
     }
 
@@ -65,6 +71,19 @@ final class BluetoothManager: NSObject, ObservableObject {
         }
         peripheral.writeValue(data, for: rxCharacteristic, type: .withResponse)
         logger.debug("Sent: \(command.trimmingCharacters(in: .whitespacesAndNewlines))")
+    }
+
+    /// Sends multiple commands with inter-command delay for device processing.
+    func sendCommands(_ commands: [String]) {
+        guard !commands.isEmpty else { return }
+        sendCommand(commands[0])
+        guard commands.count > 1 else { return }
+        Task {
+            for cmd in commands.dropFirst() {
+                try? await Task.sleep(for: .milliseconds(80))
+                sendCommand(cmd)
+            }
+        }
     }
 
     // MARK: - Private
@@ -93,6 +112,7 @@ extension BluetoothManager: CBCentralManagerDelegate {
     nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
         Task { @MainActor in
             logger.info("Bluetooth state: \(central.state.rawValue)")
+            isBluetoothOff = central.state != .poweredOn
             if central.state == .poweredOn {
                 scan()
             }
@@ -117,6 +137,7 @@ extension BluetoothManager: CBCentralManagerDelegate {
         Task { @MainActor in
             logger.info("Connected to \(peripheral.name ?? "unknown")")
             isConnected = true
+            scanTimedOut = false
             peripheral.discoverServices([BLEConstants.uartServiceUUID])
         }
     }

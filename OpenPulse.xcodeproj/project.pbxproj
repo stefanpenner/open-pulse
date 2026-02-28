@@ -23,6 +23,12 @@
 		B1000000000000000000000D /* ModeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000E /* ModeEngine.swift */; };
 		B1000000000000000000000E /* ModePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000F /* ModePicker.swift */; };
 		B1000000000000000000000F /* BreathingGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* BreathingGuideView.swift */; };
+		B10000000000000000000011 /* HeroTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* HeroTimerView.swift */; };
+		B10000000000000000000012 /* SessionSettingsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* SessionSettingsRow.swift */; };
+		B10000000000000000000013 /* IdleSessionLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* IdleSessionLayout.swift */; };
+		B10000000000000000000014 /* ActiveSessionLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* ActiveSessionLayout.swift */; };
+		B10000000000000000000015 /* ChannelIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* ChannelIndicatorView.swift */; };
+		B10000000000000000000016 /* IntensityWaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* IntensityWaveView.swift */; };
 		B20000000000000000000001 /* ModeEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* ModeEngineTests.swift */; };
 		B20000000000000000000002 /* SessionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* SessionViewModelTests.swift */; };
 /* End PBXBuildFile section */
@@ -54,6 +60,12 @@
 		A1000000000000000000000E /* ModeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngine.swift; sourceTree = "<group>"; };
 		A1000000000000000000000F /* ModePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModePicker.swift; sourceTree = "<group>"; };
 		A10000000000000000000010 /* BreathingGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingGuideView.swift; sourceTree = "<group>"; };
+		A10000000000000000000011 /* HeroTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeroTimerView.swift; sourceTree = "<group>"; };
+		A10000000000000000000012 /* SessionSettingsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSettingsRow.swift; sourceTree = "<group>"; };
+		A10000000000000000000013 /* IdleSessionLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdleSessionLayout.swift; sourceTree = "<group>"; };
+		A10000000000000000000014 /* ActiveSessionLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSessionLayout.swift; sourceTree = "<group>"; };
+		A10000000000000000000015 /* ChannelIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelIndicatorView.swift; sourceTree = "<group>"; };
+		A10000000000000000000016 /* IntensityWaveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntensityWaveView.swift; sourceTree = "<group>"; };
 		A20000000000000000000001 /* ModeEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngineTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* SessionViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModelTests.swift; sourceTree = "<group>"; };
 		D10000000000000000000001 /* OpenPulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -140,6 +152,12 @@
 				A1000000000000000000000A /* Theme.swift */,
 				A1000000000000000000000F /* ModePicker.swift */,
 				A10000000000000000000010 /* BreathingGuideView.swift */,
+				A10000000000000000000011 /* HeroTimerView.swift */,
+				A10000000000000000000012 /* SessionSettingsRow.swift */,
+				A10000000000000000000013 /* IdleSessionLayout.swift */,
+				A10000000000000000000014 /* ActiveSessionLayout.swift */,
+				A10000000000000000000015 /* ChannelIndicatorView.swift */,
+				A10000000000000000000016 /* IntensityWaveView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -265,6 +283,12 @@
 				B1000000000000000000000E /* ModePicker.swift in Sources */,
 				B1000000000000000000000F /* BreathingGuideView.swift in Sources */,
 				3EBD0C7EDD800FA443D888BA /* AutonomicState.swift in Sources */,
+				B10000000000000000000011 /* HeroTimerView.swift in Sources */,
+				B10000000000000000000012 /* SessionSettingsRow.swift in Sources */,
+				B10000000000000000000013 /* IdleSessionLayout.swift in Sources */,
+				B10000000000000000000014 /* ActiveSessionLayout.swift in Sources */,
+				B10000000000000000000015 /* ChannelIndicatorView.swift in Sources */,
+				B10000000000000000000016 /* IntensityWaveView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

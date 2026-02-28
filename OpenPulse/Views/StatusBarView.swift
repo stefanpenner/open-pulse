@@ -37,6 +37,16 @@ struct StatusBarView: View {
                 }
             }
             .buttonStyle(.plain)
+        } else if vm.ble.isConnected && !vm.ble.isReady {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .scaleEffect(0.6)
+                    .tint(Theme.connectedGreen)
+
+                Text("Connecting…")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(Theme.connectedGreen)
+            }
         } else if vm.ble.isConnected {
             HStack(spacing: 6) {
                 Circle()
@@ -48,8 +58,43 @@ struct StatusBarView: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.textSecondary)
             }
+        } else if vm.ble.isBluetoothOff {
+            Button {
+                vm.scan()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.disconnectedRed)
+
+                    Text("Bluetooth Off")
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(Theme.disconnectedRed)
+                }
+            }
+            .buttonStyle(.plain)
+            .sensoryFeedback(.warning, trigger: vm.ble.isBluetoothOff)
+        } else if vm.ble.scanTimedOut {
+            Button {
+                vm.scan()
+            } label: {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Theme.accentAmber)
+                        .frame(width: 7, height: 7)
+                        .shadow(color: Theme.accentAmber.opacity(0.6), radius: 3)
+
+                    Text("Not Found · Retry")
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(Theme.accentAmber)
+                }
+            }
+            .buttonStyle(.plain)
+            .sensoryFeedback(.error, trigger: vm.ble.scanTimedOut)
         } else {
-            Button { vm.scan() } label: {
+            Button {
+                vm.scan()
+            } label: {
                 HStack(spacing: 6) {
                     Circle()
                         .fill(Theme.disconnectedRed)
@@ -62,6 +107,7 @@ struct StatusBarView: View {
                 }
             }
             .buttonStyle(.plain)
+            .sensoryFeedback(.impact, trigger: vm.ble.isScanning)
         }
     }
 

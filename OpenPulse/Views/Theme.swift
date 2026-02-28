@@ -41,6 +41,8 @@ enum Theme {
     static let cardSubtitle = Font.caption2.weight(.medium)
     /// Hero numbers: timer display
     static let heroTimer = Font.system(size: 54, weight: .light, design: .monospaced)
+    /// Large hero timer for active session
+    static let heroTimerLarge = Font.system(size: 64, weight: .light, design: .monospaced)
     /// Large numbers: strength badge
     static let heroNumber = Font.system(size: 30, weight: .semibold, design: .rounded)
     /// Mode status text

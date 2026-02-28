@@ -7,6 +7,7 @@ struct BreathingGuideView: View {
         guard let phase = vm.breathingPhase else { return "" }
         switch phase {
         case .inhale: return "Inhale"
+        case .hold: return "Hold"
         case .exhale: return "Exhale"
         }
     }
@@ -15,7 +16,17 @@ struct BreathingGuideView: View {
         guard let phase = vm.breathingPhase else { return 0.5 }
         switch phase {
         case .inhale(let progress): return 0.5 + 0.5 * progress
+        case .hold: return 1.0
         case .exhale(let progress): return 1.0 - 0.5 * progress
+        }
+    }
+
+    private var phaseColor: Color {
+        guard let phase = vm.breathingPhase else { return Theme.textSecondary }
+        switch phase {
+        case .inhale: return Theme.accentPurple
+        case .hold: return Theme.accentAmber
+        case .exhale: return Theme.accentCyan
         }
     }
 
@@ -24,11 +35,16 @@ struct BreathingGuideView: View {
         return false
     }
 
+    private var isHolding: Bool {
+        if case .hold = vm.breathingPhase { return true }
+        return false
+    }
+
     var body: some View {
         VStack(spacing: 14) {
             Text(phaseText)
-                .font(Theme.breathingLabel)
-                .foregroundStyle(isActive ? Theme.accentCyan : Theme.textSecondary)
+                .font(.title2.weight(.medium))
+                .foregroundStyle(phaseColor)
                 .contentTransition(.opacity)
                 .animation(.easeInOut(duration: 0.3), value: phaseText)
 
@@ -40,20 +56,29 @@ struct BreathingGuideView: View {
 
                 // Breathing circle
                 Circle()
-                    .fill(
-                        isActive
-                            ? Theme.accentCyan.opacity(0.25)
-                            : Color.white.opacity(0.08)
-                    )
+                    .fill(phaseColor.opacity(0.25))
                     .frame(width: 120, height: 120)
                     .scaleEffect(circleScale)
                     .animation(.easeInOut(duration: 1), value: circleScale)
+
+                // Hold pulsing glow
+                if isHolding {
+                    Circle()
+                        .fill(phaseColor.opacity(0.15))
+                        .frame(width: 130, height: 130)
+                        .blur(radius: 12)
+                        .phaseAnimator([false, true]) { content, phase in
+                            content.opacity(phase ? 0.8 : 0.3)
+                        } animation: { _ in
+                            .easeInOut(duration: 1.0)
+                        }
+                }
 
                 // Inner glow
                 Circle()
                     .fill(
                         isActive
-                            ? Theme.accentCyan.opacity(0.12)
+                            ? phaseColor.opacity(0.12)
                             : Color.clear
                     )
                     .frame(width: 60, height: 60)
@@ -72,7 +97,7 @@ struct BreathingGuideView: View {
             if !vm.modeStatus.isEmpty {
                 Text(vm.modeStatus)
                     .font(Theme.statusLabel)
-                    .foregroundStyle(isActive ? Theme.accentCyan.opacity(0.8) : Theme.textTertiary)
+                    .foregroundStyle(phaseColor.opacity(0.8))
                     .contentTransition(.opacity)
                     .animation(.default, value: vm.modeStatus)
             }
@@ -84,8 +109,8 @@ struct BreathingGuideView: View {
                     .frame(height: 3)
                     .overlay(alignment: .leading) {
                         Capsule()
-                            .fill(Theme.accentCyan)
-                            .shadow(color: Theme.accentCyan.opacity(0.4), radius: 4)
+                            .fill(phaseColor)
+                            .shadow(color: phaseColor.opacity(0.4), radius: 4)
                             .frame(width: geo.size.width * vm.progress)
                             .animation(.linear(duration: 1), value: vm.progress)
                     }

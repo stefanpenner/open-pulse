@@ -69,7 +69,7 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         switch self {
         case .stressRelief: "Bilateral stimulation at constant intensity for general vagal toning."
         case .sleep:        "Rotating channels with gentle fade-out to ease into sleep."
-        case .focus:        "Left-side only, 30s on/off cycles with a midpoint intensity boost."
+        case .focus:        "Left-side only, 30s on/off duty cycles at constant intensity."
         case .painRelief:   "Bilateral with oscillating intensity on a 30-second wave."
         case .calm:         "Respiratory-gated: stimulates on exhale, pauses on inhale."
         case .custom:       "Manual control — set your own timer and intensity."
@@ -80,20 +80,20 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         switch self {
         case .stressRelief:
             [
-                ("Miyaguchi 2024 – Continuous vs intermittent", "https://pmc.ncbi.nlm.nih.gov/articles/PMC11099104/"),
-                ("Chen 2022 – HRV effects", "https://peerj.com/articles/14447/"),
-                ("Badran 2019 – Heart rate", "https://pmc.ncbi.nlm.nih.gov/articles/PMC6536129/"),
+                ("Horinouchi 2024 – Continuous vs intermittent", "https://pmc.ncbi.nlm.nih.gov/articles/PMC11099104/"),
+                ("Forte 2022 – HRV effects", "https://peerj.com/articles/14447/"),
+                ("Badran 2018 – Heart rate", "https://pmc.ncbi.nlm.nih.gov/articles/PMC6536129/"),
             ]
         case .sleep:
             [
-                ("Bottari 2024 – Sleep optimization", "https://onlinelibrary.wiley.com/doi/10.1111/jsr.13891"),
+                ("Bottari 2024 – Sleep pilot", "https://onlinelibrary.wiley.com/doi/10.1111/jsr.13891"),
                 ("Zhang 2024 – JAMA insomnia RCT", "https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2828072"),
-                ("Li 2022 – Primary insomnia", "https://pmc.ncbi.nlm.nih.gov/articles/PMC9599790/"),
+                ("Wu 2022 – Primary insomnia", "https://pmc.ncbi.nlm.nih.gov/articles/PMC9599790/"),
             ]
         case .focus:
             [
                 ("Sun 2021 – Spatial working memory", "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2021.790793/full"),
-                ("Loerwald 2018 – Inverted-U curve", "https://pmc.ncbi.nlm.nih.gov/articles/PMC6347516/"),
+                ("Morrison 2018 – Inverted-U curve", "https://pmc.ncbi.nlm.nih.gov/articles/PMC6347516/"),
                 ("Sharon 2021 – Pupil/alpha response", "https://pmc.ncbi.nlm.nih.gov/articles/PMC7810665/"),
             ]
         case .painRelief:
@@ -104,9 +104,9 @@ enum StimulationMode: String, CaseIterable, Identifiable {
             ]
         case .calm:
             [
-                ("Garcia 2017 – RAVANS 7T fMRI", "https://pmc.ncbi.nlm.nih.gov/articles/PMC6592731/"),
-                ("Sclocco 2021 – RAVANS depression", "https://pmc.ncbi.nlm.nih.gov/articles/PMC8429271/"),
-                ("Juel 2019 – Respiratory gating HR", "https://pmc.ncbi.nlm.nih.gov/articles/PMC8041682/"),
+                ("Sclocco 2019 – RAVANS 7T fMRI", "https://pmc.ncbi.nlm.nih.gov/articles/PMC6592731/"),
+                ("Garcia 2021 – RAVANS depression", "https://pmc.ncbi.nlm.nih.gov/articles/PMC8429271/"),
+                ("Paleczny 2019 – Respiratory gating HR", "https://pmc.ncbi.nlm.nih.gov/articles/PMC8041682/"),
             ]
         case .custom:
             []
