@@ -9,7 +9,8 @@ A native iOS app for controlling [Pulsetto](https://pulsetto.tech) vagus nerve s
 Swift 6 / SwiftUI. No dependencies. No tracking. iOS 26+.
 
 <p align="center">
-  <img src="screenshot-dark.png" width="300" alt="Open Pulse screenshot">
+  <img src="screenshot-dark.png" width="300" alt="Mode picker">
+  <img src="screenshot-session.png" width="300" alt="Active session">
 </p>
 
 ## Modes
