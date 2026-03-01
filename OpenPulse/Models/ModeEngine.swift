@@ -233,19 +233,21 @@ struct PainReliefEngine: ModeEngine {
 // 10s breathing cycle: 4s inhale (stim OFF), 6s exhale (stim ON)
 
 struct CalmEngine: ModeEngine {
-    private static let cycleLength = 10
-    private static let inhaleDuration = 4
-    private static let holdDuration = 2
-    private static let exhaleDuration = 4
+    private static let cycleLength = 15
+    private static let inhaleDuration = 5
+    private static let holdDuration = 3
+    private static let exhaleDuration = 7
 
-    private var wasExhaling = false
+    private var wasStimulating = false
 
     private func cyclePosition(elapsed: Int) -> Int {
         elapsed % Self.cycleLength
     }
 
-    private func isExhaling(elapsed: Int) -> Bool {
-        cyclePosition(elapsed: elapsed) >= Self.inhaleDuration + Self.holdDuration
+    /// Stimulation active during hold + exhale (pos >= inhaleDuration).
+    /// Activating at hold lets the device ramp finish before exhale.
+    private func isStimulating(elapsed: Int) -> Bool {
+        cyclePosition(elapsed: elapsed) >= Self.inhaleDuration
     }
 
     private func breathingPhase(elapsed: Int) -> BreathingPhase {
@@ -262,44 +264,44 @@ struct CalmEngine: ModeEngine {
     }
 
     mutating func start(baseStrength: Int, totalDuration: Int) -> [String] {
-        wasExhaling = false
+        wasStimulating = false
         // Starts with inhale — no activation
         return []
     }
 
     mutating func tick(elapsed: Int, totalDuration: Int, baseStrength: Int) -> ModeTickResult {
         var commands: [String] = []
-        let exhaling = isExhaling(elapsed: elapsed)
+        let stimulating = isStimulating(elapsed: elapsed)
 
-        if exhaling && !wasExhaling {
-            // Hold → exhale: activate
+        if stimulating && !wasStimulating {
+            // Inhale → hold: activate (ramp during hold, full intensity by exhale)
             commands.append(BLEConstants.activateCommand)
             commands.append(BLEConstants.strengthCommand(baseStrength))
-        } else if !exhaling && wasExhaling {
+        } else if !stimulating && wasStimulating {
             // Exhale → inhale: deactivate
             commands.append(BLEConstants.deactivateCommand)
         }
-        wasExhaling = exhaling
+        wasStimulating = stimulating
 
         let phase = breathingPhase(elapsed: elapsed)
         let status: String
         switch phase {
         case .inhale: status = "Inhale · Paused"
-        case .hold: status = "Hold · Paused"
+        case .hold: status = "Hold · Ramping"
         case .exhale: status = "Exhale · Stimulating"
         }
 
         return ModeTickResult(
             commands: commands,
-            isStimulationActive: exhaling,
+            isStimulationActive: stimulating,
             breathingPhase: phase,
-            activeChannel: exhaling ? .bilateral : .off,
+            activeChannel: stimulating ? .bilateral : .off,
             statusText: status
         )
     }
 
     func reconnectCommands(elapsed: Int, totalDuration: Int, baseStrength: Int) -> [String] {
-        if isExhaling(elapsed: elapsed) {
+        if isStimulating(elapsed: elapsed) {
             return [BLEConstants.activateCommand, BLEConstants.strengthCommand(baseStrength)]
         } else {
             return [BLEConstants.deactivateCommand]

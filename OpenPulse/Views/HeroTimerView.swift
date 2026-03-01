@@ -4,30 +4,7 @@ struct HeroTimerView: View {
     @ObservedObject var vm: SessionViewModel
 
     var body: some View {
-        VStack(spacing: 12) {
-            // Time display
-            Text(vm.displayTime)
-                .font(Theme.heroTimerLarge)
-                .foregroundStyle(vm.isPaused ? Theme.textSecondary : Theme.textPrimary)
-                .contentTransition(.numericText())
-                .animation(.default, value: vm.remainingSeconds)
-
-            // Progress bar
-            GeometryReader { geo in
-                Capsule()
-                    .fill(Color.white.opacity(0.1))
-                    .frame(height: 4)
-                    .overlay(alignment: .leading) {
-                        Capsule()
-                            .fill(vm.selectedMode.accentColor)
-                            .shadow(color: vm.selectedMode.accentColor.opacity(0.4), radius: 4)
-                            .frame(width: geo.size.width * vm.progress)
-                            .animation(.linear(duration: 1), value: vm.progress)
-                    }
-            }
-            .frame(height: 4)
-            .padding(.horizontal, 8)
-
+        VStack(spacing: 8) {
             // Mode status
             if !vm.modeStatus.isEmpty {
                 Text(vm.isPaused ? "Paused" : vm.modeStatus)
@@ -36,9 +13,32 @@ struct HeroTimerView: View {
                     .contentTransition(.opacity)
                     .animation(.default, value: vm.modeStatus)
             }
+
+            // Progress bar with embedded timer
+            HStack(spacing: 8) {
+                GeometryReader { geo in
+                    Capsule()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(height: 4)
+                        .overlay(alignment: .leading) {
+                            Capsule()
+                                .fill(vm.selectedMode.accentColor)
+                                .shadow(color: vm.selectedMode.accentColor.opacity(0.4), radius: 4)
+                                .frame(width: geo.size.width * vm.progress)
+                                .animation(.linear(duration: 1), value: vm.progress)
+                        }
+                }
+                .frame(height: 4)
+
+                Text(vm.displayTime)
+                    .font(.caption2.monospacedDigit().weight(.medium))
+                    .foregroundStyle(Theme.textTertiary)
+                    .contentTransition(.numericText())
+                    .animation(.default, value: vm.remainingSeconds)
+            }
+            .padding(.horizontal, 8)
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 20)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20))
+        .padding(.vertical, 16)
     }
 }

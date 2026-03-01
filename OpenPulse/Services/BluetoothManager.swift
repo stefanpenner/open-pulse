@@ -11,7 +11,6 @@ final class BluetoothManager: NSObject, ObservableObject {
     @Published var batteryVoltage: Double?
     @Published var isCharging: Bool?
     @Published var isBluetoothOff = false
-    @Published var scanTimedOut = false
 
     var onDisconnect: (@MainActor () -> Void)?
     var onCommandSent: ((String) -> Void)?
@@ -21,6 +20,9 @@ final class BluetoothManager: NSObject, ObservableObject {
     private var peripheral: CBPeripheral?
     private var rxCharacteristic: CBCharacteristic?
     private var scanTimeoutTask: Task<Void, Never>?
+    private var autoScanTask: Task<Void, Never>?
+    private var scanWhenReady = false
+    private var retryCount = 0
 
     override init() {
         super.init()
@@ -30,16 +32,18 @@ final class BluetoothManager: NSObject, ObservableObject {
     // MARK: - Public API
 
     func scan() {
-        guard centralManager.state == .poweredOn else {
-            logger.warning("Cannot scan — Bluetooth not powered on")
-            isBluetoothOff = true
-            return
-        }
         guard !isScanning, !isConnected else { return }
 
+        guard centralManager.state == .poweredOn else {
+            logger.warning("Cannot scan — Bluetooth not powered on, will scan when ready")
+            scanWhenReady = true
+            isBluetoothOff = centralManager.state != .unknown
+            return
+        }
+
         logger.info("Starting scan...")
+        scanWhenReady = false
         isBluetoothOff = false
-        scanTimedOut = false
         isScanning = true
         centralManager.scanForPeripherals(
             withServices: nil,
@@ -50,9 +54,9 @@ final class BluetoothManager: NSObject, ObservableObject {
         scanTimeoutTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(BLEConstants.scanTimeout))
             guard !Task.isCancelled, let self, self.isScanning else { return }
-            self.logger.info("Scan timed out")
+            self.logger.info("Scan timed out, will retry (attempt \(self.retryCount + 1))")
             self.stopScan()
-            self.scanTimedOut = true
+            self.scheduleRetry()
         }
     }
 
@@ -93,6 +97,26 @@ final class BluetoothManager: NSObject, ObservableObject {
         isScanning = false
         scanTimeoutTask?.cancel()
         scanTimeoutTask = nil
+    }
+
+    func stopAutoScan() {
+        stopScan()
+        autoScanTask?.cancel()
+        autoScanTask = nil
+        retryCount = 0
+    }
+
+    private func scheduleRetry() {
+        autoScanTask?.cancel()
+        retryCount += 1
+        let delay = retryCount <= 1 ? 0.0 : min(Double(retryCount) * BLEConstants.scanRetryDelay, 10.0)
+        autoScanTask = Task { [weak self] in
+            if delay > 0 {
+                try? await Task.sleep(for: .seconds(delay))
+            }
+            guard !Task.isCancelled, let self else { return }
+            self.scan()
+        }
     }
 
     private func cleanup() {
@@ -137,7 +161,9 @@ extension BluetoothManager: CBCentralManagerDelegate {
         Task { @MainActor in
             logger.info("Connected to \(peripheral.name ?? "unknown")")
             isConnected = true
-            scanTimedOut = false
+            retryCount = 0
+            autoScanTask?.cancel()
+            autoScanTask = nil
             peripheral.discoverServices([BLEConstants.uartServiceUUID])
         }
     }

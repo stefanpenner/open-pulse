@@ -8,11 +8,17 @@ struct IdleSessionLayout: View {
         VStack(spacing: 12) {
             StatusBarView(vm: vm)
 
+            Spacer()
+
+            Text("I feel...")
+                .font(.title2.weight(.medium))
+                .foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 4)
+
             ExpandedModePicker(vm: vm) { mode in
                 infoMode = mode
             }
-
-            SessionSettingsRow(vm: vm)
 
             Spacer()
 

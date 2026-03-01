@@ -20,34 +20,7 @@ struct StatusBarView: View {
 
     @ViewBuilder
     private var connectionControl: some View {
-        if vm.ble.isScanning {
-            Button { vm.stopScan() } label: {
-                HStack(spacing: 6) {
-                    ProgressView()
-                        .scaleEffect(0.6)
-                        .tint(Theme.accentBlue)
-
-                    Text("Scanning…")
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(Theme.accentBlue)
-
-                    Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(Theme.textTertiary)
-                }
-            }
-            .buttonStyle(.plain)
-        } else if vm.ble.isConnected && !vm.ble.isReady {
-            HStack(spacing: 6) {
-                ProgressView()
-                    .scaleEffect(0.6)
-                    .tint(Theme.connectedGreen)
-
-                Text("Connecting…")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(Theme.connectedGreen)
-            }
-        } else if vm.ble.isConnected {
+        if vm.ble.isConnected && vm.ble.isReady {
             HStack(spacing: 6) {
                 Circle()
                     .fill(Theme.connectedGreen)
@@ -58,56 +31,36 @@ struct StatusBarView: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.textSecondary)
             }
+        } else if vm.ble.isConnected {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .scaleEffect(0.6)
+                    .tint(Theme.connectedGreen)
+
+                Text("Connecting…")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(Theme.connectedGreen)
+            }
         } else if vm.ble.isBluetoothOff {
-            Button {
-                vm.scan()
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "antenna.radiowaves.left.and.right.slash")
-                        .font(.caption2)
-                        .foregroundStyle(Theme.disconnectedRed)
+            HStack(spacing: 6) {
+                Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.disconnectedRed)
 
-                    Text("Bluetooth Off")
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(Theme.disconnectedRed)
-                }
+                Text("Bluetooth Off")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(Theme.disconnectedRed)
             }
-            .buttonStyle(.plain)
-            .sensoryFeedback(.warning, trigger: vm.ble.isBluetoothOff)
-        } else if vm.ble.scanTimedOut {
-            Button {
-                vm.scan()
-            } label: {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(Theme.accentAmber)
-                        .frame(width: 7, height: 7)
-                        .shadow(color: Theme.accentAmber.opacity(0.6), radius: 3)
-
-                    Text("Not Found · Retry")
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(Theme.accentAmber)
-                }
-            }
-            .buttonStyle(.plain)
-            .sensoryFeedback(.error, trigger: vm.ble.scanTimedOut)
         } else {
-            Button {
-                vm.scan()
-            } label: {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(Theme.disconnectedRed)
-                        .frame(width: 7, height: 7)
-                        .shadow(color: Theme.disconnectedRed.opacity(0.6), radius: 3)
+            HStack(spacing: 6) {
+                ProgressView()
+                    .scaleEffect(0.6)
+                    .tint(Theme.accentBlue)
 
-                    Text("Tap to Connect")
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(Theme.textSecondary)
-                }
+                Text("Searching…")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(Theme.accentBlue)
             }
-            .buttonStyle(.plain)
-            .sensoryFeedback(.impact, trigger: vm.ble.isScanning)
         }
     }
 

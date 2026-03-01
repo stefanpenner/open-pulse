@@ -373,6 +373,8 @@ struct PainReliefEngineTests {
 
 @Suite("CalmEngine")
 struct CalmEngineTests {
+    // 15s cycle: 5s inhale + 3s hold + 7s exhale
+
     @Test("Start returns no commands (begins with inhale)")
     func start() {
         var engine = CalmEngine()
@@ -380,12 +382,12 @@ struct CalmEngineTests {
         #expect(cmds.isEmpty)
     }
 
-    @Test("Inhale phase is first 4 seconds of 10s cycle")
+    @Test("Inhale phase is first 5 seconds of 15s cycle")
     func inhalePhase() {
         var engine = CalmEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 300)
 
-        for t in 0...3 {
+        for t in 0...4 {
             let r = engine.tick(elapsed: t, totalDuration: 300, baseStrength: 5)
             #expect(!r.isStimulationActive)
             if case .inhale = r.breathingPhase {
@@ -396,63 +398,56 @@ struct CalmEngineTests {
         }
     }
 
-    @Test("Hold phase follows inhale at t=4 and t=5")
-    func holdPhase() {
+    @Test("Hold phase activates stimulation at t=5 (ramp during hold)")
+    func holdActivation() {
         var engine = CalmEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 300)
 
         // Tick through inhale
-        for t in 0...3 {
+        for t in 0...4 {
             _ = engine.tick(elapsed: t, totalDuration: 300, baseStrength: 5)
         }
 
-        // t=4: hold phase starts
-        let r4 = engine.tick(elapsed: 4, totalDuration: 300, baseStrength: 5)
-        #expect(!r4.isStimulationActive)
-        if case .hold(let p) = r4.breathingPhase {
-            #expect(p == 0.0)
-        } else {
-            Issue.record("Expected hold at t=4")
-        }
-
+        // t=5: hold phase starts — device activates to ramp during hold
         let r5 = engine.tick(elapsed: 5, totalDuration: 300, baseStrength: 5)
-        #expect(!r5.isStimulationActive)
+        #expect(r5.isStimulationActive)
+        #expect(r5.commands.contains("D\n"))
+        #expect(r5.commands.contains("5\n"))
         if case .hold(let p) = r5.breathingPhase {
-            #expect(p == 0.5)
+            #expect(p == 0.0)
         } else {
             Issue.record("Expected hold at t=5")
         }
     }
 
-    @Test("Exhale phase activates stimulation at t=6")
-    func exhaleActivation() {
+    @Test("Exhale continues stimulation (no new commands)")
+    func exhaleContinues() {
         var engine = CalmEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 300)
 
         // Tick through inhale + hold
-        for t in 0...5 {
+        for t in 0...7 {
             _ = engine.tick(elapsed: t, totalDuration: 300, baseStrength: 5)
         }
 
-        // t=6: transition to exhale
-        let r = engine.tick(elapsed: 6, totalDuration: 300, baseStrength: 5)
+        // t=8: exhale — still stimulating, no new activate command
+        let r = engine.tick(elapsed: 8, totalDuration: 300, baseStrength: 5)
         #expect(r.isStimulationActive)
-        #expect(r.commands.contains("D\n"))
-        #expect(r.commands.contains("5\n"))
+        #expect(r.commands.isEmpty)
     }
 
-    @Test("Inhale deactivates stimulation at t=10")
+    @Test("Inhale deactivates stimulation at t=15")
     func inhaleDeactivation() {
         var engine = CalmEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 300)
 
         // Run through first full cycle
-        for t in 0...9 {
+        for t in 0...14 {
             _ = engine.tick(elapsed: t, totalDuration: 300, baseStrength: 5)
         }
 
-        // t=10: back to inhale (10%10=0 < 4)
-        let r = engine.tick(elapsed: 10, totalDuration: 300, baseStrength: 5)
+        // t=15: back to inhale (15%15=0 < 5)
+        let r = engine.tick(elapsed: 15, totalDuration: 300, baseStrength: 5)
         #expect(!r.isStimulationActive)
         #expect(r.commands.contains("0\n"))
     }
@@ -462,7 +457,7 @@ struct CalmEngineTests {
         var engine = CalmEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 300)
 
-        // Inhale progress: t=0 → 0/4=0.0, t=2 → 2/4=0.5
+        // Inhale progress: t=0 → 0/5=0.0, t=2 → 2/5=0.4
         let r0 = engine.tick(elapsed: 0, totalDuration: 300, baseStrength: 5)
         let r2 = engine.tick(elapsed: 2, totalDuration: 300, baseStrength: 5)
 
@@ -474,28 +469,25 @@ struct CalmEngineTests {
         }
     }
 
-    @Test("Reconnect during exhale sends activate")
-    func reconnectExhale() {
+    @Test("Reconnect during hold/exhale sends activate")
+    func reconnectStimPhase() {
         let engine = CalmEngine()
-        // t=7: exhale (7%10=7 >= 6)
-        let cmds = engine.reconnectCommands(elapsed: 7, totalDuration: 300, baseStrength: 5)
-        #expect(cmds.contains("D\n"))
-        #expect(cmds.contains("5\n"))
+        // t=6: hold (6%15=6, >= 5) — stimulating
+        let holdCmds = engine.reconnectCommands(elapsed: 6, totalDuration: 300, baseStrength: 5)
+        #expect(holdCmds.contains("D\n"))
+        #expect(holdCmds.contains("5\n"))
+
+        // t=10: exhale (10%15=10, >= 5) — stimulating
+        let exhaleCmds = engine.reconnectCommands(elapsed: 10, totalDuration: 300, baseStrength: 5)
+        #expect(exhaleCmds.contains("D\n"))
+        #expect(exhaleCmds.contains("5\n"))
     }
 
     @Test("Reconnect during inhale sends deactivate")
     func reconnectInhale() {
         let engine = CalmEngine()
-        // t=1: inhale (1%10=1 < 4)
+        // t=1: inhale (1%15=1 < 5)
         let cmds = engine.reconnectCommands(elapsed: 1, totalDuration: 300, baseStrength: 5)
-        #expect(cmds == ["0\n"])
-    }
-
-    @Test("Reconnect during hold sends deactivate")
-    func reconnectHold() {
-        let engine = CalmEngine()
-        // t=5: hold (5%10=5, >= 4 but < 6)
-        let cmds = engine.reconnectCommands(elapsed: 5, totalDuration: 300, baseStrength: 5)
         #expect(cmds == ["0\n"])
     }
 
@@ -504,7 +496,7 @@ struct CalmEngineTests {
         var engine = CalmEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 300)
 
-        // Run 3 full cycles (30 seconds)
+        // Run 2 full cycles (30 seconds)
         var activations = 0
         var deactivations = 0
 
@@ -514,12 +506,12 @@ struct CalmEngineTests {
             if r.commands.contains("0\n") { deactivations += 1 }
         }
 
-        // 3 cycles: activation at t=6,16,26; deactivation at t=10,20
-        #expect(activations == 3)
-        #expect(deactivations == 2)
+        // 2 cycles: activation at t=5,20; deactivation at t=15
+        #expect(activations == 2)
+        #expect(deactivations == 1)
     }
 
-    @Test("Active channel is bilateral during exhale, off otherwise")
+    @Test("Active channel is bilateral during hold+exhale, off during inhale")
     func activeChannelCalmMode() {
         var engine = CalmEngine()
         _ = engine.start(baseStrength: 5, totalDuration: 300)
@@ -528,13 +520,22 @@ struct CalmEngineTests {
         let rInhale = engine.tick(elapsed: 1, totalDuration: 300, baseStrength: 5)
         #expect(rInhale.activeChannel == .off)
 
-        // Tick through
-        for t in 2...5 {
+        // Tick through to hold
+        for t in 2...4 {
+            _ = engine.tick(elapsed: t, totalDuration: 300, baseStrength: 5)
+        }
+
+        // Hold: bilateral (ramping)
+        let rHold = engine.tick(elapsed: 5, totalDuration: 300, baseStrength: 5)
+        #expect(rHold.activeChannel == .bilateral)
+
+        // Tick through to exhale
+        for t in 6...7 {
             _ = engine.tick(elapsed: t, totalDuration: 300, baseStrength: 5)
         }
 
         // Exhale: bilateral
-        let rExhale = engine.tick(elapsed: 6, totalDuration: 300, baseStrength: 5)
+        let rExhale = engine.tick(elapsed: 8, totalDuration: 300, baseStrength: 5)
         #expect(rExhale.activeChannel == .bilateral)
     }
 }

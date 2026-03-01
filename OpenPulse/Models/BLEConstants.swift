@@ -18,6 +18,7 @@ enum BLEConstants {
     static let keepaliveInterval: TimeInterval = 10
     static let statusPollInterval: TimeInterval = 30
     static let reconnectDelay: TimeInterval = 1
+    static let scanRetryDelay: TimeInterval = 3
 
     // Commands (verified on device)
     // 0 = off, A = left only, B = ramp-up to intensity, C = right only, D = bilateral

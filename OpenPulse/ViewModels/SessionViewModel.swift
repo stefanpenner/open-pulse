@@ -31,7 +31,7 @@ final class SessionViewModel: ObservableObject {
 
     var progress: Double {
         guard isRunning || isPaused, sessionTotalDuration > 0 else { return 0 }
-        return Double(remainingSeconds) / Double(sessionTotalDuration)
+        return 1.0 - Double(remainingSeconds) / Double(sessionTotalDuration)
     }
 
     private var countdownTimer: Timer?
@@ -82,7 +82,6 @@ final class SessionViewModel: ObservableObject {
     // MARK: - Actions
 
     func start() {
-        guard ble.isReady else { return }
 
         isRunning = true
         sessionTotalDuration = timerMinutes * 60
@@ -115,6 +114,7 @@ final class SessionViewModel: ObservableObject {
             ble.sendCommands([BLEConstants.activateCommand, BLEConstants.strengthCommand(strength)])
             stimulationActive = true
             activeChannel = .bilateral
+            debugActiveChannel = "D"
             modeStatus = "Bilateral · Continuous"
         }
 
@@ -135,6 +135,7 @@ final class SessionViewModel: ObservableObject {
         effectiveStrength = nil
         breathingPhase = nil
         activeChannel = .off
+        debugActiveChannel = ""
         modeStatus = ""
 
         stopCountdown()
@@ -167,7 +168,7 @@ final class SessionViewModel: ObservableObject {
     }
 
     func resume() {
-        guard isPaused, ble.isReady else { return }
+        guard isPaused else { return }
         isPaused = false
         isRunning = true
 
@@ -188,14 +189,6 @@ final class SessionViewModel: ObservableObject {
         startKeepalive()
     }
 
-    func scan() {
-        ble.scan()
-    }
-
-    func stopScan() {
-        ble.stopScan()
-    }
-
     @Published var debugActiveChannel: String = ""
 
     func sendDebugCommand(_ cmd: String) {
@@ -208,13 +201,27 @@ final class SessionViewModel: ObservableObject {
     }
 
     func increaseTimer() {
-        guard !isRunning, !isPaused else { return }
-        timerMinutes += 1
+        if isRunning || isPaused {
+            adjustRemainingTime(by: 60)
+        } else {
+            timerMinutes += 1
+        }
     }
 
     func decreaseTimer() {
-        guard !isRunning, !isPaused, timerMinutes > 1 else { return }
-        timerMinutes -= 1
+        if isRunning || isPaused {
+            adjustRemainingTime(by: -60)
+        } else {
+            guard timerMinutes > 1 else { return }
+            timerMinutes -= 1
+        }
+    }
+
+    private func adjustRemainingTime(by seconds: Int) {
+        let newRemaining = max(60, remainingSeconds + seconds)
+        let delta = newRemaining - remainingSeconds
+        remainingSeconds = newRemaining
+        sessionTotalDuration += delta
     }
 
     func setStrength(_ value: Int) {

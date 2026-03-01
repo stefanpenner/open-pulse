@@ -48,6 +48,7 @@ struct ActiveSessionLayout: View {
                     StrengthCardView(vm: vm)
 
                     if vm.selectedMode == .custom {
+                        LiveTimerStepper(vm: vm)
                         ChannelCommandPanel(vm: vm)
                     }
 
@@ -57,6 +58,37 @@ struct ActiveSessionLayout: View {
                 }
             }
         }
+    }
+}
+
+private struct LiveTimerStepper: View {
+    @ObservedObject var vm: SessionViewModel
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button { vm.decreaseTimer() } label: {
+                Image(systemName: "minus.circle.fill")
+                    .font(.body)
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .buttonStyle(.plain)
+
+            Text(vm.displayTime)
+                .font(.callout.weight(.semibold).monospacedDigit())
+                .foregroundStyle(Theme.textPrimary)
+                .contentTransition(.numericText())
+                .animation(.default, value: vm.remainingSeconds)
+
+            Button { vm.increaseTimer() } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.body)
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
+        .glassEffect(.regular, in: .capsule)
     }
 }
 
