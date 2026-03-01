@@ -10,7 +10,6 @@ Swift 6 / SwiftUI. No dependencies. No tracking. iOS 26+.
 
 <p align="center">
   <img src="screenshot-dark.png" width="300" alt="Mode picker">
-  <img src="screenshot-session.png" width="300" alt="Active session">
 </p>
 
 ## Modes

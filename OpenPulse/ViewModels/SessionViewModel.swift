@@ -318,10 +318,7 @@ final class SessionViewModel: ObservableObject {
         stopKeepalive()
         stopStatusPoll()
         // Session keeps running — countdown continues
-        Task {
-            try? await Task.sleep(for: .seconds(BLEConstants.reconnectDelay))
-            ble.scan()
-        }
+        // BLE manager owns reconnection via scheduleRetry()
     }
 
     private func resumeSessionOnDevice() {

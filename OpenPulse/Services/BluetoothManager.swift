@@ -23,6 +23,7 @@ final class BluetoothManager: NSObject, ObservableObject {
     private var autoScanTask: Task<Void, Never>?
     private var scanWhenReady = false
     private var retryCount = 0
+    private var intentionalDisconnect = false
 
     override init() {
         super.init()
@@ -61,6 +62,7 @@ final class BluetoothManager: NSObject, ObservableObject {
     }
 
     func disconnect() {
+        intentionalDisconnect = true
         if let peripheral {
             centralManager.cancelPeripheralConnection(peripheral)
         }
@@ -172,16 +174,20 @@ extension BluetoothManager: CBCentralManagerDelegate {
         Task { @MainActor in
             logger.error("Failed to connect: \(error?.localizedDescription ?? "unknown")")
             cleanup()
-            try? await Task.sleep(for: .seconds(BLEConstants.reconnectDelay))
-            scan()
+            scheduleRetry()
         }
     }
 
     nonisolated func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         Task { @MainActor in
             logger.info("Disconnected: \(error?.localizedDescription ?? "clean")")
+            let wasIntentional = intentionalDisconnect
+            intentionalDisconnect = false
             cleanup()
             onDisconnect?()
+            if !wasIntentional {
+                scheduleRetry()
+            }
         }
     }
 }

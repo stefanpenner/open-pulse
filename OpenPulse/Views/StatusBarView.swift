@@ -6,6 +6,9 @@ struct StatusBarView: View {
     var body: some View {
         HStack(spacing: 12) {
             connectionControl
+                .animation(.easeInOut(duration: 0.3), value: vm.ble.isConnected)
+                .animation(.easeInOut(duration: 0.3), value: vm.ble.isReady)
+                .animation(.easeInOut(duration: 0.3), value: vm.ble.isBluetoothOff)
 
             Spacer()
 
@@ -16,6 +19,12 @@ struct StatusBarView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
+        .sensoryFeedback(.success, trigger: vm.ble.isReady) { old, new in
+            !old && new
+        }
+        .sensoryFeedback(trigger: vm.ble.isConnected) { old, new in
+            old && !new ? .warning : nil
+        }
     }
 
     @ViewBuilder
@@ -31,6 +40,7 @@ struct StatusBarView: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.textSecondary)
             }
+            .transition(.blurReplace)
         } else if vm.ble.isConnected {
             HStack(spacing: 6) {
                 ProgressView()
@@ -41,6 +51,7 @@ struct StatusBarView: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.connectedGreen)
             }
+            .transition(.blurReplace)
         } else if vm.ble.isBluetoothOff {
             HStack(spacing: 6) {
                 Image(systemName: "antenna.radiowaves.left.and.right.slash")
@@ -51,6 +62,7 @@ struct StatusBarView: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.disconnectedRed)
             }
+            .transition(.blurReplace)
         } else {
             HStack(spacing: 6) {
                 ProgressView()
@@ -61,6 +73,7 @@ struct StatusBarView: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.accentBlue)
             }
+            .transition(.blurReplace)
         }
     }
 
