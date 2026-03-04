@@ -6,6 +6,9 @@ enum StimulationMode: String, CaseIterable, Identifiable {
     case focus
     case painRelief
     case calm
+    case headache
+    case nausea
+    case meditation
     case custom
 
     var id: String { rawValue }
@@ -17,6 +20,9 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         case .focus:        "Focus"
         case .painRelief:   "Pain Relief"
         case .calm:         "Calm"
+        case .headache:     "Headache"
+        case .nausea:       "Nausea"
+        case .meditation:   "Meditation"
         case .custom:       "Custom"
         }
     }
@@ -28,6 +34,9 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         case .focus:        "brain.head.profile"
         case .painRelief:   "cross.fill"
         case .calm:         "wind"
+        case .headache:     "bolt.fill"
+        case .nausea:       "pills.fill"
+        case .meditation:   "leaf.fill"
         case .custom:       "slider.horizontal.3"
         }
     }
@@ -39,6 +48,9 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         case .focus:        6
         case .painRelief:   8
         case .calm:         5
+        case .headache:     6
+        case .nausea:       5
+        case .meditation:   10
         case .custom:       10
         }
     }
@@ -50,6 +62,9 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         case .focus:        5
         case .painRelief:   5
         case .calm:         5
+        case .headache:     7
+        case .nausea:       5
+        case .meditation:   4
         case .custom:       5
         }
     }
@@ -61,6 +76,9 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         case .focus:        Theme.accentAmber
         case .painRelief:   Theme.accentBlue
         case .calm:         Theme.accentCyan
+        case .headache:     Theme.accentRed
+        case .nausea:       Theme.accentMint
+        case .meditation:   Theme.accentIndigo
         case .custom:       Theme.textSecondary
         }
     }
@@ -72,6 +90,9 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         case .focus:        "Left-side only, 30s on/off duty cycles at constant intensity."
         case .painRelief:   "Bilateral with oscillating intensity on a 30-second wave."
         case .calm:         "Respiratory-gated: stimulates on exhale, pauses on inhale."
+        case .headache:     "High-intensity bilateral bursts with brief pauses, based on gammaCore protocol."
+        case .nausea:       "Continuous bilateral stimulation targeting vagal anti-nausea pathways."
+        case .meditation:   "Slower respiratory gating (5 breaths/min) to deepen meditative states."
         case .custom:       "Manual control — set your own timer and intensity."
         }
     }
@@ -108,6 +129,22 @@ enum StimulationMode: String, CaseIterable, Identifiable {
                 ("Garcia 2021 – RAVANS depression", "https://pmc.ncbi.nlm.nih.gov/articles/PMC8429271/"),
                 ("Paleczny 2019 – Respiratory gating HR", "https://pmc.ncbi.nlm.nih.gov/articles/PMC8041682/"),
             ]
+        case .headache:
+            [
+                ("nVNS migraine meta-analysis 2023", "https://pmc.ncbi.nlm.nih.gov/articles/PMC10213755/"),
+                ("gammaCore registry – 70% response", "https://pubmed.ncbi.nlm.nih.gov/32109020/"),
+            ]
+        case .nausea:
+            [
+                ("nVNS nausea in gastroparesis 2023", "https://journals.lww.com/ajg/fulltext/2023/10001/s1846_non_invasive_vagal_nerve_stimulation_reduces.2187.aspx"),
+                ("taVNS motion sickness 2024", "https://pmc.ncbi.nlm.nih.gov/articles/PMC11531436/"),
+            ]
+        case .meditation:
+            [
+                ("tVNS + meditation RCT 2025", "https://pmc.ncbi.nlm.nih.gov/articles/PMC12341030/"),
+                ("Sclocco 2019 – RAVANS 7T fMRI", "https://pmc.ncbi.nlm.nih.gov/articles/PMC6592731/"),
+                ("Paleczny 2019 – Respiratory gating HR", "https://pmc.ncbi.nlm.nih.gov/articles/PMC8041682/"),
+            ]
         case .custom:
             []
         }
@@ -120,7 +157,27 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         case .focus:        "Moderate-Strong"
         case .painRelief:   "Weak"
         case .calm:         "Strong"
+        case .headache:     "Strong"
+        case .nausea:       "Moderate"
+        case .meditation:   "Moderate"
         case .custom:       ""
+        }
+    }
+
+    /// Whether this mode uses a breathing guide UI instead of the standard timer hero.
+    var usesBreathingGuide: Bool {
+        switch self {
+        case .calm, .meditation: true
+        default: false
+        }
+    }
+
+    /// The breathing cycle parameters, if this mode uses respiratory gating.
+    var breathingCycle: BreathingCycle? {
+        switch self {
+        case .calm: .calm
+        case .meditation: .meditation
+        default: nil
         }
     }
 
@@ -130,7 +187,10 @@ enum StimulationMode: String, CaseIterable, Identifiable {
         case .sleep:        SleepEngine()
         case .focus:        FocusEngine()
         case .painRelief:   PainReliefEngine()
-        case .calm:         CalmEngine()
+        case .calm:         CalmEngine.make()
+        case .headache:     HeadacheEngine()
+        case .nausea:       NauseaEngine()
+        case .meditation:   MeditationEngine.make()
         case .custom:       nil
         }
     }

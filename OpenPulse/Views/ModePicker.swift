@@ -50,7 +50,6 @@ struct ExpandedModePicker: View {
                 FeelingCard(
                     icon: state.icon,
                     label: state.label,
-                    subtitle: state.primaryMode.name,
                     accentColor: state.accentColor,
                     isSelected: vm.selectedFeeling == state,
                     expanded: true,
@@ -62,7 +61,6 @@ struct ExpandedModePicker: View {
             FeelingCard(
                 icon: "slider.horizontal.3",
                 label: "Custom",
-                subtitle: "Manual",
                 accentColor: Theme.textSecondary,
                 isSelected: vm.selectedMode == .custom && vm.selectedFeeling == nil,
                 expanded: true,
