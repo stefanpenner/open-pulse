@@ -44,6 +44,16 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onReceive(NotificationCenter.default.publisher(for: .appScenePhaseChanged)) { notification in
+            guard let userInfo = notification.userInfo,
+                  let oldPhase = userInfo["oldPhase"] as? ScenePhase,
+                  let newPhase = userInfo["newPhase"] as? ScenePhase else { return }
+            if newPhase == .background {
+                vm.handleBackgroundTransition()
+            } else if oldPhase == .background {
+                vm.handleForegroundTransition()
+            }
+        }
     }
 }
 

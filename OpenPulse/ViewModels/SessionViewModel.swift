@@ -35,7 +35,7 @@ final class SessionViewModel: ObservableObject {
     }
 
     private var countdownTimer: Timer?
-    private var keepaliveTimer: Timer?
+    private var keepaliveSource: DispatchSourceTimer?
     private var statusPollTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
 
@@ -43,7 +43,14 @@ final class SessionViewModel: ObservableObject {
     private var sessionTotalDuration = 0
     private var elapsed: Int { sessionTotalDuration - remainingSeconds }
 
-    init() {
+    // Wall-clock tracking (internal for testability)
+    var sessionStartDate: Date?
+    var accumulatedPauseTime: TimeInterval = 0
+    private var pauseStartDate: Date?
+    var backgroundEntryDate: Date?
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         ble.onDisconnect = { [weak self] in
             Task { @MainActor [weak self] in
                 self?.handleDisconnect()
@@ -61,6 +68,8 @@ final class SessionViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+
+        restoreSessionIfNeeded()
     }
 
     // MARK: - Mode Selection
@@ -87,6 +96,12 @@ final class SessionViewModel: ObservableObject {
         sessionTotalDuration = timerMinutes * 60
         remainingSeconds = sessionTotalDuration
         UIApplication.shared.isIdleTimerDisabled = true
+
+        // Wall-clock tracking
+        sessionStartDate = Date()
+        accumulatedPauseTime = 0
+        pauseStartDate = nil
+        backgroundEntryDate = nil
 
         // Initialize engine
         engine = selectedMode.makeEngine()
@@ -120,6 +135,7 @@ final class SessionViewModel: ObservableObject {
 
         startCountdown()
         startKeepalive()
+        persistSession()
     }
 
     func stop() {
@@ -128,6 +144,12 @@ final class SessionViewModel: ObservableObject {
         remainingSeconds = 0
         sessionTotalDuration = 0
         UIApplication.shared.isIdleTimerDisabled = false
+
+        // Clear wall-clock state
+        sessionStartDate = nil
+        accumulatedPauseTime = 0
+        pauseStartDate = nil
+        backgroundEntryDate = nil
 
         // Clear engine state
         engine = nil
@@ -140,6 +162,7 @@ final class SessionViewModel: ObservableObject {
 
         stopCountdown()
         stopKeepalive()
+        clearPersistedSession()
 
         if ble.isConnected {
             ble.sendCommand(BLEConstants.deactivateCommand)
@@ -151,6 +174,9 @@ final class SessionViewModel: ObservableObject {
         guard isRunning else { return }
         isPaused = true
         isRunning = false
+
+        // Record pause start for wall-clock tracking
+        pauseStartDate = Date()
 
         stopCountdown()
         stopKeepalive()
@@ -165,12 +191,22 @@ final class SessionViewModel: ObservableObject {
         effectiveStrength = nil
         breathingPhase = nil
         activeChannel = .off
+        persistSession()
     }
 
     func resume() {
         guard isPaused else { return }
         isPaused = false
         isRunning = true
+
+        // Accumulate paused duration
+        if let pauseStart = pauseStartDate {
+            accumulatedPauseTime += Date().timeIntervalSince(pauseStart)
+            pauseStartDate = nil
+        }
+
+        // Recalculate from wall clock after resume
+        recalculateFromWallClock()
 
         // Re-activate with correct mode state
         if let engine {
@@ -187,6 +223,7 @@ final class SessionViewModel: ObservableObject {
         stimulationActive = true
         startCountdown()
         startKeepalive()
+        persistSession()
     }
 
     @Published var debugActiveChannel: String = ""
@@ -231,6 +268,68 @@ final class SessionViewModel: ObservableObject {
         ble.sendCommand(BLEConstants.strengthCommand(clamped))
     }
 
+    // MARK: - Wall-Clock Recalculation
+
+    private func recalculateFromWallClock() {
+        guard let startDate = sessionStartDate else { return }
+
+        let now = Date()
+        let totalElapsed = now.timeIntervalSince(startDate)
+        let activeElapsed = totalElapsed - accumulatedPauseTime
+        let elapsedSeconds = Int(activeElapsed)
+        let newRemaining = max(0, sessionTotalDuration - elapsedSeconds)
+
+        if newRemaining <= 0 {
+            stop()
+            return
+        }
+
+        remainingSeconds = newRemaining
+        processTick()
+    }
+
+    // MARK: - Scene Phase
+
+    func scenePhaseHandler(from oldPhase: Any, to newPhase: Any) {
+        // Import SwiftUI's ScenePhase values via string comparison to avoid
+        // importing SwiftUI in this ViewModel. The caller passes ScenePhase values.
+        scenePhaseTransition(wentToBackground: "\(newPhase)" == "background",
+                             returnedToForeground: "\(oldPhase)" == "background" && "\(newPhase)" != "background")
+    }
+
+    func handleBackgroundTransition() {
+        scenePhaseTransition(wentToBackground: true, returnedToForeground: false)
+    }
+
+    func handleForegroundTransition() {
+        scenePhaseTransition(wentToBackground: false, returnedToForeground: true)
+    }
+
+    private func scenePhaseTransition(wentToBackground: Bool, returnedToForeground: Bool) {
+        if wentToBackground {
+            guard isRunning else { return }
+            backgroundEntryDate = Date()
+            // Stop the countdown timer — it won't fire reliably in background.
+            // Keepalive continues via DispatchSourceTimer + bluetooth-central background mode.
+            stopCountdown()
+            persistSession()
+        }
+
+        if returnedToForeground {
+            backgroundEntryDate = nil
+            guard isRunning else { return }
+            // Recalculate elapsed time from wall clock.
+            // This may call stop() if the session expired while backgrounded.
+            recalculateFromWallClock()
+            // Only resume if the session is still active after recalculation.
+            guard isRunning else { return }
+            // Resend correct BLE commands to device
+            resumeSessionOnDevice()
+            // Restart UI countdown timer
+            startCountdown()
+        }
+    }
+
     // MARK: - Timers
 
     private func startCountdown() {
@@ -238,12 +337,7 @@ final class SessionViewModel: ObservableObject {
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                if self.remainingSeconds <= 1 {
-                    self.stop()
-                } else {
-                    self.remainingSeconds -= 1
-                    self.processTick()
-                }
+                self.recalculateFromWallClock()
             }
         }
     }
@@ -276,21 +370,31 @@ final class SessionViewModel: ObservableObject {
         countdownTimer = nil
     }
 
-    private func startKeepalive() {
-        stopKeepalive()
-        keepaliveTimer = Timer.scheduledTimer(withTimeInterval: BLEConstants.keepaliveInterval, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                guard let self, self.isRunning, self.ble.isConnected else { return }
-                guard self.stimulationActive else { return }
-                let s = self.effectiveStrength ?? self.strength
-                self.ble.sendCommand(BLEConstants.strengthCommand(s))
-            }
+    private nonisolated func sendKeepalive() {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            guard self.isRunning, self.ble.isConnected else { return }
+            guard self.stimulationActive else { return }
+            let s = self.effectiveStrength ?? self.strength
+            self.ble.sendCommand(BLEConstants.strengthCommand(s))
         }
     }
 
+    private func startKeepalive() {
+        stopKeepalive()
+        let source = DispatchSource.makeTimerSource(queue: .global())
+        source.schedule(deadline: .now() + BLEConstants.keepaliveInterval,
+                        repeating: BLEConstants.keepaliveInterval)
+        source.setEventHandler { [weak self] in
+            self?.sendKeepalive()
+        }
+        source.resume()
+        keepaliveSource = source
+    }
+
     private func stopKeepalive() {
-        keepaliveTimer?.invalidate()
-        keepaliveTimer = nil
+        keepaliveSource?.cancel()
+        keepaliveSource = nil
     }
 
     private func startStatusPoll() {
@@ -337,5 +441,116 @@ final class SessionViewModel: ObservableObject {
         }
 
         startKeepalive()
+    }
+
+    // MARK: - Session Persistence
+
+    let defaults: UserDefaults
+    private enum PersistKey {
+        static let startDate = "session.startDate"
+        static let totalDuration = "session.totalDuration"
+        static let pauseTime = "session.accumulatedPauseTime"
+        static let pauseStartDate = "session.pauseStartDate"
+        static let isPaused = "session.isPaused"
+        static let mode = "session.mode"
+        static let feeling = "session.feeling"
+        static let strength = "session.strength"
+    }
+
+    private func persistSession() {
+        let d = defaults
+        d.set(sessionStartDate?.timeIntervalSince1970, forKey: PersistKey.startDate)
+        d.set(sessionTotalDuration, forKey: PersistKey.totalDuration)
+        d.set(accumulatedPauseTime, forKey: PersistKey.pauseTime)
+        d.set(pauseStartDate?.timeIntervalSince1970, forKey: PersistKey.pauseStartDate)
+        d.set(isPaused, forKey: PersistKey.isPaused)
+        d.set(selectedMode.rawValue, forKey: PersistKey.mode)
+        d.set(selectedFeeling?.rawValue, forKey: PersistKey.feeling)
+        d.set(strength, forKey: PersistKey.strength)
+    }
+
+    private func clearPersistedSession() {
+        let d = defaults
+        for key in [PersistKey.startDate, PersistKey.totalDuration, PersistKey.pauseTime,
+                    PersistKey.pauseStartDate, PersistKey.isPaused, PersistKey.mode,
+                    PersistKey.feeling, PersistKey.strength] {
+            d.removeObject(forKey: key)
+        }
+    }
+
+    private func restoreSessionIfNeeded() {
+        let d = defaults
+        guard let startTimestamp = d.object(forKey: PersistKey.startDate) as? TimeInterval else { return }
+
+        let startDate = Date(timeIntervalSince1970: startTimestamp)
+        let totalDuration = d.integer(forKey: PersistKey.totalDuration)
+        guard totalDuration > 0 else { clearPersistedSession(); return }
+
+        let pauseTime = d.double(forKey: PersistKey.pauseTime)
+        let wasPaused = d.bool(forKey: PersistKey.isPaused)
+
+        // Restore mode/feeling
+        if let modeRaw = d.string(forKey: PersistKey.mode),
+           let mode = StimulationMode(rawValue: modeRaw) {
+            selectedMode = mode
+        }
+        if let feelingRaw = d.string(forKey: PersistKey.feeling),
+           let feeling = AutonomicState(rawValue: feelingRaw) {
+            selectedFeeling = feeling
+        }
+        strength = d.integer(forKey: PersistKey.strength)
+        if strength == 0 { strength = 5 }
+
+        // Restore wall-clock state
+        sessionStartDate = startDate
+        sessionTotalDuration = totalDuration
+        accumulatedPauseTime = pauseTime
+
+        if wasPaused {
+            // Restore paused state — accumulate time from pause start to now
+            if let pauseTimestamp = d.object(forKey: PersistKey.pauseStartDate) as? TimeInterval {
+                pauseStartDate = Date(timeIntervalSince1970: pauseTimestamp)
+            } else {
+                pauseStartDate = Date()
+            }
+            // Recalculate remaining without the current pause duration
+            let totalElapsed = Date().timeIntervalSince(startDate)
+            let activeElapsed = totalElapsed - pauseTime - Date().timeIntervalSince(pauseStartDate ?? Date())
+            let remaining = max(0, totalDuration - Int(activeElapsed))
+            if remaining <= 0 {
+                clearPersistedSession()
+                return
+            }
+            remainingSeconds = remaining
+            isPaused = true
+            isRunning = false
+            engine = selectedMode.makeEngine()
+            UIApplication.shared.isIdleTimerDisabled = true
+        } else {
+            // Restore running state — recalculate from wall clock
+            let totalElapsed = Date().timeIntervalSince(startDate)
+            let activeElapsed = totalElapsed - pauseTime
+            let remaining = max(0, totalDuration - Int(activeElapsed))
+            if remaining <= 0 {
+                clearPersistedSession()
+                return
+            }
+            remainingSeconds = remaining
+            isRunning = true
+            engine = selectedMode.makeEngine()
+            // Start the engine so its internal state is initialized
+            if var engine {
+                _ = engine.start(baseStrength: strength, totalDuration: totalDuration)
+                self.engine = engine
+            }
+            UIApplication.shared.isIdleTimerDisabled = true
+            stimulationActive = true
+
+            // Catch up engine state to current elapsed
+            processTick()
+
+            startCountdown()
+            startKeepalive()
+        }
     }
 }
