@@ -35,7 +35,7 @@ final class SessionViewModel: ObservableObject {
     }
 
     private var countdownTimer: Timer?
-    private var keepaliveSource: DispatchSourceTimer?
+    private var keepaliveTimer: Timer?
     private var statusPollTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
 
@@ -310,8 +310,13 @@ final class SessionViewModel: ObservableObject {
             guard isRunning else { return }
             backgroundEntryDate = Date()
             // Stop the countdown timer — it won't fire reliably in background.
-            // Keepalive continues via DispatchSourceTimer + bluetooth-central background mode.
             stopCountdown()
+            stopKeepalive()
+            // Cleanly deactivate device before iOS suspends us;
+            // resumeSessionOnDevice() will reactivate on foreground return.
+            if ble.isConnected {
+                ble.sendCommand(BLEConstants.deactivateCommand)
+            }
             persistSession()
         }
 
@@ -370,31 +375,22 @@ final class SessionViewModel: ObservableObject {
         countdownTimer = nil
     }
 
-    private nonisolated func sendKeepalive() {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            guard self.isRunning, self.ble.isConnected else { return }
-            guard self.stimulationActive else { return }
-            let s = self.effectiveStrength ?? self.strength
-            self.ble.sendCommand(BLEConstants.strengthCommand(s))
-        }
-    }
-
     private func startKeepalive() {
         stopKeepalive()
-        let source = DispatchSource.makeTimerSource(queue: .global())
-        source.schedule(deadline: .now() + BLEConstants.keepaliveInterval,
-                        repeating: BLEConstants.keepaliveInterval)
-        source.setEventHandler { [weak self] in
-            self?.sendKeepalive()
+        keepaliveTimer = Timer.scheduledTimer(withTimeInterval: BLEConstants.keepaliveInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                guard self.isRunning, self.ble.isConnected else { return }
+                guard self.stimulationActive else { return }
+                let s = self.effectiveStrength ?? self.strength
+                self.ble.sendCommand(BLEConstants.strengthCommand(s))
+            }
         }
-        source.resume()
-        keepaliveSource = source
     }
 
     private func stopKeepalive() {
-        keepaliveSource?.cancel()
-        keepaliveSource = nil
+        keepaliveTimer?.invalidate()
+        keepaliveTimer = nil
     }
 
     private func startStatusPoll() {
