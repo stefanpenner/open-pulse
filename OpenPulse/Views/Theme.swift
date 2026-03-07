@@ -14,6 +14,8 @@ enum Theme {
     static let accentPurple = Color(hex: 0xA855F7)
     static let accentAmber = Color(hex: 0xF59E0B)
     static let accentCyan = Color(hex: 0x06B6D4)
+    static let accentMint = Color(hex: 0x34D399)
+    static let accentIndigo = Color(hex: 0x818CF8)
 
     // Text
     static let textPrimary = Color.white

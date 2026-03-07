@@ -7,23 +7,31 @@ struct BreathingGuideView: View {
         guard let phase = vm.breathingPhase else { return "" }
         switch phase {
         case .inhale: return "Inhale"
-        case .hold: return "Hold"
+        case .hold:   return "Hold"
         case .exhale: return "Exhale"
+        case .rest:   return ""  // quiet gap — no label
         }
+    }
+
+    private var cycle: BreathingCycle {
+        vm.selectedMode.breathingCycle ?? .calm
     }
 
     private var phaseCountdown: String {
         guard let phase = vm.breathingPhase else { return "" }
         switch phase {
-        case .inhale(let p): return secsLeft(progress: p, duration: 5)
-        case .hold(let p): return secsLeft(progress: p, duration: 3)
-        case .exhale(let p): return secsLeft(progress: p, duration: 7)
+        case .inhale(let p): return secsLeft(progress: p, duration: cycle.inhaleDuration)
+        case .hold(let p):   return secsLeft(progress: p, duration: cycle.holdDuration)
+        case .exhale(let p): return secsLeft(progress: p, duration: cycle.exhaleDuration)
+        case .rest:          return ""  // quiet gap — no number
         }
     }
 
     private func secsLeft(progress: Double, duration: Int) -> String {
-        let remaining = max(1, Int(ceil(Double(duration) * (1.0 - progress))))
-        return "\(remaining)"
+        // Count from duration down to 1. Each tick shows the number for a full second
+        // before decrementing: e.g. for 5s → "5","4","3","2","1" then phase transitions.
+        let remaining = duration - Int((Double(duration) * progress).rounded(.down))
+        return "\(max(1, remaining))"
     }
 
     private var circleScale: CGFloat {
@@ -32,6 +40,7 @@ struct BreathingGuideView: View {
         case .inhale(let progress): return 0.5 + 0.5 * progress
         case .hold: return 1.0
         case .exhale(let progress): return 1.0 - 0.5 * progress
+        case .rest: return 0.5  // stays contracted, stillness
         }
     }
 
@@ -41,6 +50,7 @@ struct BreathingGuideView: View {
         case .inhale: return Theme.accentPurple
         case .hold: return Theme.accentAmber
         case .exhale: return Theme.accentCyan
+        case .rest: return Theme.textTertiary
         }
     }
 
@@ -61,7 +71,7 @@ struct BreathingGuideView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(phaseColor)
                 .contentTransition(.interpolate)
-                .animation(.easeInOut(duration: 1.2), value: phaseLabel)
+                .animation(.easeInOut(duration: 1.8), value: phaseLabel)
 
             ZStack {
                 // Outer ring — color blends with phase
@@ -101,8 +111,8 @@ struct BreathingGuideView: View {
                     .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.6), value: phaseCountdown)
             }
-            .animation(.easeInOut(duration: 1.5), value: circleScale)
-            .animation(.easeInOut(duration: 1.2), value: phaseColor)
+            .animation(.easeInOut(duration: 2.0), value: circleScale)
+            .animation(.easeInOut(duration: 1.8), value: phaseColor)
             .sensoryFeedback(trigger: phaseLabel) { _, newPhase in
                 switch newPhase {
                 case "Inhale": .impact(weight: .light, intensity: 0.4)
@@ -117,7 +127,8 @@ struct BreathingGuideView: View {
                 BreathingProgressBar(
                     progress: vm.progress,
                     phaseColor: phaseColor,
-                    sessionSeconds: vm.timerMinutes * 60
+                    sessionSeconds: vm.timerMinutes * 60,
+                    cycle: cycle
                 )
 
                 Text(vm.displayTime)
@@ -136,24 +147,30 @@ private struct BreathingProgressBar: View {
     let progress: Double
     let phaseColor: Color
     let sessionSeconds: Int
+    let cycle: BreathingCycle
 
     private let barHeight: CGFloat = 6
 
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                // Background: cycle pattern showing inhale/hold/exhale phases
+                // Background: cycle pattern showing inhale/hold/exhale/rest phases
                 Canvas { context, size in
                     let total = max(1.0, Double(sessionSeconds))
-                    let cycleLen = 15.0
+                    let cycleLen = Double(cycle.cycleLength)
                     let cycleW = cycleLen / total * size.width
                     let cycles = Int(ceil(size.width / max(1, cycleW)))
 
+                    let inhaleFrac = Double(cycle.inhaleDuration) / cycleLen
+                    let holdFrac = Double(cycle.holdDuration) / cycleLen
+                    let exhaleFrac = Double(cycle.exhaleDuration) / cycleLen
+                    // rest occupies remaining fraction — drawn as gap (no fill)
+
                     for i in 0..<cycles {
                         let x = Double(i) * cycleW
-                        let inhaleW = 5.0 / 15.0 * cycleW
-                        let holdW = 3.0 / 15.0 * cycleW
-                        let exhaleW = 7.0 / 15.0 * cycleW
+                        let inhaleW = inhaleFrac * cycleW
+                        let holdW = holdFrac * cycleW
+                        let exhaleW = exhaleFrac * cycleW
 
                         context.fill(
                             Path(CGRect(x: x, y: 0, width: inhaleW, height: size.height)),
@@ -167,6 +184,7 @@ private struct BreathingProgressBar: View {
                             Path(CGRect(x: x + inhaleW + holdW, y: 0, width: min(exhaleW, size.width - x - inhaleW - holdW), height: size.height)),
                             with: .color(Theme.accentCyan.opacity(0.2))
                         )
+                        // Rest segment: no fill (gap between cycles)
                     }
                 }
                 .clipShape(Capsule())

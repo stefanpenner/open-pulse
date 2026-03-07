@@ -7,6 +7,9 @@ enum AutonomicState: String, CaseIterable, Identifiable {
     case wired
     case foggy
     case hurting
+    case headachy
+    case nauseous
+    case scattered
 
     var id: String { rawValue }
 
@@ -17,6 +20,9 @@ enum AutonomicState: String, CaseIterable, Identifiable {
         case .wired:     "Can't Sleep"
         case .foggy:     "Foggy"
         case .hurting:   "In Pain"
+        case .headachy:  "Headache"
+        case .nauseous:  "Nauseous"
+        case .scattered: "Scattered"
         }
     }
 
@@ -31,6 +37,9 @@ enum AutonomicState: String, CaseIterable, Identifiable {
         case .wired:     .sleep
         case .foggy:     .focus
         case .hurting:   .painRelief
+        case .headachy:  .headache
+        case .nauseous:  .nausea
+        case .scattered: .meditation
         }
     }
 }

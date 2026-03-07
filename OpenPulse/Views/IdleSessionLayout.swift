@@ -32,7 +32,7 @@ struct IdleSessionLayout: View {
     }
 }
 
-private struct ModeInfoSheet: View {
+struct ModeInfoSheet: View {
     let mode: StimulationMode
     @Environment(\.dismiss) private var dismiss
 

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ActiveSessionLayout: View {
     @ObservedObject var vm: SessionViewModel
+    @State private var showingInfo = false
 
     var body: some View {
         GeometryReader { geo in
@@ -12,10 +13,21 @@ struct ActiveSessionLayout: View {
                 VStack(spacing: 12) {
                     StatusBarView(vm: vm)
 
-                    Text(vm.selectedMode.name)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(vm.selectedMode.accentColor)
-                        .tracking(0.5)
+                    HStack(spacing: 6) {
+                        Text(vm.selectedMode.name)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(vm.selectedMode.accentColor)
+                            .tracking(0.5)
+
+                        if vm.selectedMode != .custom {
+                            Button { showingInfo = true } label: {
+                                Image(systemName: "info.circle")
+                                    .font(.caption)
+                                    .foregroundStyle(vm.selectedMode.accentColor.opacity(0.6))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
 
                     ChannelIndicatorView(
                         activeChannel: vm.activeChannel,
@@ -24,7 +36,7 @@ struct ActiveSessionLayout: View {
 
                     Spacer(minLength: 0)
 
-                    if vm.selectedMode == .calm {
+                    if vm.selectedMode.usesBreathingGuide {
                         BreathingGuideView(vm: vm)
                     } else {
                         HeroTimerView(vm: vm)
@@ -57,6 +69,11 @@ struct ActiveSessionLayout: View {
                     ActionButtonView(vm: vm)
                 }
             }
+        }
+        .sheet(isPresented: $showingInfo) {
+            ModeInfoSheet(mode: vm.selectedMode)
+                .presentationDetents([.medium])
+                .preferredColorScheme(.dark)
         }
     }
 }

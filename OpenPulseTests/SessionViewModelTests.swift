@@ -349,7 +349,7 @@ struct AutonomicStateTests {
     @Test("Case order matches grid layout")
     func caseOrder() {
         let cases = AutonomicState.allCases
-        #expect(cases == [.stressed, .anxious, .wired, .foggy, .hurting])
+        #expect(cases == [.stressed, .anxious, .wired, .foggy, .hurting, .headachy, .nauseous, .scattered])
     }
 
     @Test("Labels are user-facing feeling words")
@@ -359,6 +359,9 @@ struct AutonomicStateTests {
         #expect(AutonomicState.wired.label == "Can't Sleep")
         #expect(AutonomicState.foggy.label == "Foggy")
         #expect(AutonomicState.hurting.label == "In Pain")
+        #expect(AutonomicState.headachy.label == "Headache")
+        #expect(AutonomicState.nauseous.label == "Nauseous")
+        #expect(AutonomicState.scattered.label == "Scattered")
     }
 }
 
