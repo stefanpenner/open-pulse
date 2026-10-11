@@ -2,8 +2,23 @@ import SwiftUI
 
 struct BreathingGuideView: View {
     @ObservedObject var vm: SessionViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .largeTitle) private var outerRingSize: CGFloat = 160
+    @ScaledMetric(relativeTo: .largeTitle) private var breathCircleSize: CGFloat = 140
+    @ScaledMetric(relativeTo: .largeTitle) private var holdGlowSize: CGFloat = 150
+    @ScaledMetric(relativeTo: .largeTitle) private var innerGlowSize: CGFloat = 60
 
     private var phaseLabel: String {
+        // Pause / offline / incomplete stop-off use shared status (matches Island + hero).
+        // Mid-run durable pending alone must not replace breath phase — use Reconnecting via link.
+        let showPendingOff = PendingOffPresentation.shouldShowBanner(
+            isRunning: vm.isRunning,
+            pendingDeviceOff: vm.pendingDeactivate
+        )
+        if vm.isPaused || showPendingOff || !vm.ble.isReady {
+            return vm.sessionStatusText
+        }
         guard let phase = vm.breathingPhase else { return "" }
         switch phase {
         case .inhale: return "Inhale"
@@ -14,10 +29,18 @@ struct BreathingGuideView: View {
     }
 
     private var cycle: BreathingCycle {
-        vm.selectedMode.breathingCycle ?? .calm
+        // Align UI with resolveEngine: primary Breathe uses pace; legacy meditation uses med cycle
+        if vm.selectedMode == .calm {
+            return vm.breathePace.cycle
+        }
+        if vm.selectedMode == .meditation {
+            return .meditation
+        }
+        return vm.selectedMode.breathingCycle ?? vm.breathePace.cycle
     }
 
     private var phaseCountdown: String {
+        if vm.isPaused { return "—" }
         guard let phase = vm.breathingPhase else { return "" }
         switch phase {
         case .inhale(let p): return secsLeft(progress: p, duration: cycle.inhaleDuration)
@@ -54,9 +77,9 @@ struct BreathingGuideView: View {
         }
     }
 
+    /// Matches engine stim window (late inhale prep + hold + exhale), not exhale-only.
     private var isActive: Bool {
-        if case .exhale = vm.breathingPhase { return true }
-        return false
+        vm.stimulationActive && !vm.isPaused
     }
 
     private var isHolding: Bool {
@@ -64,56 +87,81 @@ struct BreathingGuideView: View {
         return false
     }
 
+    private var breathingAccessibilityLabel: String {
+        let showPendingOff = PendingOffPresentation.shouldShowBanner(
+            isRunning: vm.isRunning,
+            pendingDeviceOff: vm.pendingDeactivate
+        )
+        if vm.isPaused || showPendingOff || !vm.ble.isReady {
+            return vm.sessionStatusText
+        }
+        let phase = phaseLabel.isEmpty ? "Breathing" : phaseLabel
+        let count = phaseCountdown.isEmpty || phaseCountdown == "—" ? "" : ", \(phaseCountdown)"
+        let stim = isActive ? ", session active" : ""
+        return "\(phase)\(count)\(stim)"
+    }
+
     var body: some View {
         VStack(spacing: 10) {
-            // Phase label above circle
+            // Phase label above circle (title2+ at accessibility sizes)
             Text(phaseLabel)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(phaseColor)
-                .contentTransition(.interpolate)
-                .animation(.easeInOut(duration: 1.8), value: phaseLabel)
+                .font(
+                    vm.isPaused
+                        ? Theme.statusLabel
+                        : (dynamicTypeSize.isAccessibilitySize
+                            ? .title2.weight(.regular)
+                            : Theme.breathingLabel)
+                )
+                .foregroundStyle(vm.isPaused ? Theme.accentAmber : phaseColor)
+                .minimumScaleFactor(0.8)
+                .lineLimit(2)
+                .contentTransition(reduceMotion ? .identity : .interpolate)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 1.8), value: phaseLabel)
 
             ZStack {
                 // Outer ring — color blends with phase
                 Circle()
-                    .stroke(phaseColor.opacity(0.12), lineWidth: 1.5)
-                    .frame(width: 160, height: 160)
+                    .stroke((vm.isPaused ? Theme.accentAmber : phaseColor).opacity(0.12), lineWidth: 1.5)
+                    .frame(width: outerRingSize, height: outerRingSize)
 
                 // Breathing circle
                 Circle()
-                    .fill(phaseColor.opacity(0.25))
-                    .frame(width: 140, height: 140)
-                    .scaleEffect(circleScale)
+                    .fill((vm.isPaused ? Theme.accentAmber : phaseColor).opacity(0.25))
+                    .frame(width: breathCircleSize, height: breathCircleSize)
+                    .scaleEffect(vm.isPaused ? 0.85 : circleScale)
 
-                // Hold glow — always rendered, opacity-driven
+                // Hold glow — static when Reduce Motion; pulse otherwise
                 Circle()
                     .fill(phaseColor.opacity(0.15))
-                    .frame(width: 150, height: 150)
+                    .frame(width: holdGlowSize, height: holdGlowSize)
                     .blur(radius: 12)
-                    .opacity(isHolding ? 1 : 0)
-                    .phaseAnimator([false, true]) { content, phase in
-                        content.opacity(isHolding ? (phase ? 0.8 : 0.4) : 0)
-                    } animation: { _ in
-                        .easeInOut(duration: 1.2)
-                    }
+                    .opacity(isHolding && !vm.isPaused ? (reduceMotion ? 0.6 : 1) : 0)
+                    .modifier(HoldPulseModifier(
+                        isActive: isHolding && !vm.isPaused && !reduceMotion
+                    ))
 
-                // Inner glow
+                // Inner glow — follows stimulationActive (prep + hold + exhale)
                 Circle()
                     .fill(phaseColor.opacity(isActive ? 0.12 : 0))
-                    .frame(width: 60, height: 60)
+                    .frame(width: innerGlowSize, height: innerGlowSize)
                     .scaleEffect(circleScale)
                     .blur(radius: 10)
 
-                // Phase countdown number
+                // Phase countdown number (Dynamic Type)
                 Text(phaseCountdown)
-                    .font(.system(size: 48, weight: .light, design: .rounded))
-                    .foregroundStyle(phaseColor)
-                    .contentTransition(.numericText())
-                    .animation(.easeInOut(duration: 0.6), value: phaseCountdown)
+                    .font(.system(.largeTitle, design: .rounded).weight(.light))
+                    .foregroundStyle(vm.isPaused ? Theme.accentAmber : phaseColor)
+                    .minimumScaleFactor(0.7)
+                    .contentTransition(reduceMotion ? .identity : .numericText())
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: phaseCountdown)
+                    .accessibilityHidden(true)
             }
-            .animation(.easeInOut(duration: 2.0), value: circleScale)
-            .animation(.easeInOut(duration: 1.8), value: phaseColor)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 2.0), value: circleScale)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 1.8), value: phaseColor)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(breathingAccessibilityLabel)
             .sensoryFeedback(trigger: phaseLabel) { _, newPhase in
+                // Keep phase haptics even with Reduce Motion — they replace visual motion
                 switch newPhase {
                 case "Inhale": .impact(weight: .light, intensity: 0.4)
                 case "Hold": .impact(weight: .medium, intensity: 0.5)
@@ -127,18 +175,35 @@ struct BreathingGuideView: View {
                 BreathingProgressBar(
                     progress: vm.progress,
                     phaseColor: phaseColor,
-                    sessionSeconds: vm.timerMinutes * 60,
+                    sessionSeconds: vm.sessionDurationSeconds,
                     cycle: cycle
                 )
 
-                Text(vm.displayTime)
-                    .font(.caption2.monospacedDigit().weight(.medium))
-                    .foregroundStyle(Theme.textTertiary)
-                    .contentTransition(.numericText())
-                    .animation(.default, value: vm.remainingSeconds)
+                // Time lives on LiveTimerStepper — progress bar only here
             }
             .padding(.horizontal, 16)
-            .animation(.easeInOut(duration: 1.2), value: phaseColor)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 1.2), value: phaseColor)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Session progress")
+            .accessibilityValue("\(Int((vm.progress * 100).rounded())) percent complete")
+        }
+    }
+}
+
+/// Hold pulse only when motion is allowed (Reduce Motion → static opacity).
+private struct HoldPulseModifier: ViewModifier {
+    let isActive: Bool
+
+    func body(content: Content) -> some View {
+        if isActive {
+            content
+                .phaseAnimator([false, true]) { view, phase in
+                    view.opacity(phase ? 0.8 : 0.4)
+                } animation: { _ in
+                    .easeInOut(duration: 1.2)
+                }
+        } else {
+            content
         }
     }
 }
@@ -148,6 +213,7 @@ private struct BreathingProgressBar: View {
     let phaseColor: Color
     let sessionSeconds: Int
     let cycle: BreathingCycle
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let barHeight: CGFloat = 6
 
@@ -192,9 +258,11 @@ private struct BreathingProgressBar: View {
                 // Foreground: filled progress
                 Capsule()
                     .fill(phaseColor)
-                    .shadow(color: phaseColor.opacity(0.4), radius: 3)
+                    .shadow(
+                        color: reduceMotion ? .clear : phaseColor.opacity(0.4),
+                        radius: reduceMotion ? 0 : 3
+                    )
                     .frame(width: geo.size.width * progress)
-                    .animation(.linear(duration: 1), value: progress)
             }
         }
         .frame(height: barHeight)

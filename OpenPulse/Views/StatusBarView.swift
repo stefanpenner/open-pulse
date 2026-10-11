@@ -1,113 +1,191 @@
 import SwiftUI
 
+/// Avoids ternary on blurReplace (not on AnyTransition).
+private struct ConnectionChipTransition: ViewModifier {
+    let reduceMotion: Bool
+    func body(content: Content) -> some View {
+        if reduceMotion {
+            content.transition(.opacity)
+        } else {
+            content.transition(.blurReplace)
+        }
+    }
+}
+
 struct StatusBarView: View {
     @ObservedObject var vm: SessionViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// When true, connection empty state owns the link story — chip would double VO/copy.
+    var hideConnectionChip: Bool = false
+
+    private var showsBattery: Bool { vm.ble.batteryPercentage != nil }
+    private var showsConnection: Bool { !hideConnectionChip }
+    private var isVisible: Bool { showsConnection || showsBattery }
 
     var body: some View {
-        HStack(spacing: 12) {
-            connectionControl
-                .animation(.easeInOut(duration: 0.3), value: vm.ble.isConnected)
-                .animation(.easeInOut(duration: 0.3), value: vm.ble.isReady)
-                .animation(.easeInOut(duration: 0.3), value: vm.ble.isBluetoothOff)
+        Group {
+            if isVisible {
+                HStack(spacing: 12) {
+                    if showsConnection {
+                        connectionControl
+                            .animation(
+                                reduceMotion ? nil : .easeInOut(duration: 0.3),
+                                value: vm.ble.isConnected
+                            )
+                            .animation(
+                                reduceMotion ? nil : .easeInOut(duration: 0.3),
+                                value: vm.ble.isReady
+                            )
+                            .animation(
+                                reduceMotion ? nil : .easeInOut(duration: 0.3),
+                                value: vm.ble.isBluetoothOff
+                            )
+                    }
 
-            Spacer()
+                    Spacer(minLength: 0)
 
-            if let pct = vm.ble.batteryPercentage {
-                batteryInfo(pct)
+                    if let pct = vm.ble.batteryPercentage {
+                        batteryInfo(pct)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .wellnessGlass(.regular, in: .capsule)
+                .sensoryFeedback(trigger: vm.ble.isReady) { old, new in
+                    guard !old && new else { return nil }
+                    return reduceMotion ? .impact(weight: .light) : .success
+                }
+                .sensoryFeedback(trigger: vm.ble.isConnected) { old, new in
+                    guard old && !new else { return nil }
+                    return reduceMotion ? .impact(weight: .light) : .warning
+                }
             }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .glassEffect(.regular, in: .capsule)
-        .sensoryFeedback(.success, trigger: vm.ble.isReady) { old, new in
-            !old && new
-        }
-        .sensoryFeedback(trigger: vm.ble.isConnected) { old, new in
-            old && !new ? .warning : nil
         }
     }
 
     @ViewBuilder
     private var connectionControl: some View {
-        if vm.ble.isConnected && vm.ble.isReady {
-            HStack(spacing: 6) {
+        // Bluetooth off wins over stale Connected flags
+        Group {
+            if vm.ble.isBluetoothOff {
+                connectionChip(
+                    icon: "antenna.radiowaves.left.and.right.slash",
+                    text: ConnectionPresentation.chipText(
+                        isBluetoothOff: true, isConnected: false, isReady: false
+                    ),
+                    color: Theme.disconnectedRed,
+                    showProgress: false,
+                    showDot: false
+                )
+            } else if vm.ble.isConnected && vm.ble.isReady {
+                connectionChip(
+                    icon: nil,
+                    text: ConnectionPresentation.chipText(
+                        isBluetoothOff: false, isConnected: true, isReady: true
+                    ),
+                    color: Theme.textSecondary,
+                    showProgress: false,
+                    showDot: true
+                )
+            } else if vm.ble.isConnected {
+                connectionChip(
+                    icon: nil,
+                    text: ConnectionPresentation.chipText(
+                        isBluetoothOff: false, isConnected: true, isReady: false
+                    ),
+                    color: Theme.connectedGreen,
+                    showProgress: true,
+                    showDot: false
+                )
+            } else {
+                connectionChip(
+                    icon: nil,
+                    text: ConnectionPresentation.chipText(
+                        isBluetoothOff: false, isConnected: false, isReady: false
+                    ),
+                    color: Theme.accentBlue,
+                    showProgress: true,
+                    showDot: false
+                )
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(ConnectionPresentation.accessibilityLabel(
+            isBluetoothOff: vm.ble.isBluetoothOff,
+            isConnected: vm.ble.isConnected,
+            isReady: vm.ble.isReady
+        ))
+    }
+
+    @ViewBuilder
+    private func connectionChip(
+        icon: String?,
+        text: String,
+        color: Color,
+        showProgress: Bool,
+        showDot: Bool
+    ) -> some View {
+        HStack(spacing: 6) {
+            if showDot {
                 Circle()
                     .fill(Theme.connectedGreen)
                     .frame(width: 7, height: 7)
-                    .shadow(color: Theme.connectedGreen.opacity(0.6), radius: 3)
-
-                Text("Connected")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(Theme.textSecondary)
+                    .shadow(
+                        color: reduceMotion ? .clear : Theme.connectedGreen.opacity(0.6),
+                        radius: 3
+                    )
+                    .accessibilityHidden(true)
             }
-            .transition(.blurReplace)
-        } else if vm.ble.isConnected {
-            HStack(spacing: 6) {
+            if showProgress {
                 ProgressView()
                     .scaleEffect(0.6)
-                    .tint(Theme.connectedGreen)
-
-                Text("Connecting…")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(Theme.connectedGreen)
+                    .tint(color)
+                    .accessibilityHidden(true)
             }
-            .transition(.blurReplace)
-        } else if vm.ble.isBluetoothOff {
-            HStack(spacing: 6) {
-                Image(systemName: "antenna.radiowaves.left.and.right.slash")
+            if let icon {
+                Image(systemName: icon)
                     .font(.caption2)
-                    .foregroundStyle(Theme.disconnectedRed)
-
-                Text("Bluetooth Off")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(Theme.disconnectedRed)
+                    .foregroundStyle(color)
+                    .accessibilityHidden(true)
             }
-            .transition(.blurReplace)
-        } else {
-            HStack(spacing: 6) {
-                ProgressView()
-                    .scaleEffect(0.6)
-                    .tint(Theme.accentBlue)
-
-                Text("Searching…")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(Theme.accentBlue)
-            }
-            .transition(.blurReplace)
+            Text(text)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(color)
         }
+        .modifier(ConnectionChipTransition(reduceMotion: reduceMotion))
     }
 
     private func batteryInfo(_ pct: Int) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: batteryIcon(pct))
+        let charging = vm.ble.isCharging
+        let confirmed = vm.ble.batterySampleConfirmed
+        let low = BatteryPresentation.isLow(percent: pct, isCharging: charging)
+        let color = low ? Theme.disconnectedRed : Theme.textSecondary
+
+        return HStack(spacing: 4) {
+            Image(systemName: BatteryPresentation.iconName(percent: pct))
                 .font(.caption2)
-                .foregroundStyle(Theme.textSecondary)
+                .foregroundStyle(color)
+                .symbolEffect(.pulse, isActive: low && !reduceMotion)
+                .accessibilityHidden(true)
 
-            if let v = vm.ble.batteryVoltage {
-                Text(String(format: "%.2fV", v))
-                    .font(.caption2.monospacedDigit().weight(.medium))
-                    .foregroundStyle(Theme.textTertiary)
-            }
-
-            Text("\(pct)%")
+            Text(BatteryPresentation.chipText(percent: pct, sampleConfirmed: confirmed))
                 .font(.caption2.monospacedDigit().weight(.medium))
-                .foregroundStyle(Theme.textSecondary)
+                .foregroundStyle(color)
+                .accessibilityHidden(true)
 
-            if let charging = vm.ble.isCharging, charging {
+            if charging == true {
                 Image(systemName: "bolt.fill")
                     .font(.caption2)
                     .foregroundStyle(Theme.accentTeal)
+                    .accessibilityHidden(true)
             }
         }
-    }
-
-    private func batteryIcon(_ pct: Int) -> String {
-        switch pct {
-        case 0..<13: "battery.0percent"
-        case 13..<38: "battery.25percent"
-        case 38..<63: "battery.50percent"
-        case 63..<88: "battery.75percent"
-        default: "battery.100percent"
-        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            BatteryPresentation.accessibilityLabel(
+                percent: pct, isCharging: charging, isLow: low, sampleConfirmed: confirmed
+            )
+        )
     }
 }

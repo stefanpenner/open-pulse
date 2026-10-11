@@ -3,6 +3,7 @@ import SwiftUI
 struct ChannelIndicatorView: View {
     let activeChannel: ActiveChannel
     let accentColor: Color
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 10) {
@@ -28,7 +29,12 @@ struct ChannelIndicatorView: View {
                 .foregroundStyle(rightActive ? accentColor : Theme.textTertiary)
                 .opacity(rightActive ? 1.0 : 0.3)
         }
-        .animation(.easeInOut(duration: 0.3), value: activeChannel)
+        .animation(
+            reduceMotion ? nil : .easeInOut(duration: 0.3),
+            value: activeChannel
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilitySummary)
     }
 
     private var leftActive: Bool {
@@ -37,5 +43,14 @@ struct ChannelIndicatorView: View {
 
     private var rightActive: Bool {
         activeChannel == .bilateral || activeChannel == .right
+    }
+
+    private var accessibilitySummary: String {
+        switch activeChannel {
+        case .bilateral: "Both channels active"
+        case .left: "Left channel active"
+        case .right: "Right channel active"
+        case .off: "Channels off"
+        }
     }
 }

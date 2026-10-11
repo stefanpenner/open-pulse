@@ -4,7 +4,7 @@
   <img src="icon.svg" width="128" height="128" alt="Open Pulse app icon">
 </p>
 
-A native iOS app for controlling [Pulsetto](https://pulsetto.tech) vagus nerve stimulation devices over Bluetooth.
+A native iOS app for controlling [Pulsetto](https://pulsetto.tech) wellness devices over Bluetooth.
 
 Swift 6 / SwiftUI. No dependencies. No tracking. iOS 26+.
 
@@ -14,19 +14,23 @@ Swift 6 / SwiftUI. No dependencies. No tracking. iOS 26+.
   <img src="screenshot-session.png" width="280" alt="Active session">
 </p>
 
-## Modes
+## Feelings
 
-| Mode | Duration | Behavior | Evidence |
-|------|----------|----------|----------|
-| **Stress Relief** | 6 min | Bilateral, constant intensity | [Horinouchi 2024](https://pmc.ncbi.nlm.nih.gov/articles/PMC11099104/), [Forte 2022](https://peerj.com/articles/14447/), [Badran 2018](https://pmc.ncbi.nlm.nih.gov/articles/PMC6536129/) |
-| **Sleep** | 10 min | Rotating channels, gentle fade-out | [Bottari 2024](https://onlinelibrary.wiley.com/doi/10.1111/jsr.13891), [Zhang 2024](https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2828072), [Wu 2022](https://pmc.ncbi.nlm.nih.gov/articles/PMC9599790/) |
-| **Focus** | 6 min | Left-side only, 30s on/off duty cycles | [Sun 2021](https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2021.790793/full), [Morrison 2018](https://pmc.ncbi.nlm.nih.gov/articles/PMC6347516/), [Sharon 2021](https://pmc.ncbi.nlm.nih.gov/articles/PMC7810665/) |
-| **Pain Relief** | 8 min | Bilateral, sine wave oscillation | [Straube 2015](https://pubmed.ncbi.nlm.nih.gov/26156114/), [Pantaleao 2011](https://pubmed.ncbi.nlm.nih.gov/21277840/), [CPM 2024](https://pmc.ncbi.nlm.nih.gov/articles/PMC11543976/) |
-| **Calm** | 5 min | Exhale-gated with breathing guide | [Sclocco 2019](https://pmc.ncbi.nlm.nih.gov/articles/PMC6592731/), [Garcia 2021](https://pmc.ncbi.nlm.nih.gov/articles/PMC8429271/), [Paleczny 2019](https://pmc.ncbi.nlm.nih.gov/articles/PMC8041682/) |
-| **Headache** | 6 min | High-intensity bilateral bursts (gammaCore protocol) | [nVNS meta-analysis 2023](https://pmc.ncbi.nlm.nih.gov/articles/PMC10213755/), [gammaCore registry](https://pubmed.ncbi.nlm.nih.gov/32109020/) |
-| **Nausea** | 5 min | Continuous bilateral, anti-nausea pathways | [nVNS gastroparesis 2023](https://journals.lww.com/ajg/fulltext/2023/10001/s1846_non_invasive_vagal_nerve_stimulation_reduces.2187.aspx), [taVNS motion sickness 2024](https://pmc.ncbi.nlm.nih.gov/articles/PMC11531436/) |
-| **Meditation** | 10 min | Slower respiratory gating (5 breaths/min) | [tVNS + meditation RCT 2025](https://pmc.ncbi.nlm.nih.gov/articles/PMC12341030/), [Sclocco 2019](https://pmc.ncbi.nlm.nih.gov/articles/PMC6592731/) |
-| **Custom** | User-set | Manual control | — |
+You pick a feeling. The app runs one engine. Custom stays manual.
+
+| Feeling | Engine | Default | Behavior |
+|---------|--------|---------|----------|
+| **Stressed** | Stress | 6 min | Bilateral, steady intensity |
+| **Anxious** | Breathe | 5 min | Exhale-gated. Pace is Calm or Meditate |
+| **Can't Sleep** | Sleep | 10 min | Rotating channels, gentle fade-out |
+| **Foggy** | Focus | 6 min | Left side, 30s on / 30s off |
+| **Aching** | Ease | 8 min | Wave, or Burst (2 min on / 30s off) |
+
+Older saved names still open. Learn uses Focus. Meditation uses Breathe at the Meditate pace. Head comfort uses Ease Burst. Gut comfort uses Stress.
+
+Wellness device control only. This is not a medical treatment. Optional Mindful Minutes writes to Apple Health. The app does not read Health.
+
+Parameter notes and citations stay in [research.md](research.md).
 
 See [research.md](research.md) for full citations and parameter rationale.
 

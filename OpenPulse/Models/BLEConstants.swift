@@ -10,6 +10,10 @@ enum BLEConstants {
     static let deviceNamePrefix = "Pulsetto"
     static let scanTimeout: TimeInterval = 10
 
+    /// CoreBluetooth state restoration ID (must stay stable across launches).
+    /// Lets iOS relaunch/reattach after jetsam while a session may still be open.
+    static let centralRestoreIdentifier = "io.github.stefanpenner.OpenPulse.central"
+
     // Battery voltage thresholds
     static let batteryFullVoltage: Double = 3.95
     static let batteryEmptyVoltage: Double = 2.5
@@ -19,6 +23,11 @@ enum BLEConstants {
     static let statusPollInterval: TimeInterval = 30
     static let reconnectDelay: TimeInterval = 1
     static let scanRetryDelay: TimeInterval = 3
+
+    /// Hard ceiling for any session (wellness safety / battery comfort).
+    static let maxSessionMinutes = 60
+    /// Battery % at/below which UI warns the user.
+    static let lowBatteryThresholdPercent = 15
 
     // Commands (verified on device)
     // 0 = off, A = left only, B = ramp-up to intensity, C = right only, D = bilateral
@@ -30,8 +39,10 @@ enum BLEConstants {
     static let batteryQueryCommand = "Q\n"
     static let chargingQueryCommand = "u\n"
 
+    /// Clamps to device range 1…9 before formatting.
     static func strengthCommand(_ level: Int) -> String {
-        "\(level)\n"
+        let clamped = max(1, min(9, level))
+        return "\(clamped)\n"
     }
 
     // Battery calculation
