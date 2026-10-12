@@ -4,6 +4,7 @@ struct ContentView: View {
     @StateObject private var vm = SessionViewModel()
     @State private var showOnboarding: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         _showOnboarding = State(initialValue: !AppPreferences.hasCompletedOnboarding())
@@ -117,17 +118,8 @@ struct ContentView: View {
             }
             .interactiveDismissDisabled()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .appScenePhaseChanged)) { notification in
-            guard let userInfo = notification.userInfo,
-                  let oldPhase = userInfo["oldPhase"] as? ScenePhase,
-                  let newPhase = userInfo["newPhase"] as? ScenePhase else { return }
-            if newPhase == .background {
-                vm.handleBackgroundTransition()
-            } else if oldPhase == .background {
-                vm.handleForegroundTransition()
-                // User may have flipped system notification permission while away
-                vm.refreshSessionEndAlertAuthorization()
-            }
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            handleScenePhaseChange(from: oldPhase, to: newPhase)
         }
         // Live Activity intents + wall complete use SessionActionBridge only
         .onAppear {
@@ -139,6 +131,16 @@ struct ContentView: View {
         // Battery-read grace / sample can flip canStart without a ready edge
         .onChange(of: vm.canStart) { _, can in
             if can { SessionActionBridge.shared.drainPending() }
+        }
+    }
+
+    private func handleScenePhaseChange(from oldPhase: ScenePhase, to newPhase: ScenePhase) {
+        if newPhase == .background {
+            vm.handleBackgroundTransition()
+        } else if oldPhase == .background {
+            vm.handleForegroundTransition()
+            // User may have flipped system notification permission while away
+            vm.refreshSessionEndAlertAuthorization()
         }
     }
 }
