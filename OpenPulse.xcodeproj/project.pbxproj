@@ -14,14 +14,12 @@
 		B10000000000000000000004 /* SessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* SessionViewModel.swift */; };
 		B10000000000000000000005 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* ContentView.swift */; };
 		B10000000000000000000006 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000006 /* StatusBarView.swift */; };
-		B10000000000000000000007 /* TimerCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000007 /* TimerCardView.swift */; };
 		B10000000000000000000008 /* StrengthCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000008 /* StrengthCardView.swift */; };
 		B10000000000000000000009 /* ActionButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000009 /* ActionButtonView.swift */; };
 		B1000000000000000000000A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000A /* Theme.swift */; };
 		B1000000000000000000000B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000B /* Assets.xcassets */; };
 		B1000000000000000000000C /* StimulationMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000D /* StimulationMode.swift */; };
 		B1000000000000000000000D /* ModeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000E /* ModeEngine.swift */; };
-		B1000000000000000000000E /* ModePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000F /* ModePicker.swift */; };
 		B1000000000000000000000F /* BreathingGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* BreathingGuideView.swift */; };
 		B10000000000000000000011 /* HeroTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* HeroTimerView.swift */; };
 		B10000000000000000000012 /* SessionSettingsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* SessionSettingsRow.swift */; };
@@ -29,8 +27,54 @@
 		B10000000000000000000014 /* ActiveSessionLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* ActiveSessionLayout.swift */; };
 		B10000000000000000000015 /* ChannelIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* ChannelIndicatorView.swift */; };
 		B10000000000000000000016 /* IntensityWaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* IntensityWaveView.swift */; };
+		B10000000000000000000017 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* AppPreferences.swift */; };
+		B10000000000000000000018 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000018 /* OnboardingView.swift */; };
+		B10000000000000000000019 /* ConnectionEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000019 /* ConnectionEmptyState.swift */; };
+		B1000000000000000000001A /* SessionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001A /* SessionHistory.swift */; };
+		B1000000000000000000001C /* DurationPresetRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001C /* DurationPresetRow.swift */; };
+		B1000000000000000000002B /* SessionDurationOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002B /* SessionDurationOptions.swift */; };
+		B1000000000000000000002C /* SessionEndNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002C /* SessionEndNotifier.swift */; };
+		B1000000000000000000001D /* SessionHistorySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* SessionHistorySheet.swift */; };
+		B1000000000000000000001E /* SessionLiveActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001E /* SessionLiveActivityController.swift */; };
 		B20000000000000000000001 /* ModeEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* ModeEngineTests.swift */; };
 		B20000000000000000000002 /* SessionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* SessionViewModelTests.swift */; };
+		B20000000000000000000003 /* AppPreferencesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* AppPreferencesTests.swift */; };
+
+		B1000000000000000000001F /* SessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001F /* SessionActivityAttributes.swift */; };
+		B30000000000000000000001 /* OpenPulseWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* OpenPulseWidgetBundle.swift */; };
+		B30000000000000000000002 /* SessionLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* SessionLiveActivityWidget.swift */; };
+		B30000000000000000000003 /* SessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* SessionActivityAttributes.swift */; };
+		B30000000000000000000005 /* LiveActivityPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000027 /* LiveActivityPresentation.swift */; };
+		B30000000000000000000004 /* OpenPulseWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D30000000000000000000001 /* OpenPulseWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B10000000000000000000020 /* DeviceTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000020 /* DeviceTransport.swift */; };
+		B10000000000000000000021 /* MindfulMinutesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000021 /* MindfulMinutesStore.swift */; };
+		B20000000000000000000004 /* MockDeviceTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* MockDeviceTransport.swift */; };
+		B10000000000000000000022 /* SerialBLEWriteQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000022 /* SerialBLEWriteQueue.swift */; };
+		B20000000000000000000005 /* SerialBLEWriteQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* SerialBLEWriteQueueTests.swift */; };
+		B20000000000000000000006 /* SessionHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* SessionHistoryTests.swift */; };
+		B10000000000000000000023 /* SessionSafety.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000023 /* SessionSafety.swift */; };
+		B10000000000000000000024 /* PendingOffBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000024 /* PendingOffBanner.swift */; };
+		B20000000000000000000007 /* SessionSafetyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* SessionSafetyTests.swift */; };
+		B10000000000000000000025 /* DeviceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000025 /* DeviceState.swift */; };
+		B10000000000000000000026 /* WriteEpochFence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000026 /* WriteEpochFence.swift */; };
+		B10000000000000000000029 /* SessionControlIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000029 /* SessionControlIntents.swift */; };
+		B1000000000000000000002A /* SessionActionBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002A /* SessionActionBridge.swift */; };
+		B30000000000000000000006 /* SessionControlIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000029 /* SessionControlIntents.swift */; };
+		B20000000000000000000008 /* WriteEpochFenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* WriteEpochFenceTests.swift */; };
+		B10000000000000000000027 /* LiveActivityPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000027 /* LiveActivityPresentation.swift */; };
+		B20000000000000000000009 /* LiveActivityPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* LiveActivityPresentationTests.swift */; };
+		B10000000000000000000028 /* SoftStart.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000028 /* SoftStart.swift */; };
+		B2000000000000000000000A /* SoftStartTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SoftStartTests.swift */; };
+		B2000000000000000000000B /* MindfulSessionRangeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* MindfulSessionRangeTests.swift */; };
+		B2000000000000000000000C /* SessionActionBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* SessionActionBridgeTests.swift */; };
+		B1000000000000000000002D /* OpenPulseIntentRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002D /* OpenPulseIntentRelay.swift */; };
+		B30000000000000000000007 /* OpenPulseIntentRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002D /* OpenPulseIntentRelay.swift */; };
+		B1000000000000000000002E /* SessionReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002E /* SessionReminderScheduler.swift */; };
+		B1000000000000000000002F /* BreathPhasePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002F /* BreathPhasePresentation.swift */; };
+		B10000000000000000000030 /* AmbientAudioPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000030 /* AmbientAudioPolicy.swift */; };
+		B10000000000000000000031 /* SessionAmbientAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000031 /* SessionAmbientAudio.swift */; };
+		B10000000000000000000032 /* AmbientCalm.m4a in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000032 /* AmbientCalm.m4a */; };
+		B30000000000000000000008 /* StartSessionControlWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* StartSessionControlWidget.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,6 +85,14 @@
 			remoteGlobalIDString = E10000000000000000000001;
 			remoteInfo = OpenPulse;
 		};
+
+		CC0000000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 330000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E30000000000000000000001;
+			remoteInfo = OpenPulseWidget;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -50,7 +102,6 @@
 		A10000000000000000000004 /* SessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModel.swift; sourceTree = "<group>"; };
 		A10000000000000000000005 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A10000000000000000000006 /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
-		A10000000000000000000007 /* TimerCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerCardView.swift; sourceTree = "<group>"; };
 		A10000000000000000000008 /* StrengthCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrengthCardView.swift; sourceTree = "<group>"; };
 		A10000000000000000000009 /* ActionButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonView.swift; sourceTree = "<group>"; };
 		A1000000000000000000000A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -58,7 +109,6 @@
 		A1000000000000000000000C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A1000000000000000000000D /* StimulationMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StimulationMode.swift; sourceTree = "<group>"; };
 		A1000000000000000000000E /* ModeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngine.swift; sourceTree = "<group>"; };
-		A1000000000000000000000F /* ModePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModePicker.swift; sourceTree = "<group>"; };
 		A10000000000000000000010 /* BreathingGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingGuideView.swift; sourceTree = "<group>"; };
 		A10000000000000000000011 /* HeroTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeroTimerView.swift; sourceTree = "<group>"; };
 		A10000000000000000000012 /* SessionSettingsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSettingsRow.swift; sourceTree = "<group>"; };
@@ -66,11 +116,54 @@
 		A10000000000000000000014 /* ActiveSessionLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSessionLayout.swift; sourceTree = "<group>"; };
 		A10000000000000000000015 /* ChannelIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelIndicatorView.swift; sourceTree = "<group>"; };
 		A10000000000000000000016 /* IntensityWaveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntensityWaveView.swift; sourceTree = "<group>"; };
+		A10000000000000000000017 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPreferences.swift; sourceTree = "<group>"; };
+		A10000000000000000000018 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		A10000000000000000000019 /* ConnectionEmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEmptyState.swift; sourceTree = "<group>"; };
+		A1000000000000000000001A /* SessionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistory.swift; sourceTree = "<group>"; };
+		A1000000000000000000001C /* DurationPresetRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationPresetRow.swift; sourceTree = "<group>"; };
+		A1000000000000000000002B /* SessionDurationOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDurationOptions.swift; sourceTree = "<group>"; };
+		A1000000000000000000002C /* SessionEndNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionEndNotifier.swift; sourceTree = "<group>"; };
+		A1000000000000000000001D /* SessionHistorySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistorySheet.swift; sourceTree = "<group>"; };
+		A1000000000000000000001E /* SessionLiveActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLiveActivityController.swift; sourceTree = "<group>"; };
+		A1000000000000000000001F /* SessionActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActivityAttributes.swift; sourceTree = "<group>"; };
+		A30000000000000000000001 /* OpenPulseWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPulseWidgetBundle.swift; sourceTree = "<group>"; };
+		A30000000000000000000002 /* SessionLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLiveActivityWidget.swift; sourceTree = "<group>"; };
+		A30000000000000000000003 /* SessionActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActivityAttributes.swift; sourceTree = "<group>"; };
+		A30000000000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D30000000000000000000001 /* OpenPulseWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OpenPulseWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000001 /* ModeEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngineTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* SessionViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModelTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* AppPreferencesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPreferencesTests.swift; sourceTree = "<group>"; };
 		D10000000000000000000001 /* OpenPulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D20000000000000000000001 /* OpenPulseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenPulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E87518493F691B82D92474E8 /* AutonomicState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutonomicState.swift; sourceTree = "<group>"; };
+		A10000000000000000000020 /* DeviceTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceTransport.swift; sourceTree = "<group>"; };
+		A10000000000000000000021 /* MindfulMinutesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MindfulMinutesStore.swift; sourceTree = "<group>"; };
+		A10000000000000000000029 /* SessionControlIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionControlIntents.swift; sourceTree = "<group>"; };
+		A1000000000000000000002A /* SessionActionBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActionBridge.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* MockDeviceTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceTransport.swift; sourceTree = "<group>"; };
+		A10000000000000000000022 /* SerialBLEWriteQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialBLEWriteQueue.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* SerialBLEWriteQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialBLEWriteQueueTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* SessionHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistoryTests.swift; sourceTree = "<group>"; };
+		A10000000000000000000023 /* SessionSafety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSafety.swift; sourceTree = "<group>"; };
+		A10000000000000000000024 /* PendingOffBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingOffBanner.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* SessionSafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSafetyTests.swift; sourceTree = "<group>"; };
+		A10000000000000000000025 /* DeviceState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceState.swift; sourceTree = "<group>"; };
+		A10000000000000000000026 /* WriteEpochFence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WriteEpochFence.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* WriteEpochFenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WriteEpochFenceTests.swift; sourceTree = "<group>"; };
+		A10000000000000000000027 /* LiveActivityPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityPresentation.swift; sourceTree = "<group>"; };
+		A20000000000000000000009 /* LiveActivityPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityPresentationTests.swift; sourceTree = "<group>"; };
+		A10000000000000000000028 /* SoftStart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftStart.swift; sourceTree = "<group>"; };
+		A2000000000000000000000A /* SoftStartTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftStartTests.swift; sourceTree = "<group>"; };
+		A2000000000000000000000B /* MindfulSessionRangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MindfulSessionRangeTests.swift; sourceTree = "<group>"; };
+		A2000000000000000000000C /* SessionActionBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActionBridgeTests.swift; sourceTree = "<group>"; };
+		A1000000000000000000002D /* OpenPulseIntentRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPulseIntentRelay.swift; sourceTree = "<group>"; };
+		A1000000000000000000002E /* SessionReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReminderScheduler.swift; sourceTree = "<group>"; };
+		A1000000000000000000002F /* BreathPhasePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathPhasePresentation.swift; sourceTree = "<group>"; };
+		A10000000000000000000030 /* AmbientAudioPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAudioPolicy.swift; sourceTree = "<group>"; };
+		A10000000000000000000031 /* SessionAmbientAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAmbientAudio.swift; sourceTree = "<group>"; };
+		A10000000000000000000032 /* AmbientCalm.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = AmbientCalm.m4a; sourceTree = "<group>"; };
+		A30000000000000000000008 /* StartSessionControlWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartSessionControlWidget.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +181,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+
+		220000000000000000000023 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -96,6 +197,7 @@
 			children = (
 				C10000000000000000000002 /* OpenPulse */,
 				C10000000000000000000008 /* OpenPulseTests */,
+				C30000000000000000000001 /* OpenPulseWidget */,
 				C10000000000000000000007 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -106,6 +208,7 @@
 				A10000000000000000000001 /* OpenPulseApp.swift */,
 				A1000000000000000000000C /* Info.plist */,
 				A1000000000000000000000B /* Assets.xcassets */,
+				C10000000000000000000009 /* Resources */,
 				C10000000000000000000003 /* Models */,
 				C10000000000000000000004 /* Services */,
 				C10000000000000000000005 /* ViewModels */,
@@ -114,13 +217,30 @@
 			path = OpenPulse;
 			sourceTree = "<group>";
 		};
+		C10000000000000000000009 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000032 /* AmbientCalm.m4a */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		C10000000000000000000003 /* Models */ = {
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000002 /* BLEConstants.swift */,
 				A1000000000000000000000D /* StimulationMode.swift */,
 				A1000000000000000000000E /* ModeEngine.swift */,
+				A10000000000000000000028 /* SoftStart.swift */,
 				E87518493F691B82D92474E8 /* AutonomicState.swift */,
+				A10000000000000000000017 /* AppPreferences.swift */,
+				A1000000000000000000001A /* SessionHistory.swift */,
+				A1000000000000000000002B /* SessionDurationOptions.swift */,
+				A10000000000000000000023 /* SessionSafety.swift */,
+				A1000000000000000000001F /* SessionActivityAttributes.swift */,
+				A10000000000000000000027 /* LiveActivityPresentation.swift */,
+				A1000000000000000000002F /* BreathPhasePresentation.swift */,
+				A10000000000000000000030 /* AmbientAudioPolicy.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -129,6 +249,18 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000003 /* BluetoothManager.swift */,
+				A1000000000000000000001E /* SessionLiveActivityController.swift */,
+				A1000000000000000000002C /* SessionEndNotifier.swift */,
+				A10000000000000000000020 /* DeviceTransport.swift */,
+				A10000000000000000000025 /* DeviceState.swift */,
+				A10000000000000000000022 /* SerialBLEWriteQueue.swift */,
+				A10000000000000000000026 /* WriteEpochFence.swift */,
+				A10000000000000000000029 /* SessionControlIntents.swift */,
+				A1000000000000000000002A /* SessionActionBridge.swift */,
+				A1000000000000000000002D /* OpenPulseIntentRelay.swift */,
+				A1000000000000000000002E /* SessionReminderScheduler.swift */,
+				A10000000000000000000031 /* SessionAmbientAudio.swift */,
+				A10000000000000000000021 /* MindfulMinutesStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -146,11 +278,9 @@
 			children = (
 				A10000000000000000000005 /* ContentView.swift */,
 				A10000000000000000000006 /* StatusBarView.swift */,
-				A10000000000000000000007 /* TimerCardView.swift */,
 				A10000000000000000000008 /* StrengthCardView.swift */,
 				A10000000000000000000009 /* ActionButtonView.swift */,
 				A1000000000000000000000A /* Theme.swift */,
-				A1000000000000000000000F /* ModePicker.swift */,
 				A10000000000000000000010 /* BreathingGuideView.swift */,
 				A10000000000000000000011 /* HeroTimerView.swift */,
 				A10000000000000000000012 /* SessionSettingsRow.swift */,
@@ -158,6 +288,11 @@
 				A10000000000000000000014 /* ActiveSessionLayout.swift */,
 				A10000000000000000000015 /* ChannelIndicatorView.swift */,
 				A10000000000000000000016 /* IntensityWaveView.swift */,
+				A10000000000000000000018 /* OnboardingView.swift */,
+				A10000000000000000000019 /* ConnectionEmptyState.swift */,
+				A10000000000000000000024 /* PendingOffBanner.swift */,
+				A1000000000000000000001C /* DurationPresetRow.swift */,
+				A1000000000000000000001D /* SessionHistorySheet.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -167,6 +302,7 @@
 			children = (
 				D10000000000000000000001 /* OpenPulse.app */,
 				D20000000000000000000001 /* OpenPulseTests.xctest */,
+				D30000000000000000000001 /* OpenPulseWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -176,8 +312,31 @@
 			children = (
 				A20000000000000000000001 /* ModeEngineTests.swift */,
 				A20000000000000000000002 /* SessionViewModelTests.swift */,
+				A20000000000000000000003 /* AppPreferencesTests.swift */,
+				A20000000000000000000004 /* MockDeviceTransport.swift */,
+				A20000000000000000000005 /* SerialBLEWriteQueueTests.swift */,
+				A20000000000000000000006 /* SessionHistoryTests.swift */,
+				A20000000000000000000007 /* SessionSafetyTests.swift */,
+				A20000000000000000000008 /* WriteEpochFenceTests.swift */,
+				A20000000000000000000009 /* LiveActivityPresentationTests.swift */,
+				A2000000000000000000000A /* SoftStartTests.swift */,
+				A2000000000000000000000B /* MindfulSessionRangeTests.swift */,
+				A2000000000000000000000C /* SessionActionBridgeTests.swift */,
 			);
 			path = OpenPulseTests;
+			sourceTree = "<group>";
+		};
+
+		C30000000000000000000001 /* OpenPulseWidget */ = {
+			isa = PBXGroup;
+			children = (
+				A30000000000000000000001 /* OpenPulseWidgetBundle.swift */,
+				A30000000000000000000002 /* SessionLiveActivityWidget.swift */,
+				A30000000000000000000003 /* SessionActivityAttributes.swift */,
+				A30000000000000000000008 /* StartSessionControlWidget.swift */,
+				A30000000000000000000004 /* Info.plist */,
+			);
+			path = OpenPulseWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -190,10 +349,12 @@
 				220000000000000000000001 /* Sources */,
 				220000000000000000000002 /* Resources */,
 				220000000000000000000003 /* Frameworks */,
+				220000000000000000000020 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				DD0000000000000000000002 /* PBXTargetDependency */,
 			);
 			name = OpenPulse;
 			productName = OpenPulse;
@@ -216,6 +377,24 @@
 			productName = OpenPulseTests;
 			productReference = D20000000000000000000001 /* OpenPulseTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+
+		E30000000000000000000001 /* OpenPulseWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F30000000000000000000001 /* Build configuration list for PBXNativeTarget "OpenPulseWidget" */;
+			buildPhases = (
+				220000000000000000000021 /* Sources */,
+				220000000000000000000022 /* Resources */,
+				220000000000000000000023 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenPulseWidget;
+			productName = OpenPulseWidget;
+			productReference = D30000000000000000000001 /* OpenPulseWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -248,6 +427,7 @@
 			targets = (
 				E10000000000000000000001 /* OpenPulse */,
 				E20000000000000000000001 /* OpenPulseTests */,
+				E30000000000000000000001 /* OpenPulseWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -258,6 +438,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				B1000000000000000000000B /* Assets.xcassets in Resources */,
+				B10000000000000000000032 /* AmbientCalm.m4a in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		220000000000000000000022 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -274,13 +462,12 @@
 				B10000000000000000000004 /* SessionViewModel.swift in Sources */,
 				B10000000000000000000005 /* ContentView.swift in Sources */,
 				B10000000000000000000006 /* StatusBarView.swift in Sources */,
-				B10000000000000000000007 /* TimerCardView.swift in Sources */,
 				B10000000000000000000008 /* StrengthCardView.swift in Sources */,
 				B10000000000000000000009 /* ActionButtonView.swift in Sources */,
 				B1000000000000000000000A /* Theme.swift in Sources */,
 				B1000000000000000000000C /* StimulationMode.swift in Sources */,
 				B1000000000000000000000D /* ModeEngine.swift in Sources */,
-				B1000000000000000000000E /* ModePicker.swift in Sources */,
+				B10000000000000000000028 /* SoftStart.swift in Sources */,
 				B1000000000000000000000F /* BreathingGuideView.swift in Sources */,
 				3EBD0C7EDD800FA443D888BA /* AutonomicState.swift in Sources */,
 				B10000000000000000000011 /* HeroTimerView.swift in Sources */,
@@ -289,6 +476,31 @@
 				B10000000000000000000014 /* ActiveSessionLayout.swift in Sources */,
 				B10000000000000000000015 /* ChannelIndicatorView.swift in Sources */,
 				B10000000000000000000016 /* IntensityWaveView.swift in Sources */,
+				B10000000000000000000017 /* AppPreferences.swift in Sources */,
+				B10000000000000000000018 /* OnboardingView.swift in Sources */,
+				B10000000000000000000019 /* ConnectionEmptyState.swift in Sources */,
+				B10000000000000000000024 /* PendingOffBanner.swift in Sources */,
+				B1000000000000000000001A /* SessionHistory.swift in Sources */,
+				B10000000000000000000023 /* SessionSafety.swift in Sources */,
+				B1000000000000000000001C /* DurationPresetRow.swift in Sources */,
+				B1000000000000000000002B /* SessionDurationOptions.swift in Sources */,
+				B1000000000000000000001D /* SessionHistorySheet.swift in Sources */,
+				B1000000000000000000001E /* SessionLiveActivityController.swift in Sources */,
+				B1000000000000000000002C /* SessionEndNotifier.swift in Sources */,
+				B1000000000000000000001F /* SessionActivityAttributes.swift in Sources */,
+				B10000000000000000000027 /* LiveActivityPresentation.swift in Sources */,
+				B10000000000000000000020 /* DeviceTransport.swift in Sources */,
+				B10000000000000000000025 /* DeviceState.swift in Sources */,
+				B10000000000000000000021 /* MindfulMinutesStore.swift in Sources */,
+				B10000000000000000000022 /* SerialBLEWriteQueue.swift in Sources */,
+				B10000000000000000000026 /* WriteEpochFence.swift in Sources */,
+				B10000000000000000000029 /* SessionControlIntents.swift in Sources */,
+				B1000000000000000000002A /* SessionActionBridge.swift in Sources */,
+				B1000000000000000000002D /* OpenPulseIntentRelay.swift in Sources */,
+				B1000000000000000000002E /* SessionReminderScheduler.swift in Sources */,
+				B1000000000000000000002F /* BreathPhasePresentation.swift in Sources */,
+				B10000000000000000000030 /* AmbientAudioPolicy.swift in Sources */,
+				B10000000000000000000031 /* SessionAmbientAudio.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,17 +509,60 @@
 			buildActionMask = 2147483647;
 			files = (
 				B20000000000000000000001 /* ModeEngineTests.swift in Sources */,
+				B20000000000000000000003 /* AppPreferencesTests.swift in Sources */,
 				B20000000000000000000002 /* SessionViewModelTests.swift in Sources */,
+				B20000000000000000000004 /* MockDeviceTransport.swift in Sources */,
+				B20000000000000000000005 /* SerialBLEWriteQueueTests.swift in Sources */,
+				B20000000000000000000006 /* SessionHistoryTests.swift in Sources */,
+				B20000000000000000000007 /* SessionSafetyTests.swift in Sources */,
+				B20000000000000000000008 /* WriteEpochFenceTests.swift in Sources */,
+				B20000000000000000000009 /* LiveActivityPresentationTests.swift in Sources */,
+				B2000000000000000000000A /* SoftStartTests.swift in Sources */,
+				B2000000000000000000000B /* MindfulSessionRangeTests.swift in Sources */,
+				B2000000000000000000000C /* SessionActionBridgeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		220000000000000000000021 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B30000000000000000000001 /* OpenPulseWidgetBundle.swift in Sources */,
+				B30000000000000000000002 /* SessionLiveActivityWidget.swift in Sources */,
+				B30000000000000000000003 /* SessionActivityAttributes.swift in Sources */,
+				B30000000000000000000005 /* LiveActivityPresentation.swift in Sources */,
+				B30000000000000000000006 /* SessionControlIntents.swift in Sources */,
+				B30000000000000000000007 /* OpenPulseIntentRelay.swift in Sources */,
+				B30000000000000000000008 /* StartSessionControlWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		220000000000000000000020 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B30000000000000000000004 /* OpenPulseWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
 		DD0000000000000000000001 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = E10000000000000000000001 /* OpenPulse */;
 			targetProxy = CC0000000000000000000001 /* PBXContainerItemProxy */;
+		};
+		DD0000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E30000000000000000000001 /* OpenPulseWidget */;
+			targetProxy = CC0000000000000000000002 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -438,8 +693,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = OpenPulse/OpenPulse.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = T93925EZUT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenPulse/Info.plist;
@@ -455,7 +711,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -472,8 +728,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = OpenPulse/OpenPulse.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = T93925EZUT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenPulse/Info.plist;
@@ -489,7 +746,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -506,11 +763,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = T93925EZUT;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulseTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -528,11 +785,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = T93925EZUT;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulseTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -542,6 +799,69 @@
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenPulse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OpenPulse";
+			};
+			name = Release;
+		};
+
+		110000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = T93925EZUT;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenPulseWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OpenPulseWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse.OpenPulseWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG OPENPULSE_APP_EXTENSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		110000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = T93925EZUT;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenPulseWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OpenPulseWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse.OpenPulseWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = OPENPULSE_APP_EXTENSION;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -571,6 +891,15 @@
 			buildConfigurations = (
 				110000000000000000000005 /* Debug */,
 				110000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F30000000000000000000001 /* Build configuration list for PBXNativeTarget "OpenPulseWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				110000000000000000000007 /* Debug */,
+				110000000000000000000008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

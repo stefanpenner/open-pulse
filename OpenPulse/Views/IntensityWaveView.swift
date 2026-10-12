@@ -4,44 +4,57 @@ struct IntensityWaveView: View {
     let strength: Int
     let effectiveStrength: Int?
     let accentColor: Color
-
-    @State private var phase: Double = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .body) private var waveHeight: CGFloat = 48
 
     private var amplitude: Double {
         Double(effectiveStrength ?? strength) / 9.0
     }
 
     var body: some View {
-        TimelineView(.animation) { timeline in
-            Canvas { context, size in
-                let midY = size.height / 2
-                let amp = amplitude * midY * 0.8
-
-                var path = Path()
-                path.move(to: CGPoint(x: 0, y: midY))
-
-                let date = timeline.date.timeIntervalSinceReferenceDate
-                let phaseOffset = date * 2.0
-
-                for x in stride(from: 0, through: size.width, by: 1) {
-                    let normalizedX = x / size.width
-                    let angle = normalizedX * Double.pi * 4.0 + phaseOffset
-                    let y = midY + amp * sin(angle)
-                    path.addLine(to: CGPoint(x: x, y: y))
+        Group {
+            if reduceMotion {
+                // Static curve — no continuous TimelineView animation
+                waveCanvas(phaseOffset: 0)
+            } else {
+                // Calm motion budget (R46): slower than gadget UI — still.softStart feel
+                TimelineView(.animation) { timeline in
+                    let date = timeline.date.timeIntervalSinceReferenceDate
+                    waveCanvas(phaseOffset: date * 1.15)
                 }
-
-                // Fill
-                var fillPath = path
-                fillPath.addLine(to: CGPoint(x: size.width, y: size.height))
-                fillPath.addLine(to: CGPoint(x: 0, y: size.height))
-                fillPath.closeSubpath()
-                context.fill(fillPath, with: .color(accentColor.opacity(0.1)))
-
-                // Stroke
-                context.stroke(path, with: .color(accentColor.opacity(0.6)), lineWidth: 1.5)
             }
         }
-        .frame(height: 48)
-        .animation(.easeInOut(duration: 0.3), value: amplitude)
+        .frame(height: waveHeight)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: amplitude)
+        .accessibilityLabel(
+            SessionDurationOptions.activeIntensityAccessibility(
+                effective: effectiveStrength ?? strength,
+                target: strength
+            )
+        )
+    }
+
+    private func waveCanvas(phaseOffset: Double) -> some View {
+        Canvas { context, size in
+            let midY = size.height / 2
+            let amp = amplitude * midY * 0.8
+
+            var path = Path()
+            path.move(to: CGPoint(x: 0, y: midY))
+
+            for x in stride(from: 0, through: size.width, by: 1) {
+                let normalizedX = x / size.width
+                let angle = normalizedX * Double.pi * 4.0 + phaseOffset
+                let y = midY + amp * sin(angle)
+                path.addLine(to: CGPoint(x: x, y: y))
+            }
+
+            var fillPath = path
+            fillPath.addLine(to: CGPoint(x: size.width, y: size.height))
+            fillPath.addLine(to: CGPoint(x: 0, y: size.height))
+            fillPath.closeSubpath()
+            context.fill(fillPath, with: .color(accentColor.opacity(0.1)))
+            context.stroke(path, with: .color(accentColor.opacity(0.6)), lineWidth: 1.5)
+        }
     }
 }
