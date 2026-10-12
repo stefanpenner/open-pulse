@@ -102,6 +102,18 @@ private struct SoftResumeGate {
         armed = false
         return true
     }
+
+    /// Pause soft-starts once. An open ladder catches up from its start (R53). Else `target`.
+    mutating func reconnectLevel(soft: inout SoftStartState, elapsed: Int, target: Int) -> Int {
+        if consume() {
+            return soft.begin(target: target, atElapsed: elapsed)
+        }
+        if let level = soft.reconnectCatchUp(elapsed: elapsed, target: target) {
+            return level
+        }
+        soft.complete(syncedTo: target)
+        return target
+    }
 }
 
 // MARK: - Soft-start state (continuous bilateral comfort)
@@ -267,18 +279,8 @@ struct StressReliefEngine: ModeEngine {
     }
 
     mutating func reconnectCommands(elapsed: Int, totalDuration: Int, baseStrength: Int) -> [String] {
-        if softResume.consume() {
-            let initial = soft.begin(target: baseStrength, atElapsed: elapsed)
-            return [BLEConstants.activateCommand, BLEConstants.strengthCommand(initial)]
-        }
-        // Mid soft (in-process only): continue ladder.
-        // Never rehydrate soft from wall elapsed alone — would undercut user raise mid soft (R53).
-        if soft.isEnabled, let level = soft.reconnectCatchUp(elapsed: elapsed, target: baseStrength) {
-            return [BLEConstants.activateCommand, BLEConstants.strengthCommand(level)]
-        }
-        soft.complete(syncedTo: baseStrength)
-        // Settled / post-kill mid-session: full target (user already acclimated or soft state lost)
-        return [BLEConstants.activateCommand, BLEConstants.strengthCommand(baseStrength)]
+        let level = softResume.reconnectLevel(soft: &soft, elapsed: elapsed, target: baseStrength)
+        return [BLEConstants.activateCommand, BLEConstants.strengthCommand(level)]
     }
 
     mutating func noteUserStrength(_ strength: Int, previousBase: Int?) {
@@ -485,20 +487,10 @@ struct SleepEngine: ModeEngine {
             allowSoftClimb: false
         )
         noteSettledComfort(fade, base: baseStrength)
-        if softResume.consume() {
-            // Cap soft target at comfort fade so late-session pause never re-ramps above floor
-            let initial = soft.begin(target: fade, atElapsed: elapsed)
-            lastFadeStrength = initial
-            return [Self.channelSequence[effectivePhase], BLEConstants.strengthCommand(initial)]
-        }
-        // Mid soft: continue ladder toward fade-capped comfort
-        if soft.isEnabled, let level = soft.reconnectCatchUp(elapsed: elapsed, target: fade) {
-            lastFadeStrength = level
-            return [Self.channelSequence[effectivePhase], BLEConstants.strengthCommand(level)]
-        }
-        soft.complete(syncedTo: fade)
-        lastFadeStrength = fade
-        return [Self.channelSequence[effectivePhase], BLEConstants.strengthCommand(fade)]
+        // Cap soft target at comfort fade so late-session pause never re-ramps above floor
+        let level = softResume.reconnectLevel(soft: &soft, elapsed: elapsed, target: fade)
+        lastFadeStrength = level
+        return [Self.channelSequence[effectivePhase], BLEConstants.strengthCommand(level)]
     }
 
     mutating func notePaused() {
@@ -694,16 +686,8 @@ struct FocusEngine: ModeEngine {
         let on = isOnPhase(elapsed: elapsed)
         wasOn = on
         if on {
-            if softResume.consume() {
-                let initial = soft.begin(target: baseStrength, atElapsed: elapsed)
-                return [BLEConstants.leftChannelCommand, BLEConstants.strengthCommand(initial)]
-            }
-            // Mid soft (in-process only): continue ladder
-            if soft.isEnabled, let level = soft.reconnectCatchUp(elapsed: elapsed, target: baseStrength) {
-                return [BLEConstants.leftChannelCommand, BLEConstants.strengthCommand(level)]
-            }
-            soft.complete(syncedTo: baseStrength)
-            return [BLEConstants.leftChannelCommand, BLEConstants.strengthCommand(baseStrength)]
+            let level = softResume.reconnectLevel(soft: &soft, elapsed: elapsed, target: baseStrength)
+            return [BLEConstants.leftChannelCommand, BLEConstants.strengthCommand(level)]
         } else {
             softResume.reset()
             soft.complete(syncedTo: baseStrength)
@@ -953,15 +937,8 @@ struct HeadacheEngine: ModeEngine {
         // Match Focus: sync edge state so next tick does not re-fire on/off
         wasOn = on
         if on {
-            if softResume.consume() {
-                let initial = soft.begin(target: baseStrength, atElapsed: elapsed)
-                return [BLEConstants.activateCommand, BLEConstants.strengthCommand(initial)]
-            }
-            if soft.isEnabled, let level = soft.reconnectCatchUp(elapsed: elapsed, target: baseStrength) {
-                return [BLEConstants.activateCommand, BLEConstants.strengthCommand(level)]
-            }
-            soft.complete(syncedTo: baseStrength)
-            return [BLEConstants.activateCommand, BLEConstants.strengthCommand(baseStrength)]
+            let level = softResume.reconnectLevel(soft: &soft, elapsed: elapsed, target: baseStrength)
+            return [BLEConstants.activateCommand, BLEConstants.strengthCommand(level)]
         } else {
             softResume.reset()
             soft.complete(syncedTo: baseStrength)
@@ -1151,15 +1128,8 @@ struct RespiratoryGatedEngine: ModeEngine {
         wasStimulating = stimulating
         lastElapsed = elapsed
         if stimulating {
-            if softResume.consume() {
-                let initial = soft.begin(target: baseStrength, atElapsed: elapsed)
-                return [BLEConstants.activateCommand, BLEConstants.strengthCommand(initial)]
-            }
-            if soft.isEnabled, let level = soft.reconnectCatchUp(elapsed: elapsed, target: baseStrength) {
-                return [BLEConstants.activateCommand, BLEConstants.strengthCommand(level)]
-            }
-            soft.complete(syncedTo: baseStrength)
-            return [BLEConstants.activateCommand, BLEConstants.strengthCommand(baseStrength)]
+            let level = softResume.reconnectLevel(soft: &soft, elapsed: elapsed, target: baseStrength)
+            return [BLEConstants.activateCommand, BLEConstants.strengthCommand(level)]
         } else {
             soft.complete(syncedTo: baseStrength)
             return [BLEConstants.deactivateCommand]
