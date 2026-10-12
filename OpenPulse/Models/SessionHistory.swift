@@ -75,29 +75,35 @@ enum SessionHistory {
         now: Date = Date()
     ) {
         var items = load(defaults: defaults)
-        // Only store options that apply to the mode (Still advanced)
-        let paceRaw: String? = {
-            guard mode.usesBreathingGuide || mode == .meditation else { return nil }
-            return (breathePace ?? .calm).rawValue
-        }()
-        let patternRaw: String? = {
-            guard mode == .painRelief || mode == .headache else { return nil }
-            return (easePattern ?? .wave).rawValue
-        }()
         let record = SessionRecord(
-            id: UUID(),
             endedAt: now,
             modeRaw: mode.rawValue,
             durationSeconds: max(0, durationSeconds),
             strength: max(1, min(9, strength)),
             completed: completed,
-            breathePaceRaw: paceRaw,
-            easePatternRaw: patternRaw
+            breathePaceRaw: storedPace(mode: mode, pace: breathePace),
+            easePatternRaw: storedPattern(mode: mode, pattern: easePattern)
         )
         items.insert(record, at: 0)
         if items.count > maxEntries {
             items = Array(items.prefix(maxEntries))
         }
+        save(items, defaults: defaults)
+    }
+
+    /// Pace is stored only for a breath mode. Other modes keep a nil pace.
+    private static func storedPace(mode: StimulationMode, pace: BreathePace?) -> String? {
+        guard mode.usesBreathingGuide || mode == .meditation else { return nil }
+        return (pace ?? .calm).rawValue
+    }
+
+    /// Pattern is stored only for Ease. Other modes keep a nil pattern.
+    private static func storedPattern(mode: StimulationMode, pattern: EasePattern?) -> String? {
+        guard mode == .painRelief || mode == .headache else { return nil }
+        return (pattern ?? .wave).rawValue
+    }
+
+    private static func save(_ items: [SessionRecord], defaults: UserDefaults) {
         if let data = try? JSONEncoder().encode(items) {
             defaults.set(data, forKey: storageKey)
         }
