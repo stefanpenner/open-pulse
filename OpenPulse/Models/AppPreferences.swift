@@ -48,20 +48,19 @@ enum AppPreferences {
 
     /// Last custom channel: "A" | "B" | "C" | "D" | "0"
     static func customChannel(defaults: UserDefaults = .standard) -> String {
-        let v = defaults.string(forKey: customChannelKey) ?? "D"
-        switch v {
-        case "A", "B", "C", "D", "0": return v
-        default: return "D"
-        }
+        knownChannel(defaults.string(forKey: customChannelKey) ?? "D")
     }
 
     static func saveCustomChannel(_ cmd: String, defaults: UserDefaults = .standard) {
-        let v: String
+        defaults.set(knownChannel(cmd), forKey: customChannelKey)
+    }
+
+    /// A custom channel is A, B, C, D, or off. Anything else is bilateral.
+    private static func knownChannel(_ cmd: String) -> String {
         switch cmd {
-        case "A", "B", "C", "D", "0": v = cmd
-        default: v = "D"
+        case "A", "B", "C", "D", "0": return cmd
+        default: return "D"
         }
-        defaults.set(v, forKey: customChannelKey)
     }
 
     /// Opt-in: write completed breathing sessions to Apple Health as Mindful Minutes.
