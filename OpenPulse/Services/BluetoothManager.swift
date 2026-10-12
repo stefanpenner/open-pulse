@@ -175,6 +175,21 @@ final class BluetoothManager: DeviceState {
         isCharging = nil
         batteryVoltage = nil
     }
+
+    /// The radio is off. Drop the link so the screen cannot say Connected.
+    private func radioTurnedOff() {
+        stopScan()
+        connectTimeoutTask?.cancel()
+        connectTimeoutTask = nil
+        let hadLink = isConnected || isReady || peripheral != nil
+        cleanup()
+        // Pack percent is honest only during a search. The radio is off, so drop it.
+        batteryPercentage = nil
+        isCharging = nil
+        if hadLink {
+            onDisconnect?()
+        }
+    }
 }
 
 // MARK: - CBCentralManagerDelegate
@@ -202,18 +217,7 @@ extension BluetoothManager: CBCentralManagerDelegate {
                     scan()
                 }
             } else {
-                // Tear down stale ready/connected so UI never shows Connected while BT is off
-                stopScan()
-                connectTimeoutTask?.cancel()
-                connectTimeoutTask = nil
-                let hadLink = isConnected || isReady || peripheral != nil
-                cleanup()
-                // Radio off — drop last pack reading (cache is only for mid-search honesty)
-                batteryPercentage = nil
-                isCharging = nil
-                if hadLink {
-                    onDisconnect?()
-                }
+                radioTurnedOff()
             }
         }
     }
