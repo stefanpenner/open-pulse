@@ -111,22 +111,14 @@ enum SessionEndNotifier {
             switch settings.authorizationStatus {
             case .notDetermined:
                 center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
-                    DispatchQueue.main.async {
-                        completion?(granted)
-                    }
+                    deliverOnMain(granted, to: completion)
                 }
             case .authorized, .provisional, .ephemeral:
-                DispatchQueue.main.async {
-                    completion?(true)
-                }
+                deliverOnMain(true, to: completion)
             case .denied:
-                DispatchQueue.main.async {
-                    completion?(false)
-                }
+                deliverOnMain(false, to: completion)
             @unknown default:
-                DispatchQueue.main.async {
-                    completion?(false)
-                }
+                deliverOnMain(false, to: completion)
             }
         }
     }
@@ -135,9 +127,13 @@ enum SessionEndNotifier {
     static func fetchCanDeliver(completion: @escaping @Sendable (Bool) -> Void) {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             let ok = canDeliverAlerts(authorizationStatus: settings.authorizationStatus)
-            DispatchQueue.main.async {
-                completion(ok)
-            }
+            deliverOnMain(ok, to: completion)
+        }
+    }
+
+    private static func deliverOnMain(_ granted: Bool, to completion: (@Sendable (Bool) -> Void)?) {
+        DispatchQueue.main.async {
+            completion?(granted)
         }
     }
 }
