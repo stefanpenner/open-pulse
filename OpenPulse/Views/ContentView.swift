@@ -38,21 +38,9 @@ struct ContentView: View {
             GlassEffectContainer {
                 Group {
                     if isActive {
-                        if reduceMotion {
-                            ActiveSessionLayout(vm: vm)
-                                .transition(.opacity)
-                        } else {
-                            ActiveSessionLayout(vm: vm)
-                                .transition(.blurReplace)
-                        }
+                        sessionTransition(ActiveSessionLayout(vm: vm))
                     } else {
-                        if reduceMotion {
-                            IdleSessionLayout(vm: vm)
-                                .transition(.opacity)
-                        } else {
-                            IdleSessionLayout(vm: vm)
-                                .transition(.blurReplace)
-                        }
+                        sessionTransition(IdleSessionLayout(vm: vm))
                     }
                 }
                 .padding(.horizontal, Theme.spaceL)
@@ -131,6 +119,15 @@ struct ContentView: View {
         // Battery-read grace / sample can flip canStart without a ready edge
         .onChange(of: vm.canStart) { _, can in
             if can { SessionActionBridge.shared.drainPending() }
+        }
+    }
+
+    @ViewBuilder
+    private func sessionTransition<Content: View>(_ content: Content) -> some View {
+        if reduceMotion {
+            content.transition(.opacity)
+        } else {
+            content.transition(.blurReplace)
         }
     }
 
