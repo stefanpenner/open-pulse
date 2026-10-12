@@ -121,41 +121,19 @@ final class SessionActionBridge {
     /// Bound + not ready stashes pending with TTL; ready alone never auto-starts.
     /// Empty pack never stashes (ready or not) — charge then start again.
     func requestStart() {
-        if let s = session {
-            if s.canStart {
-                s.start()
-                clearPending()
-                return
-            }
-            if s.isRunning || s.isPaused {
-                // Already in session — drop stale start
-                clearPending()
-                return
-            }
-            // Battery gate parity with UI canStart (empty + grace/unconfirmed)
-            if s.blocksStartForBattery {
-                // Empty pack (not charging): never defer until charge
-                if let pct = s.ble.batteryPercentage,
-                   BatteryPresentation.isEmpty(percent: pct),
-                   s.ble.isCharging != true {
-                    clearPending()
-                    return
-                }
-                // Mid-read grace / unconfirmed — arm TTL until canStart drains
-                armStartPending()
-                return
-            }
-            // Bound idle, link ready but mid battery-read grace — keep pending (TTL)
-            // Drain when canStart flips true (ContentView onChange) or TTL expires
-            if s.ble.isReady {
-                armStartPending()
-                return
-            }
-            // Bound idle, link not ready — wait for ready drain (bounded TTL)
+        guard let s = session else {
             armStartPending()
             return
         }
-        armStartPending()
+        switch startGate(s) {
+        case .now:
+            s.start()
+            clearPending()
+        case .drop:
+            clearPending()
+        case .hold:
+            armStartPending()
+        }
     }
 
     /// Island / Shortcuts intensity ± (one-hand, on-device only).
@@ -199,27 +177,7 @@ final class SessionActionBridge {
             return wasActive && !s.isRunning && !s.isPaused
         }
         // Cold / process-death: only claim complete when no durable session or wall past.
-        // Keys match SessionViewModel.PersistKey (session.*).
-        let d = UserDefaults.standard
-        let start: Date? = (d.object(forKey: "session.startDate") as? TimeInterval)
-            .map { Date(timeIntervalSince1970: $0) }
-        let total = d.integer(forKey: "session.totalDuration")
-        let pauseAccum = d.double(forKey: "session.accumulatedPauseTime")
-        let pauseStart: Date? = (d.object(forKey: "session.pauseStartDate") as? TimeInterval)
-            .map { Date(timeIntervalSince1970: $0) }
-        let isPaused = d.bool(forKey: "session.isPaused")
-        let offlineSince: Date? = (d.object(forKey: "session.offlineSince") as? TimeInterval)
-            .map { Date(timeIntervalSince1970: $0) }
-        let confirm = LiveActivityEndPolicy.shouldConfirmUnboundComplete(
-            now: now(),
-            persistedStart: start,
-            totalDurationSeconds: total,
-            accumulatedPause: pauseAccum,
-            pauseStart: pauseStart,
-            isPaused: isPaused,
-            offlineSince: offlineSince
-        )
-        guard confirm else {
+        guard unboundSessionMayComplete() else {
             // Mid-session process death — keep LA; restore will rebind VM
             return false
         }
@@ -257,22 +215,15 @@ final class SessionActionBridge {
                 clearPending()
                 return
             }
-            if s.canStart {
+            switch startGate(s) {
+            case .now:
                 s.start()
                 clearPending()
-            } else if s.isRunning || s.isPaused {
-                // Already in session — drop stale start
+            case .drop:
                 clearPending()
-            } else if s.blocksStartForBattery {
-                // Empty pack: drop. Grace/unconfirmed: keep until canStart or TTL.
-                if let pct = s.ble.batteryPercentage,
-                   BatteryPresentation.isEmpty(percent: pct),
-                   s.ble.isCharging != true {
-                    clearPending()
-                }
-                // else keep pending through battery grace / link-ready
+            case .hold:
+                break
             }
-            // else keep until canStart (battery read / grace) or link ready (still within TTL)
         case .stop:
             if s.isRunning || s.isPaused {
                 s.stop(reason: .user)
@@ -294,6 +245,45 @@ final class SessionActionBridge {
     }
 
     // MARK: - Intent TTL (Start / Resume)
+
+    /// One Start gate for request and drain.
+    /// `.now` fires. `.drop` clears. `.hold` waits inside the TTL.
+    private enum StartGate {
+        case now
+        case drop
+        case hold
+    }
+
+    private func startGate(_ s: SessionViewModel) -> StartGate {
+        if s.canStart { return .now }
+        if s.isRunning || s.isPaused { return .drop }
+        if s.blocksStartForBattery,
+           let pct = s.ble.batteryPercentage,
+           BatteryPresentation.isEmpty(percent: pct),
+           s.ble.isCharging != true {
+            return .drop
+        }
+        return .hold
+    }
+
+    /// Keys match SessionViewModel.PersistKey (session.*).
+    private func unboundSessionMayComplete() -> Bool {
+        let d = UserDefaults.standard
+        return LiveActivityEndPolicy.shouldConfirmUnboundComplete(
+            now: now(),
+            persistedStart: storedDate(d, key: "session.startDate"),
+            totalDurationSeconds: d.integer(forKey: "session.totalDuration"),
+            accumulatedPause: d.double(forKey: "session.accumulatedPauseTime"),
+            pauseStart: storedDate(d, key: "session.pauseStartDate"),
+            isPaused: d.bool(forKey: "session.isPaused"),
+            offlineSince: storedDate(d, key: "session.offlineSince")
+        )
+    }
+
+    private func storedDate(_ defaults: UserDefaults, key: String) -> Date? {
+        (defaults.object(forKey: key) as? TimeInterval)
+            .map { Date(timeIntervalSince1970: $0) }
+    }
 
     private func armStartPending() {
         pending = .start
