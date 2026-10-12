@@ -68,19 +68,22 @@ final class MindfulMinutesStore: MindfulMinutesWriting {
         HKObjectType.categoryType(forIdentifier: .mindfulSession)
     }
 
-    /// Request write-only authorization for mindful sessions.
-    func requestAuthorization() async throws {
+    private func requireMindfulType() throws -> HKCategoryType {
         guard isHealthDataAvailable, let type = mindfulType else {
             throw MindfulError.unavailable
         }
+        return type
+    }
+
+    /// Request write-only authorization for mindful sessions.
+    func requestAuthorization() async throws {
+        let type = try requireMindfulType()
         try await store.requestAuthorization(toShare: [type], read: [])
     }
 
     /// Save a completed session window as a mindful sample (duration marker).
     func saveSession(start: Date, end: Date) async throws {
-        guard isHealthDataAvailable, let type = mindfulType else {
-            throw MindfulError.unavailable
-        }
+        let type = try requireMindfulType()
         guard end > start else { throw MindfulError.invalidRange }
 
         let sample = HKCategorySample(
