@@ -591,110 +591,132 @@ final class SessionViewModel: ObservableObject {
     func start() {
         guard canStart else { return }
 
-        isRunning = true
-        sessionTotalDuration = min(timerMinutes, BLEConstants.maxSessionMinutes) * 60
-        remainingSeconds = sessionTotalDuration
-        // Clear pending only after we enqueue absolute session program (incl. leading 0 for breath modes)
-        UIApplication.shared.isIdleTimerDisabled = true
+        armRunningClock()
+        resetCustomSoftWindow()
+        beginMindfulWindow()
 
-        // Wall-clock tracking (inject `now` so tests and wall math share one clock)
-        sessionStartDate = now()
-        sessionWallStart = sessionStartDate
-        accumulatedPauseTime = 0
-        pauseStartDate = nil
-        backgroundEntryDate = nil
-        lastTickElapsed = nil
-        // Custom soft-starts on first start when strength warrants (matches engines)
-        customSoftOnNextResume = selectedMode == .custom && SoftStart.isNeeded(target: strength)
-        customSoftBeginElapsed = nil
-        // Fresh mindful segments for this session
-        mindfulSegments = []
-        mindfulSegmentStart = sessionStartDate
-
-        // Initialize engine (respects Breathe pace / Ease pattern)
-        engine = resolveEngine()
-        // Sleep phase anchor before any ±time; comfort seed from soft start
-        defaults.removeObject(forKey: PersistKey.phaseLengthSeconds)
-        defaults.removeObject(forKey: PersistKey.lastComfortStrength)
-        defaults.removeObject(forKey: PersistKey.userStrengthFloor)
-        persistPhaseScheduleIfNeeded()
-
-        if var engine {
-            var cmds = engine.start(baseStrength: strength, totalDuration: sessionTotalDuration)
-            // Absolute-off first if engine didn't already include it (safety vs prior stim)
-            if !cmds.contains(BLEConstants.deactivateCommand),
-               !cmds.contains(where: { $0.hasPrefix("0") }) {
-                cmds.insert(BLEConstants.deactivateCommand, at: 0)
-            }
-            self.engine = engine
-            // Do not persist soft-start steps — only settled fade/base (restore honesty)
-            if ble.isReady {
-                ble.cancelProgramWrites()
-            }
-            sendSessionCommands(cmds)
-            // Keep durable pending until lead-0 ACK (process death cannot drop sticky off)
-            // Set initial state from engine
-            // Align UI with engine soft-start / phase at t=0 (no 1s lag)
-            processTick()
-            if selectedMode.usesBreathingGuide {
-                // Respiratory-gated modes start with inhale (stim off)
-                // processTick may leave engine-aligned state; force inhale flags if needed
-                if breathingPhase == nil {
-                    stimulationActive = false
-                    activeChannel = .off
-                    breathingPhase = .inhale(progress: 0)
-                    modeStatus = "Inhale"
-                }
-            } else if modeStatus.isEmpty || modeStatus == "Starting" {
-                // Fallback if engine tick was empty
-                if selectedMode == .focus || selectedMode == .learn {
-                    stimulationActive = true
-                    activeChannel = .left
-                    modeStatus = SoftStart.isNeeded(target: strength) ? "Left channel · Easing in" : "Starting"
-                } else {
-                    stimulationActive = true
-                    activeChannel = .bilateral
-                    if SoftStart.isNeeded(target: strength) {
-                        modeStatus = "Bilateral · Easing in"
-                        effectiveStrength = SoftStart.initialStrength(target: strength)
-                    } else {
-                        modeStatus = "Starting"
-                    }
-                }
-            }
+        bindSessionEngine()
+        if engine == nil {
+            programCustomStart()
         } else {
-            // Custom: absolute program — cancel stale queue, leading off, then channel
-            // Keep sticky custom channel; remap pure-off to bilateral so start is intentional
-            if customChannelCommand == "0" {
-                customChannelCommand = "D"
-            }
-            if ble.isReady {
-                ble.cancelProgramWrites()
-            }
-            var cmds = customReconnectCommands()
-            if !cmds.contains(BLEConstants.deactivateCommand),
-               !cmds.contains(where: { $0.hasPrefix("0") }) {
-                cmds.insert(BLEConstants.deactivateCommand, at: 0)
-            }
-            sendSessionCommands(cmds)
-            // Keep durable pending until lead-0 ACK
-            applyCustomChannelFlagsFromCommand()
-            debugActiveChannel = customChannelCommand
-            if SoftStart.isNeeded(target: strength), customSoftBeginElapsed != nil {
-                modeStatus = "Custom · Easing in"
-                effectiveStrength = SoftStart.initialStrength(target: strength)
-            } else {
-                modeStatus = "Custom · \(customChannelCommand == "0" ? "Off" : "Manual")"
-            }
+            programEngineStart()
         }
 
-        // Drop any leftover end alert from a prior completed session
         endNotifier.cancel()
         startCountdown()
         startKeepalive()
         persistSession()
         pushLiveActivity(start: true)
         syncAmbientAudio()
+    }
+
+    /// One clock for the run (`now`), including tests.
+    private func armRunningClock() {
+        isRunning = true
+        sessionTotalDuration = min(timerMinutes, BLEConstants.maxSessionMinutes) * 60
+        remainingSeconds = sessionTotalDuration
+        UIApplication.shared.isIdleTimerDisabled = true
+        sessionStartDate = now()
+        sessionWallStart = sessionStartDate
+        accumulatedPauseTime = 0
+        pauseStartDate = nil
+        backgroundEntryDate = nil
+        lastTickElapsed = nil
+    }
+
+    /// Custom eases in on first start when strength warrants. Other modes stay settled.
+    private func resetCustomSoftWindow() {
+        customSoftOnNextResume = selectedMode == .custom && SoftStart.isNeeded(target: strength)
+        customSoftBeginElapsed = nil
+    }
+
+    private func beginMindfulWindow() {
+        mindfulSegments = []
+        mindfulSegmentStart = sessionStartDate
+    }
+
+    /// Sleep phase anchor before any ±time. Comfort seed comes from the program, not a prior run.
+    private func bindSessionEngine() {
+        engine = resolveEngine()
+        defaults.removeObject(forKey: PersistKey.phaseLengthSeconds)
+        defaults.removeObject(forKey: PersistKey.lastComfortStrength)
+        defaults.removeObject(forKey: PersistKey.userStrengthFloor)
+        persistPhaseScheduleIfNeeded()
+    }
+
+    private func programEngineStart() {
+        guard var engine else { return }
+        let commands = engine.start(baseStrength: strength, totalDuration: sessionTotalDuration)
+        self.engine = engine
+        sendStartProgram(commands)
+        processTick()
+        applyEngineStartFallback()
+    }
+
+    /// Pure off is not a start. Bilateral is the intentional custom channel.
+    private func programCustomStart() {
+        if customChannelCommand == "0" {
+            customChannelCommand = "D"
+        }
+        sendStartProgram(customReconnectCommands())
+        applyCustomChannelFlagsFromCommand()
+        debugActiveChannel = customChannelCommand
+        applyCustomStartStatus()
+    }
+
+    /// Pending off stays set until the lead-0 write succeeds.
+    private func sendStartProgram(_ commands: [String]) {
+        if ble.isReady {
+            ble.cancelProgramWrites()
+        }
+        sendSessionCommands(commandsWithLeadingOff(commands))
+    }
+
+    /// Lead with absolute off unless the program already starts off.
+    private func commandsWithLeadingOff(_ commands: [String]) -> [String] {
+        var commands = commands
+        if !commands.contains(BLEConstants.deactivateCommand),
+           !commands.contains(where: { $0.hasPrefix("0") }) {
+            commands.insert(BLEConstants.deactivateCommand, at: 0)
+        }
+        return commands
+    }
+
+    /// Breath modes with no phase yet start on inhale, stim off.
+    /// An empty engine tick still shows channel and ease-in.
+    private func applyEngineStartFallback() {
+        if selectedMode.usesBreathingGuide {
+            guard breathingPhase == nil else { return }
+            stimulationActive = false
+            activeChannel = .off
+            breathingPhase = .inhale(progress: 0)
+            modeStatus = "Inhale"
+            return
+        }
+        guard modeStatus.isEmpty || modeStatus == "Starting" else { return }
+        if selectedMode == .focus || selectedMode == .learn {
+            stimulationActive = true
+            activeChannel = .left
+            modeStatus = SoftStart.isNeeded(target: strength) ? "Left channel · Easing in" : "Starting"
+            return
+        }
+        stimulationActive = true
+        activeChannel = .bilateral
+        if SoftStart.isNeeded(target: strength) {
+            modeStatus = "Bilateral · Easing in"
+            effectiveStrength = SoftStart.initialStrength(target: strength)
+        } else {
+            modeStatus = "Starting"
+        }
+    }
+
+    private func applyCustomStartStatus() {
+        if SoftStart.isNeeded(target: strength), customSoftBeginElapsed != nil {
+            modeStatus = "Custom · Easing in"
+            effectiveStrength = SoftStart.initialStrength(target: strength)
+        } else {
+            modeStatus = "Custom · \(customChannelCommand == "0" ? "Off" : "Manual")"
+        }
     }
 
     /// One status path for app UI + Live Activity (pending / offline / phase).
@@ -744,20 +766,59 @@ final class SessionViewModel: ObservableObject {
         case completed
     }
 
+    /// Facts captured before stop clears the run. Island copy must not see the re-armed off flag.
+    private struct StopSnapshot {
+        let reason: StopReason
+        let mode: StimulationMode
+        let strength: Int
+        let planned: Int
+        let elapsedActive: Int
+        let liveActivityPendingOff: Bool
+        let historicalEnd: Date?
+    }
+
     func stop(reason: StopReason = .user) {
         guard isRunning || isPaused else { return }
 
-        let mode = selectedMode
-        let strengthSnapshot = strength
-        let planned = sessionTotalDuration
-        let remaining = remainingSeconds
-        // Elapsed active time for history
-        let elapsedActive = max(0, planned - remaining)
-        // LA complete copy: claim "turning device off" only when off is still needed.
-        // Paused + off already ACKed → pending false; safety re-off still runs below.
-        let wasRunning = isRunning
-        let laPendingOff = wasRunning || pendingDeactivate
+        let end = stopSnapshot(reason: reason)
+        retireActiveRun()
+        closeMindfulForStop(end)
 
+        clearSessionClocks()
+        clearStimulationState()
+        stopRunLoops(reason: reason)
+        clearPersistedSession()
+
+        requestDeviceOff(andQueryStatus: false)
+        endLiveActivity(end)
+        ambientAudio.stop(fade: true)
+
+        recordSessionHistory(end)
+        saveMindfulForStop(end)
+        clearMindfulWindow()
+        if end.reason == .completed {
+            completionBanner = "Session complete · \(end.mode.name)"
+        }
+    }
+
+    private func stopSnapshot(reason: StopReason) -> StopSnapshot {
+        let planned = sessionTotalDuration
+        let start = sessionStartDate
+        let pause = accumulatedPauseTime
+        return StopSnapshot(
+            reason: reason,
+            mode: selectedMode,
+            strength: strength,
+            planned: planned,
+            elapsedActive: max(0, planned - remainingSeconds),
+            liveActivityPendingOff: isRunning || pendingDeactivate,
+            historicalEnd: start.map {
+                $0.addingTimeInterval(TimeInterval(planned) + pause)
+            }
+        )
+    }
+
+    private func retireActiveRun() {
         isRunning = false
         isPaused = false
         remainingSeconds = 0
@@ -769,29 +830,28 @@ final class SessionViewModel: ObservableObject {
         backgroundWatchTask = nil
         backgroundPingTask?.cancel()
         backgroundPingTask = nil
+    }
 
-        // Snapshot clocks before clear — completed sessions must not overclaim late stop
-        let startSnap = sessionStartDate
-        let pauseSnap = accumulatedPauseTime
-        let historicalEnd: Date? = startSnap.map {
-            $0.addingTimeInterval(TimeInterval(planned) + pauseSnap)
-        }
-        if reason == .completed, let hist = historicalEnd {
+    /// Completed practice ends at the planned instant, not at a late stop.
+    private func closeMindfulForStop(_ end: StopSnapshot) {
+        if end.reason == .completed, let hist = end.historicalEnd {
             closeMindfulSegment(at: min(Date(), hist))
         } else {
             closeMindfulSegment()
         }
+    }
 
-        // Clear wall-clock state
+    private func clearSessionClocks() {
         sessionStartDate = nil
         accumulatedPauseTime = 0
         pauseStartDate = nil
         backgroundEntryDate = nil
         lastTickElapsed = nil
+    }
+
+    private func clearStimulationState() {
         customSoftOnNextResume = false
         customSoftBeginElapsed = nil
-
-        // Clear engine state
         engine = nil
         stimulationActive = false
         effectiveStrength = nil
@@ -799,61 +859,56 @@ final class SessionViewModel: ObservableObject {
         activeChannel = .off
         debugActiveChannel = ""
         modeStatus = ""
+    }
 
+    /// A completed stop keeps the end alert. A user stop cancels it.
+    private func stopRunLoops(reason: StopReason) {
         stopCountdown()
         stopKeepalive()
-        // Keep pending end alert on .completed (BG race: stop must not cancel the notify).
-        // Cancel only for user stop — completed alert is the feature.
         if reason != .completed {
             endNotifier.cancel()
         }
-        clearPersistedSession()
+    }
 
-        // Off first; defer status queries until off ACK (avoids sticky pending banner)
-        requestDeviceOff(andQueryStatus: false)
-
-        // LA complete copy uses pre-arm snapshot only — do not OR post-re-arm pending
-        // (that always made completed claim "turning device off" even after pause off-ACK).
+    private func endLiveActivity(_ end: StopSnapshot) {
         liveActivity.end(
-            reason: reason == .completed ? .completed : .user,
-            modeName: mode.name,
-            pendingDeviceOff: laPendingOff
+            reason: end.reason == .completed ? .completed : .user,
+            modeName: end.mode.name,
+            pendingDeviceOff: end.liveActivityPendingOff
         )
-        // Fade ambience — never tied to stim; stop session always ends sound
-        ambientAudio.stop(fade: true)
+    }
 
-        // Privacy-first local log + intensity memory (competitive parity w/ official app)
-        AppPreferences.saveLastStrength(strengthSnapshot, defaults: defaults)
-        if planned > 0 {
-            let loggedDuration = reason == .completed ? planned : elapsedActive
-            SessionHistory.append(
-                mode: mode,
-                durationSeconds: loggedDuration,
-                strength: strengthSnapshot,
-                completed: reason == .completed,
-                breathePace: breathePace,
-                easePattern: easePattern,
-                defaults: defaults
-            )
-            recentSessions = SessionHistory.load(defaults: defaults)
-        }
+    private func recordSessionHistory(_ end: StopSnapshot) {
+        AppPreferences.saveLastStrength(end.strength, defaults: defaults)
+        guard end.planned > 0 else { return }
+        let loggedDuration = end.reason == .completed ? end.planned : end.elapsedActive
+        SessionHistory.append(
+            mode: end.mode,
+            durationSeconds: loggedDuration,
+            strength: end.strength,
+            completed: end.reason == .completed,
+            breathePace: breathePace,
+            easePattern: easePattern,
+            defaults: defaults
+        )
+        recentSessions = SessionHistory.load(defaults: defaults)
+    }
 
-        // Opt-in Mindful Minutes for breathing sessions that completed or ran meaningfully
-        if reason == .completed || elapsedActive >= 60 {
-            let mindfulEnd = (reason == .completed ? historicalEnd : nil) ?? Date()
-            saveMindfulMinutesIfEnabled(
-                mode: mode,
-                durationSeconds: reason == .completed ? planned : elapsedActive,
-                end: min(Date(), mindfulEnd)
-            )
-        }
+    private func saveMindfulForStop(_ end: StopSnapshot) {
+        guard end.reason == .completed || end.elapsedActive >= 60 else { return }
+        let mindfulEnd = (end.reason == .completed ? end.historicalEnd : nil) ?? Date()
+        let duration = end.reason == .completed ? end.planned : end.elapsedActive
+        saveMindfulMinutesIfEnabled(
+            mode: end.mode,
+            durationSeconds: duration,
+            end: min(Date(), mindfulEnd)
+        )
+    }
+
+    private func clearMindfulWindow() {
         sessionWallStart = nil
         mindfulSegments = []
         mindfulSegmentStart = nil
-
-        if reason == .completed {
-            completionBanner = "Session complete · \(mode.name)"
-        }
     }
 
     /// Island / Siri Stop while idle — re-assert durable HW off (no active session).
@@ -1668,18 +1723,20 @@ final class SessionViewModel: ObservableObject {
         countdownTimer = timer
     }
 
+    /// Idle and paused do not program the device (stop race / stale timer).
     private func processTick() {
-        // Never program hardware while idle/paused (stop race / stale timer)
         guard isRunning else { return }
+
         touchLastAlive()
-
-        guard var engine else {
-            // Custom mode: optional soft re-entry after pause
-            advanceCustomSoftIfNeeded()
-            lastTickElapsed = elapsed
-            return
+        if engine == nil {
+            tickCustomProgram()
+        } else {
+            tickEngineProgram()
         }
+    }
 
+    private func tickEngineProgram() {
+        guard var engine else { return }
         let result = engine.tick(
             elapsed: elapsed,
             totalDuration: sessionTotalDuration,
@@ -1687,13 +1744,17 @@ final class SessionViewModel: ObservableObject {
         )
         self.engine = engine
         lastTickElapsed = elapsed
-
-        // Send BLE commands only when fully ready
         if ble.isReady, !result.commands.isEmpty {
             sendSessionCommands(result.commands)
         }
-
         applyTickResult(result)
+    }
+
+    private func tickCustomProgram() {
+        if let command = stepCustomSoft(), ble.isReady, stimulationActive {
+            ble.sendCommand(command)
+        }
+        lastTickElapsed = elapsed
     }
 
     /// Shared UI + durable comfort after an engine tick (timer or setStrength path).
@@ -1739,9 +1800,10 @@ final class SessionViewModel: ObservableObject {
         }
     }
 
-    /// Step custom soft-start after pause (local elapsed from customSoftBeginElapsed).
-    private func advanceCustomSoftIfNeeded() {
-        guard let begin = customSoftBeginElapsed else { return }
+    /// Next custom soft step, or full strength when the ease window closes.
+    /// Nil when the window is idle or the step is unchanged. The caller sends it.
+    private func stepCustomSoft() -> String? {
+        guard let begin = customSoftBeginElapsed else { return nil }
         let local = max(0, elapsed - begin)
         let desired = SoftStart.strength(atElapsed: local, target: strength)
         if SoftStart.isComplete(elapsed: local, target: strength) {
@@ -1750,17 +1812,11 @@ final class SessionViewModel: ObservableObject {
             if modeStatus.contains("Easing") {
                 modeStatus = customChannelCommand == "0" ? "Custom · Off" : "Custom · Manual"
             }
-            if ble.isReady, stimulationActive {
-                ble.sendCommand(BLEConstants.strengthCommand(strength))
-            }
-            return
+            return BLEConstants.strengthCommand(strength)
         }
-        if effectiveStrength != desired {
-            effectiveStrength = desired
-            if ble.isReady, stimulationActive {
-                ble.sendCommand(BLEConstants.strengthCommand(desired))
-            }
-        }
+        guard effectiveStrength != desired else { return nil }
+        effectiveStrength = desired
+        return BLEConstants.strengthCommand(desired)
     }
 
     private func stopCountdown() {
