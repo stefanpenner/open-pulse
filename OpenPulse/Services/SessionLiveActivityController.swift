@@ -34,71 +34,9 @@ protocol SessionLiveActivityPresenting: AnyObject {
     func noteHardwareOffConfirmed()
 }
 
-/// Default production Live Activity (static controller).
-@MainActor
-final class SystemSessionLiveActivity: SessionLiveActivityPresenting {
-    func start(
-        mode: StimulationMode,
-        totalSeconds: Int,
-        remainingSeconds: Int,
-        statusText: String,
-        stimulationActive: Bool,
-        pendingDeviceOff: Bool,
-        isPaused: Bool,
-        isLinkReady: Bool
-    ) {
-        SessionLiveActivityController.start(
-            mode: mode,
-            totalSeconds: totalSeconds,
-            remainingSeconds: remainingSeconds,
-            statusText: statusText,
-            stimulationActive: stimulationActive,
-            pendingDeviceOff: pendingDeviceOff,
-            isPaused: isPaused,
-            isLinkReady: isLinkReady
-        )
-    }
-
-    func update(
-        remainingSeconds: Int,
-        totalSeconds: Int,
-        isPaused: Bool,
-        statusText: String,
-        stimulationActive: Bool,
-        pendingDeviceOff: Bool,
-        isLinkReady: Bool
-    ) {
-        SessionLiveActivityController.update(
-            remainingSeconds: remainingSeconds,
-            totalSeconds: totalSeconds,
-            isPaused: isPaused,
-            statusText: statusText,
-            stimulationActive: stimulationActive,
-            pendingDeviceOff: pendingDeviceOff,
-            isLinkReady: isLinkReady
-        )
-    }
-
-    func end(
-        reason: SessionLiveActivityController.EndReason,
-        modeName: String,
-        pendingDeviceOff: Bool
-    ) {
-        SessionLiveActivityController.end(
-            reason: reason,
-            modeName: modeName,
-            pendingDeviceOff: pendingDeviceOff
-        )
-    }
-
-    func noteHardwareOffConfirmed() {
-        SessionLiveActivityController.noteHardwareOffConfirmed()
-    }
-}
-
 /// Lock Screen / Dynamic Island session presence.
 @MainActor
-enum SessionLiveActivityController {
+final class SessionLiveActivityController: SessionLiveActivityPresenting {
     nonisolated(unsafe) private static var currentActivity: Activity<SessionActivityAttributes>?
     /// Generation token so async end() cannot kill a newer activity.
     private static var generation: UInt64 = 0
@@ -142,98 +80,16 @@ enum SessionLiveActivityController {
         }
     }
 
-    static func start(
-        mode: StimulationMode,
-        totalSeconds: Int,
-        remainingSeconds: Int,
-        statusText: String,
-        stimulationActive: Bool,
-        pendingDeviceOff: Bool = false,
-        isPaused: Bool = false,
-        isLinkReady: Bool = true,
-        now: Date = Date()
-    ) {
-        guard isSupported else { return }
-
-        generation &+= 1
-        let gen = generation
-        // New session — do not let prior completed linger receive off-ACK re-end
-        lingeringCompleted = nil
-        let prior = currentActivity
-        currentActivity = nil
-        // Process-dead orphans still sit in Activity.activities with live endsAt
-        endOrphanActivities(keeping: prior?.id)
-
-        let attributes = SessionActivityAttributes(
-            modeRaw: mode.rawValue,
-            modeName: mode.name,
-            totalSeconds: totalSeconds
-        )
-        let endsAt = LiveActivityPresentation.endsAt(
-            remainingSeconds: remainingSeconds,
-            isPaused: isPaused,
-            isLinkReady: isLinkReady,
-            now: now
-        )
-        let state = SessionActivityAttributes.ContentState(
-            remainingSeconds: remainingSeconds,
-            totalSeconds: totalSeconds,
-            isPaused: isPaused,
-            statusText: statusText.isEmpty ? mode.name : statusText,
-            stimulationActive: stimulationActive,
-            pendingDeviceOff: pendingDeviceOff,
-            endsAt: endsAt,
-            isLinkReady: isLinkReady
-        )
-        // Stale at session end so system can dim after 00:00 even if process is late.
-        // Offline / paused: extend stale far so LA does not dim mid-reconnect.
-        let stale: Date
-        if isPaused || !isLinkReady {
-            stale = now.addingTimeInterval(TimeInterval(max(remainingSeconds + 3600, 3600)))
-        } else if let endsAt {
-            stale = endsAt
-        } else {
-            stale = now.addingTimeInterval(TimeInterval(max(remainingSeconds + 30, 60)))
-        }
-
-        if let prior {
-            Task {
-                await prior.end(nil, dismissalPolicy: .immediate)
-            }
-        }
-
-        do {
-            let activity = try Activity.request(
-                attributes: attributes,
-                content: .init(state: state, staleDate: stale),
-                pushType: nil
-            )
-            guard gen == generation else {
-                Task { await activity.end(nil, dismissalPolicy: .immediate) }
-                return
-            }
-            currentActivity = activity
-            // Schedule end complete on first start (not only subsequent updates)
-            scheduleEndAtSessionEnd(endsAt: endsAt, gen: gen)
-        } catch {
-            currentActivity = nil
-        }
-    }
-
-    static func update(
+    private func liveContent(
         remainingSeconds: Int,
         totalSeconds: Int,
         isPaused: Bool,
         statusText: String,
         stimulationActive: Bool,
-        pendingDeviceOff: Bool = false,
-        isLinkReady: Bool = true,
-        now: Date = Date()
-    ) {
-        guard let activity = currentActivity else { return }
-        // Monotonic seq so out-of-order async updates cannot clobber pause/reconnect
-        generation &+= 1
-        let gen = generation
+        pendingDeviceOff: Bool,
+        isLinkReady: Bool,
+        now: Date
+    ) -> ActivityContent<SessionActivityAttributes.ContentState> {
         let endsAt = LiveActivityPresentation.endsAt(
             remainingSeconds: remainingSeconds,
             isPaused: isPaused,
@@ -250,7 +106,8 @@ enum SessionLiveActivityController {
             endsAt: endsAt,
             isLinkReady: isLinkReady
         )
-        // Offline freezes endsAt (nil) so scheduleEndAtSessionEnd cancels — no false complete.
+        // Stale at session end so system can dim after 00:00 even if process is late.
+        // Offline / paused: extend stale far so LA does not dim mid-reconnect.
         let stale: Date
         if isPaused || !isLinkReady {
             stale = now.addingTimeInterval(TimeInterval(max(remainingSeconds + 3600, 3600)))
@@ -259,50 +116,139 @@ enum SessionLiveActivityController {
         } else {
             stale = now.addingTimeInterval(TimeInterval(max(remainingSeconds + 30, 60)))
         }
-        let content = ActivityContent(state: state, staleDate: stale)
+        return ActivityContent(state: state, staleDate: stale)
+    }
+
+    func start(
+        mode: StimulationMode,
+        totalSeconds: Int,
+        remainingSeconds: Int,
+        statusText: String,
+        stimulationActive: Bool,
+        pendingDeviceOff: Bool = false,
+        isPaused: Bool = false,
+        isLinkReady: Bool = true
+    ) {
+        let now = Date()
+        guard Self.isSupported else { return }
+
+        Self.generation &+= 1
+        let gen = Self.generation
+        // New session — do not let prior completed linger receive off-ACK re-end
+        Self.lingeringCompleted = nil
+        let prior = Self.currentActivity
+        Self.currentActivity = nil
+        // Process-dead orphans still sit in Activity.activities with live endsAt
+        Self.endOrphanActivities(keeping: prior?.id)
+
+        let attributes = SessionActivityAttributes(
+            modeRaw: mode.rawValue,
+            modeName: mode.name,
+            totalSeconds: totalSeconds
+        )
+        let content = liveContent(
+            remainingSeconds: remainingSeconds,
+            totalSeconds: totalSeconds,
+            isPaused: isPaused,
+            statusText: statusText.isEmpty ? mode.name : statusText,
+            stimulationActive: stimulationActive,
+            pendingDeviceOff: pendingDeviceOff,
+            isLinkReady: isLinkReady,
+            now: now
+        )
+
+        if let prior {
+            Task {
+                await prior.end(nil, dismissalPolicy: .immediate)
+            }
+        }
+
+        do {
+            let activity = try Activity.request(
+                attributes: attributes,
+                content: content,
+                pushType: nil
+            )
+            guard gen == Self.generation else {
+                Task { await activity.end(nil, dismissalPolicy: .immediate) }
+                return
+            }
+            Self.currentActivity = activity
+            // Schedule end complete on first start (not only subsequent updates)
+            scheduleEndAtSessionEnd(endsAt: content.state.endsAt, gen: gen)
+        } catch {
+            Self.currentActivity = nil
+        }
+    }
+
+    func update(
+        remainingSeconds: Int,
+        totalSeconds: Int,
+        isPaused: Bool,
+        statusText: String,
+        stimulationActive: Bool,
+        pendingDeviceOff: Bool = false,
+        isLinkReady: Bool = true
+    ) {
+        let now = Date()
+        guard Self.currentActivity != nil else { return }
+        // Monotonic seq so out-of-order async updates cannot clobber pause/reconnect
+        Self.generation &+= 1
+        let gen = Self.generation
+        let content = liveContent(
+            remainingSeconds: remainingSeconds,
+            totalSeconds: totalSeconds,
+            isPaused: isPaused,
+            statusText: statusText,
+            stimulationActive: stimulationActive,
+            pendingDeviceOff: pendingDeviceOff,
+            isLinkReady: isLinkReady,
+            now: now
+        )
         // Chain updates: each waits for prior, then applies only if still latest gen
-        let prior = updateChain
-        updateChain = Task {
+        let prior = Self.updateChain
+        Self.updateChain = Task {
             await prior?.value
-            guard gen == generation, let act = currentActivity else { return }
+            guard gen == Self.generation, let act = Self.currentActivity else { return }
             await act.update(content)
         }
-        scheduleEndAtSessionEnd(endsAt: endsAt, gen: gen)
+        // Offline freezes endsAt (nil) so scheduleEndAtSessionEnd cancels — no false complete.
+        scheduleEndAtSessionEnd(endsAt: content.state.endsAt, gen: gen)
     }
 
     /// When system countdown hits endsAt, complete session first (VM wall truth), then LA.
     /// Never end-before-confirm — that lied "Session complete" while stim could continue.
-    private static func scheduleEndAtSessionEnd(endsAt: Date?, gen: UInt64) {
-        endScheduleTask?.cancel()
+    private func scheduleEndAtSessionEnd(endsAt: Date?, gen: UInt64) {
+        Self.endScheduleTask?.cancel()
         guard let endsAt else { return }
         let delay = endsAt.timeIntervalSinceNow
         guard delay > 0 else {
-            if gen == generation {
+            if gen == Self.generation {
                 Task { @MainActor in
                     await fireSessionEndAfterConfirm(gen: gen)
                 }
             }
             return
         }
-        endScheduleTask = Task {
+        Self.endScheduleTask = Task {
             let ns = UInt64(delay * 1_000_000_000)
             try? await Task.sleep(nanoseconds: ns)
-            guard !Task.isCancelled, gen == generation else { return }
+            guard !Task.isCancelled, gen == Self.generation else { return }
             await fireSessionEndAfterConfirm(gen: gen)
         }
     }
 
     /// Confirm with session (wall-honest), then end LA only if session confirms complete.
     @MainActor
-    private static func fireSessionEndAfterConfirm(gen: UInt64) async {
-        guard gen == generation else { return }
-        guard let act = currentActivity, !act.content.state.isPaused else { return }
+    private func fireSessionEndAfterConfirm(gen: UInt64) async {
+        guard gen == Self.generation else { return }
+        guard let act = Self.currentActivity, !act.content.state.isPaused else { return }
         let modeName = act.attributes.modeName
         // VM stop ends LA when wall past; unbound returns true + durable pending-off
-        let confirmed = requestSessionComplete()
+        let confirmed = Self.requestSessionComplete()
         // Only end LA when session (or unbound path) confirms — never on stale remaining alone
         if LiveActivityEndPolicy.shouldEndAsCompleted(
-            activityStillCurrent: currentActivity != nil && gen == generation,
+            activityStillCurrent: Self.currentActivity != nil && gen == Self.generation,
             sessionConfirmedComplete: confirmed
         ) {
             // Unbound / no VM end path: durable off is armed — claim pending off
@@ -312,25 +258,25 @@ enum SessionLiveActivityController {
 
     /// End Live Activity. Completed sessions linger briefly with honest complete copy.
     /// - Parameter pendingDeviceOff: true only when HW off is still in flight (Still honesty).
-    static func end(
+    func end(
         reason: EndReason = .user,
         modeName: String = "",
-        pendingDeviceOff: Bool = true,
-        now: Date = Date()
+        pendingDeviceOff: Bool = true
     ) {
-        generation &+= 1
-        let gen = generation
-        endScheduleTask?.cancel()
-        endScheduleTask = nil
-        lingeringCompleted = nil
-        let activity = currentActivity
-        currentActivity = nil
-        let prior = updateChain
-        updateChain = nil
+        let now = Date()
+        Self.generation &+= 1
+        let gen = Self.generation
+        Self.endScheduleTask?.cancel()
+        Self.endScheduleTask = nil
+        Self.lingeringCompleted = nil
+        let activity = Self.currentActivity
+        Self.currentActivity = nil
+        let prior = Self.updateChain
+        Self.updateChain = nil
         // Caller truth only — do not sticky-OR ActivityKit state (paused off-ACK would lie)
         let offPending = pendingDeviceOff
         // Drop any process-orphan siblings so dual Islands cannot linger
-        endOrphanActivities(keeping: activity?.id)
+        Self.endOrphanActivities(keeping: activity?.id)
         Task {
             await prior?.value
             guard let activity else { return }
@@ -354,7 +300,7 @@ enum SessionLiveActivityController {
                 )
                 if offPending {
                     // Keep handle so off ACK can clear "turning device off" during linger
-                    lingeringCompleted = (activity, modeName, gen)
+                    Self.lingeringCompleted = (activity, modeName, gen)
                 }
                 await activity.end(
                     ActivityContent(state: final, staleDate: dismissAt),
@@ -365,8 +311,8 @@ enum SessionLiveActivityController {
                     try? await Task.sleep(
                         for: .seconds(LiveActivityPresentation.completedDismissalSeconds + 0.5)
                     )
-                    if let linger = lingeringCompleted, linger.gen == gen {
-                        lingeringCompleted = nil
+                    if let linger = Self.lingeringCompleted, linger.gen == gen {
+                        Self.lingeringCompleted = nil
                     }
                 }
             case .user:
@@ -376,9 +322,10 @@ enum SessionLiveActivityController {
     }
 
     /// After durable off ACK while completed LA lingers — re-end with honest copy (no turning off).
-    static func noteHardwareOffConfirmed(now: Date = Date()) {
-        guard let linger = lingeringCompleted else { return }
-        lingeringCompleted = nil
+    func noteHardwareOffConfirmed() {
+        let now = Date()
+        guard let linger = Self.lingeringCompleted else { return }
+        Self.lingeringCompleted = nil
         let modeName = linger.modeName
         let activity = linger.activity
         Task {

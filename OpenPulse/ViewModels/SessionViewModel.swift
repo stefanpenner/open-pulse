@@ -193,7 +193,7 @@ final class SessionViewModel: ObservableObject {
         self.ble = ble
         self.endNotifier = endNotifier ?? SystemSessionEndNotifier()
         self.mindfulStore = mindfulStore ?? MindfulMinutesStore()
-        self.liveActivity = liveActivity ?? SystemSessionLiveActivity()
+        self.liveActivity = liveActivity ?? SessionLiveActivityController()
         self.ambientAudio = ambientAudio ?? SessionAmbientAudio()
         // Restore durable pending-off before didSet wiring via direct assign after load
         if let last = AppPreferences.lastStrength(defaults: defaults) {
