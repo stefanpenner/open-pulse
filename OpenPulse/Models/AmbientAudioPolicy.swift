@@ -1,14 +1,10 @@
 import Foundation
 
-/// Pure policy for optional session ambience (local only — no streaming).
+/// Pure policy for optional calming ticks (local synth only — no streaming).
 /// Off by default. Audio never required for stim. Audio stop ≠ session stop.
 enum AmbientAudioPolicy {
-    /// Bundle resource name (without extension).
-    static let resourceName = "AmbientCalm"
-    static let resourceExtension = "m4a"
-
-    /// Target playback volume (0…1) after fade-in.
-    static let targetVolume: Float = 0.55
+    /// Target tick level (0…1) after fade-in. Click loudness lives in BilateralTicks.volume.
+    static let targetVolume: Float = 1.0
 
     /// Fade durations (seconds).
     static let fadeInSeconds: TimeInterval = 2.5

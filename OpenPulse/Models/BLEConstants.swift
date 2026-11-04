@@ -15,8 +15,13 @@ enum BLEConstants {
     static let centralRestoreIdentifier = "io.github.stefanpenner.OpenPulse.central"
 
     // Battery voltage thresholds
-    static let batteryFullVoltage: Double = 3.95
-    static let batteryEmptyVoltage: Double = 2.5
+    // Official Pulsetto app curve (PulseLibre App.js, pulse-libre-desktop main.py):
+    // 3.5 V = 0 %, 3.9 V = 100 %, linear between.
+    static let batteryFullVoltage: Double = 3.9
+    static let batteryEmptyVoltage: Double = 3.5
+    /// Below this the pack is dead and reads 0 %. Between this and
+    /// `batteryEmptyVoltage` the pack is low but usable and reads 1 %.
+    static let batteryDeadVoltage: Double = 3.4
 
     // Intervals
     static let keepaliveInterval: TimeInterval = 10
@@ -26,8 +31,6 @@ enum BLEConstants {
 
     /// Hard ceiling for any session (wellness safety / battery comfort).
     static let maxSessionMinutes = 60
-    /// Battery % at/below which UI warns the user.
-    static let lowBatteryThresholdPercent = 15
 
     // Commands (verified on device)
     // 0 = off, A = left only, B = ramp-up to intensity, C = right only, D = bilateral
@@ -38,17 +41,22 @@ enum BLEConstants {
     static let deactivateCommand = "0\n"
     static let batteryQueryCommand = "Q\n"
     static let chargingQueryCommand = "u\n"
+    static let firmwareQueryCommand = "v\n"     // reply "fw:1.1.22"
+    static let deviceNameQueryCommand = "i\n"   // reply "Pulsetto_ST_02"
 
     /// Clamps to device range 1…9 before formatting.
     static func strengthCommand(_ level: Int) -> String {
-        let clamped = max(1, min(9, level))
-        return "\(clamped)\n"
+        "\(StrengthPresentation.clamp(level))\n"
     }
 
-    // Battery calculation
+    /// Pure voltage-to-percent map. Linear 3.5…3.9 V, clamped to 0…100.
+    /// 0 means dead (below 3.4 V) and blocks Start, so a usable pack at
+    /// 3.4…3.5 V floors at 1.
     static func batteryPercentage(fromVoltage voltage: Double) -> Int {
         if voltage >= batteryFullVoltage { return 100 }
-        if voltage <= batteryEmptyVoltage { return 0 }
-        return Int(((voltage - batteryEmptyVoltage) / (batteryFullVoltage - batteryEmptyVoltage)) * 100)
+        if voltage < batteryDeadVoltage { return 0 }
+        let span = batteryFullVoltage - batteryEmptyVoltage
+        let linear = Int((((voltage - batteryEmptyVoltage) / span) * 100).rounded())
+        return max(1, linear)
     }
 }

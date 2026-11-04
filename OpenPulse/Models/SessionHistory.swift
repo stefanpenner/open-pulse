@@ -79,7 +79,7 @@ enum SessionHistory {
             endedAt: now,
             modeRaw: mode.rawValue,
             durationSeconds: max(0, durationSeconds),
-            strength: max(1, min(9, strength)),
+            strength: StrengthPresentation.clamp(strength),
             completed: completed,
             breathePaceRaw: storedPace(mode: mode, pace: breathePace),
             easePatternRaw: storedPattern(mode: mode, pattern: easePattern)

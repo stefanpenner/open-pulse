@@ -134,13 +134,13 @@ private func makeVM(
     // Known pack by default so Start gate grace does not block unrelated tests
     mock.batteryPercentage = 80
     mock.batterySampleConfirmed = true
-    let vm = SessionViewModel(
+    let vm = testVM(
         defaults: defaults,
         ble: mock,
         endNotifier: endNotifier,
         mindfulStore: mindfulStore,
         liveActivity: liveActivity,
-        ambientAudio: ambientAudio ?? NullAmbientAudio()
+        ambientAudio: ambientAudio
     )
     return (vm, mock)
 }
@@ -155,13 +155,13 @@ private func makeVM(
     ambientAudio: (any SessionAmbientAudioPlaying)? = nil
 ) -> (SessionViewModel, MockDeviceTransport) {
     let mock = MockDeviceTransport()
-    let vm = SessionViewModel(
+    let vm = testVM(
         defaults: defaults,
         ble: mock,
         endNotifier: endNotifier,
         mindfulStore: mindfulStore,
         liveActivity: liveActivity,
-        ambientAudio: ambientAudio ?? NullAmbientAudio()
+        ambientAudio: ambientAudio
     )
     return (vm, mock)
 }
@@ -910,9 +910,10 @@ struct StartGateTests {
         mock.becomeReady()
         #expect(vm.isRunning, "short blip reconnect keeps running")
         #expect(vm.offlineSince == nil)
-        // Lead-0 ACK clears durable pending after reprogram
+        // A running off ACK must not drop the durable flag.
         mock.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
+        #expect(vm.pendingDeactivate)
+        #expect(vm.isRunning)
     }
 
     @Test("Long offline auto-pauses and arms durable off")
@@ -1002,7 +1003,7 @@ struct StartGateTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isPaused, "ready cold launch must pause a long drop")
         #expect(!vm.isRunning)
         #expect(vm.pendingDeactivate)
@@ -1034,7 +1035,7 @@ struct StartGateTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(!vm.isPaused)
         let programs = mock.commands.filter { $0 == BLEConstants.activateCommand }
@@ -1059,7 +1060,7 @@ struct StartGateTests {
         let mock = MockDeviceTransport()
         mock.isConnected = false
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isPaused, "long offline after kill must not restore as running")
         #expect(!vm.isRunning)
         #expect(vm.pendingDeactivate)
@@ -1088,7 +1089,7 @@ struct StartGateTests {
         let mock = MockDeviceTransport()
         mock.isConnected = false
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isPaused)
         #expect(!vm.isRunning)
         // Threshold freeze: active = (offlineAt+90) - start = 170 → remaining 430
@@ -1120,7 +1121,7 @@ struct StartGateTests {
         let mock = MockDeviceTransport()
         mock.isConnected = false
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning, "80s offline still under threshold — keep running")
         #expect(vm.offlineSince != nil)
         #expect(vm.pendingDeactivate)
@@ -1151,9 +1152,10 @@ struct StartGateTests {
         let mock = MockDeviceTransport()
         mock.isConnected = false
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isPaused)
         #expect(!vm.isRunning)
+        #expect(vm.pendingDeactivate, "paused restore forces the off flag")
         #expect(vm.remainingSeconds == 450 || abs(vm.remainingSeconds - 450) <= 2,
                 "remaining=\(vm.remainingSeconds) expected~450 (freeze at lastAlive)")
         #expect(vm.completionBanner == nil)
@@ -1175,7 +1177,7 @@ struct StartGateTests {
         let mock = MockDeviceTransport()
         mock.isConnected = false
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect((1...9).contains(vm.strength), "must not surface raw 99")
         #expect(vm.strength == StimulationMode.stressRelief.defaultStrength
                 || vm.strength == StrengthPresentation.clamp(99),
@@ -1204,7 +1206,7 @@ struct StartGateTests {
         let mock1 = MockDeviceTransport()
         mock1.isConnected = false
         mock1.isReady = false
-        let vm1 = SessionViewModel(defaults: d, ble: mock1)
+        let vm1 = testVM(defaults: d, ble: mock1)
         #expect(vm1.isPaused)
         let rem1 = vm1.remainingSeconds
         #expect(rem1 > 300, "freeze remaining must leave practice left")
@@ -1221,7 +1223,7 @@ struct StartGateTests {
         let mock2 = MockDeviceTransport()
         mock2.isConnected = false
         mock2.isReady = false
-        let vm2 = SessionViewModel(defaults: d, ble: mock2)
+        let vm2 = testVM(defaults: d, ble: mock2)
         #expect(vm2.isPaused, "second kill must not re-run as active")
         #expect(!vm2.isRunning)
         #expect(abs(vm2.remainingSeconds - rem1) <= 2,
@@ -1507,9 +1509,9 @@ struct BackgroundSafetyTests {
         // Soft-start first start (strength 5 → initial 3)
         #expect(spy.commands.contains("3\n"), "Custom soft-starts, cmds=\(spy.commands)")
         #expect(!spy.commands.contains("5\n") || spy.commands.last == "5\n")
-        // Pending clears only after lead-0 ACK (not optimistically)
+        #expect(vm.pendingDeactivate, "start arms off before the channel write")
         spy.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
+        #expect(vm.pendingDeactivate, "running off ACK keeps the flag")
         #expect(vm.modeStatus.contains("Easing") || vm.effectiveStrength == 3)
     }
 
@@ -1549,25 +1551,29 @@ struct BackgroundSafetyTests {
         #expect(vm.isRunning)
     }
 
-    @Test("Start keeps sticky pending until lead-0 ACK")
-    @MainActor func startClearsPendingAfterLeadOffAck() {
-        let suiteName = "test.startclear.\(UUID().uuidString)"
+    @Test("Running lead-0 ACK keeps durable off across process death")
+    @MainActor func runningOffAckKeepsPendingAcrossDeath() {
+        let suiteName = "test.deadrun.\(UUID().uuidString)"
         let d = UserDefaults(suiteName: suiteName)!
-        AppPreferences.setPendingDeactivate(true, defaults: d)
         let (vm, spy) = makeVM(defaults: d)
-        #expect(vm.pendingDeactivate)
-        vm.selectMode(.custom)
+        #expect(!vm.pendingDeactivate)
+        vm.selectMode(.stressRelief)
+        vm.strength = 5
         vm.ble.isConnected = true
         vm.ble.isReady = true
         vm.start()
         #expect(vm.isRunning)
         #expect(spy.commands.first == "0\n")
-        // Durable off stays until lead-0 confirms (process death cannot drop sticky off)
-        #expect(vm.pendingDeactivate)
-        #expect(AppPreferences.pendingDeactivate(defaults: d) == true)
+        #expect(vm.pendingDeactivate, "start arms off before a program can apply")
+        #expect(AppPreferences.pendingDeactivate(defaults: d))
         spy.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
-        #expect(AppPreferences.pendingDeactivate(defaults: d) == false)
+        #expect(vm.isRunning)
+        #expect(vm.pendingDeactivate, "running off ACK must not clear the flag")
+        #expect(AppPreferences.pendingDeactivate(defaults: d))
+
+        let (vm2, _) = makeVM(defaults: d)
+        #expect(vm2.pendingDeactivate, "a dead run must keep the off flag")
+        #expect(vm2.isRunning)
     }
 
     @Test("Calm start enqueues absolute off only")
@@ -1576,8 +1582,9 @@ struct BackgroundSafetyTests {
         simulateRunning(vm, mode: .calm, strength: 5)
         #expect(spy.commands == ["0\n"] || spy.commands.first == "0\n")
         #expect(!vm.stimulationActive)
+        #expect(vm.pendingDeactivate, "calm start arms off before stim")
         spy.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
+        #expect(vm.pendingDeactivate)
         #expect(vm.modeStatus == "Inhale")
         #expect(!vm.modeStatus.contains("Paused"))
     }
@@ -1747,13 +1754,13 @@ struct BackgroundSafetyTests {
         vm2.ble.isReady = true
         vm2.flushPendingDeactivateIfNeeded()
         #expect(spy.commands.contains("0\n"))
-        // Durable flag stays true until lead-0 ACK on Start
         #expect(vm2.pendingDeactivate)
         vm2.selectMode(.stressRelief)
         vm2.start()
-        #expect(vm2.pendingDeactivate, "still sticky until off ACK")
+        #expect(vm2.pendingDeactivate, "start keeps the off flag")
         spy.completeWrite("0\n", success: true)
-        #expect(!vm2.pendingDeactivate)
+        #expect(vm2.pendingDeactivate, "running off ACK keeps the flag")
+        #expect(vm2.isRunning)
     }
 
     @Test("Custom channel survives process relaunch")
@@ -1863,13 +1870,15 @@ struct BackgroundSafetyTests {
         vm.selectMode(.stressRelief)
         vm.start()
         #expect(vm.isRunning)
-        // No sticky pending — ACK of lead-0 is session program, not idle off confirm haptic
+        #expect(vm.pendingDeactivate, "start arms off before the program")
+        // Lead-0 of a run is not an idle off confirm.
         spy.completeWrite("0\n", success: true)
+        #expect(vm.pendingDeactivate)
         #expect(vm.deviceOffConfirmedToken == tokenBefore, "fresh Start lead-0 must not fire off haptic")
     }
 
-    @Test("Start with sticky pending: lead-0 ACK clears durable off")
-    @MainActor func startLeadOffClearsStickyPending() {
+    @Test("Start with sticky pending: lead-0 ACK keeps durable off")
+    @MainActor func startLeadOffKeepsStickyPending() {
         let suiteName = "test.offtoken.sticky.\(UUID().uuidString)"
         let d = UserDefaults(suiteName: suiteName)!
         AppPreferences.setPendingDeactivate(true, defaults: d)
@@ -1879,9 +1888,10 @@ struct BackgroundSafetyTests {
         vm.ble.isReady = true
         vm.selectMode(.stressRelief)
         vm.start()
-        #expect(vm.pendingDeactivate, "optimistic clear removed — still sticky")
+        #expect(vm.pendingDeactivate, "start keeps the off flag")
         spy.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
+        #expect(vm.pendingDeactivate, "running off ACK keeps the flag")
+        #expect(vm.isRunning)
     }
 
     @Test("Off ACK while paused clears pending (LA can stop saying stopping)")
@@ -2238,6 +2248,9 @@ struct SessionRestoreTests {
         #expect(vm.remainingSeconds <= 572)
         // Offline restore never claims stim until BLE is ready
         #expect(!vm.stimulationActive)
+        // Disk flag was false. A running restore must arm it before reprogram.
+        #expect(vm.pendingDeactivate)
+        #expect(AppPreferences.pendingDeactivate(defaults: d))
     }
 
     @Test("Sleep restore mid-fade keeps comfort floor and phase anchor")
@@ -2474,7 +2487,7 @@ struct SessionRestoreTests {
         d.set(false, forKey: "session.isPaused")
         d.set("custom", forKey: "session.mode")
         d.set(7, forKey: "session.strength")
-        let vm2 = SessionViewModel(defaults: d, ble: mock)
+        let vm2 = testVM(defaults: d, ble: mock)
         if vm2.isRunning {
             mock.reset()
             mock.isReady = false
@@ -2581,7 +2594,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm2 = SessionViewModel(defaults: d, ble: mock)
+        let vm2 = testVM(defaults: d, ble: mock)
         #expect(vm2.isRunning || vm2.isPaused)
         #expect(vm2.strength == 7)
         // Reconnect strength numbers must not undercut raised floor
@@ -2614,7 +2627,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm2 = SessionViewModel(defaults: d, ble: mock)
+        let vm2 = testVM(defaults: d, ble: mock)
         #expect(vm2.strength == 3)
         let nums = mock.commands.compactMap {
             Int($0.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -2648,7 +2661,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(vm.selectedMode == .sleep)
         let nums = mock.commands.compactMap {
@@ -2723,7 +2736,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(vm.selectedMode == .painRelief)
         let nums = mock.commands.compactMap {
@@ -2756,7 +2769,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(vm.selectedMode == .painRelief)
         #expect(vm.easePattern == .burst)
@@ -2793,7 +2806,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock, now: { frozen })
+        let vm = testVM(defaults: d, ble: mock, now: { frozen })
         #expect(vm.isRunning)
         #expect(vm.easePattern == .burst)
         let nums = mock.commands.compactMap {
@@ -2825,7 +2838,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(vm.selectedMode == .stressRelief, "nausea merges to Stress")
         let nums = mock.commands.compactMap {
@@ -2902,7 +2915,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock, now: { frozen })
+        let vm = testVM(defaults: d, ble: mock, now: { frozen })
         #expect(vm.isRunning)
         mock.reset()
         mock.isReady = false
@@ -2965,7 +2978,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock, now: { frozen })
+        let vm = testVM(defaults: d, ble: mock, now: { frozen })
         #expect(vm.isRunning)
         #expect(vm.easePattern == .burst)
         mock.reset()
@@ -3000,7 +3013,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(vm.selectedMode == .stressRelief)
         let nums = mock.commands.compactMap {
@@ -3032,7 +3045,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(vm.selectedMode == .focus)
         let nums = mock.commands.compactMap {
@@ -3068,7 +3081,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock, now: { frozen })
+        let vm = testVM(defaults: d, ble: mock, now: { frozen })
         #expect(vm.isRunning)
         #expect(vm.selectedMode == .focus)
         let cmds = mock.commands
@@ -3295,7 +3308,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm2 = SessionViewModel(defaults: d, ble: mock)
+        let vm2 = testVM(defaults: d, ble: mock)
         #expect(vm2.isRunning || vm2.isPaused || vm2.selectedMode == .custom)
         #expect(vm2.selectedMode == .custom)
         // Soft begin restored if still within window (session just started)
@@ -3384,7 +3397,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(vm.easePattern == .burst)
         let nums = mock.commands.compactMap {
@@ -3478,7 +3491,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isPaused)
         #expect(vm.selectedMode == .custom)
         mock.reset()
@@ -3505,7 +3518,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isPaused)
         mock.reset()
         vm.resume()
@@ -3584,7 +3597,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(vm.selectedMode == .calm)
         let nums = mock.commands.compactMap {
@@ -3617,7 +3630,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.isRunning)
         #expect(vm.selectedMode == .calm)
         #expect(vm.breathePace == .meditate)
@@ -3652,7 +3665,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
 
         #expect(vm.isRunning)
         // Closed segment restored (internal; verify via stop mindful path by prefs)
@@ -3677,7 +3690,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
 
         #expect(vm.isRunning)
         #expect(vm.remainingSeconds >= 550)
@@ -3704,7 +3717,7 @@ struct SessionRestoreTests {
         let mock = MockDeviceTransport()
         mock.isConnected = false
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
 
         #expect(vm.isRunning)
         #expect(!vm.stimulationActive)
@@ -3781,7 +3794,7 @@ struct SessionRestoreTests {
         mock.isConnected = true
         mock.isReady = true
         let la = RecordingLiveActivity()
-        let vm = SessionViewModel(defaults: d, ble: mock, liveActivity: la)
+        let vm = testVM(defaults: d, ble: mock, liveActivity: la)
 
         #expect(!vm.isRunning)
         #expect(vm.pendingDeactivate)
@@ -4121,6 +4134,50 @@ struct AmbientMusicSessionTests {
         vm.handleForegroundTransition()
         #expect(vm.isRunning)
         #expect(audio.isPlaying)
+    }
+
+    @Test("Haptic taps alone run the tapper with no sound")
+    @MainActor func hapticsAlonePlay() {
+        let audio = NullAmbientAudio()
+        let (vm, _) = makeVM(ambientAudio: audio)
+        #expect(!vm.hapticTicksEnabled)
+        vm.setHapticTicksEnabled(true)
+        simulateRunning(vm, mode: .calm)
+        #expect(audio.isPlaying)
+        #expect(audio.lastSyncHaptics == true)
+        #expect(audio.lastSyncSound == false)
+        vm.pause()
+        #expect(!audio.isPlaying)
+    }
+
+    @Test("Use Joy-Con is off by default and reaches the tapper")
+    @MainActor func joyConOptIn() {
+        let audio = NullAmbientAudio()
+        let (vm, _) = makeVM(ambientAudio: audio)
+        #expect(!vm.joyConEnabled)
+        vm.setHapticTicksEnabled(true)
+        #expect(audio.lastSyncJoyCon == false)
+        vm.setJoyConEnabled(true)
+        #expect(vm.joyConEnabled)
+        #expect(audio.lastSyncJoyCon == true)
+    }
+
+    @Test("Joy-Con setting persists")
+    @MainActor func joyConPersists() {
+        let defaults = UserDefaults(suiteName: "test.joycon.\(UUID().uuidString)")!
+        let (vm, _) = makeVM(defaults: defaults)
+        vm.setJoyConEnabled(true)
+        let (again, _) = makeVM(defaults: defaults)
+        #expect(again.joyConEnabled)
+    }
+
+    @Test("Joy-Con status follows the paired controllers")
+    @MainActor func joyConStatus() {
+        let audio = NullAmbientAudio()
+        let (vm, _) = makeVM(ambientAudio: audio)
+        #expect(vm.joyConStatus == "No Joy-Con found. Pair them in Bluetooth settings.")
+        audio.setPlan(JoyConTapper.plan([.init(id: 0, kind: .pair)]))
+        #expect(vm.joyConStatus == "Left and right Joy-Con ready.")
     }
 
     @Test("Stop fades ambient off")

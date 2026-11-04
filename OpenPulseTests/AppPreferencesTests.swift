@@ -55,6 +55,22 @@ struct AppPreferencesTests {
         AppPreferences.setAmbientMusicEnabled(false, defaults: d)
         #expect(!AppPreferences.ambientMusicEnabled(defaults: d))
     }
+
+    @Test("Haptic taps default off and stick when enabled")
+    func hapticTicksToggle() {
+        let d = UserDefaults(suiteName: "test.prefs.haptic.\(UUID().uuidString)")!
+        #expect(!AppPreferences.hapticTicksEnabled(defaults: d))
+        AppPreferences.setHapticTicksEnabled(true, defaults: d)
+        #expect(AppPreferences.hapticTicksEnabled(defaults: d))
+    }
+
+    @Test("Joy-Con default off and stick when enabled")
+    func joyConToggle() {
+        let d = UserDefaults(suiteName: "test.prefs.joycon.\(UUID().uuidString)")!
+        #expect(!AppPreferences.joyConEnabled(defaults: d))
+        AppPreferences.setJoyConEnabled(true, defaults: d)
+        #expect(AppPreferences.joyConEnabled(defaults: d))
+    }
 }
 
 @Suite("AmbientAudioPolicy")
@@ -224,7 +240,7 @@ struct SessionDurationTests {
     @MainActor func idleDuration() {
         let suiteName = "test.duration.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
-        let vm = SessionViewModel(defaults: defaults, ble: MockDeviceTransport())
+        let vm = testVM(defaults: defaults, ble: MockDeviceTransport())
         vm.timerMinutes = 8
         #expect(vm.sessionDurationSeconds == 480)
     }
@@ -234,7 +250,7 @@ struct SessionDurationTests {
         let suiteName = "test.duration.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         let mock = MockDeviceTransport()
-        let vm = SessionViewModel(defaults: defaults, ble: mock)
+        let vm = testVM(defaults: defaults, ble: mock)
         mock.becomeReady()
         vm.selectMode(.sleep)
         vm.start()

@@ -53,6 +53,18 @@ final class MockDeviceTransport: DeviceState {
         }
     }
 
+    /// Inject an unprompted "mode:" notice, as the pack would send it.
+    func reportMode(_ text: String) {
+        guard let mode = DeviceMode(report: text) else { return }
+        deviceMode = mode
+        onModeReport?(mode)
+    }
+
+    /// Mirror the cleanup of a real link drop.
+    func dropLink() {
+        deviceMode = nil
+    }
+
     /// Raise ready edge (fires `@Published` → VM ready sink).
     /// Default confirms battery so session Start tests stay green; pass `false` to test first-Q gate.
     func becomeReady(confirmBattery: Bool = true) {
@@ -67,4 +79,27 @@ final class MockDeviceTransport: DeviceState {
         commands = []
         cancelProgramWritesCount = 0
     }
+}
+
+/// A view model wired to fakes only. Real ActivityKit, HealthKit, notifications, and audio
+/// make slow sync calls to iOS (about 3 s per Live Activity start), so tests must not touch them.
+@MainActor
+func testVM(
+    defaults: UserDefaults,
+    ble: DeviceState,
+    endNotifier: (any SessionEndNotifying)? = nil,
+    mindfulStore: (any MindfulMinutesWriting)? = nil,
+    liveActivity: (any SessionLiveActivityPresenting)? = nil,
+    ambientAudio: (any SessionAmbientAudioPlaying)? = nil,
+    now: @escaping () -> Date = { Date() }
+) -> SessionViewModel {
+    SessionViewModel(
+        defaults: defaults,
+        ble: ble,
+        endNotifier: endNotifier ?? RecordingSessionEndNotifier(),
+        mindfulStore: mindfulStore ?? RecordingMindfulMinutesStore(),
+        liveActivity: liveActivity ?? RecordingLiveActivity(),
+        ambientAudio: ambientAudio ?? NullAmbientAudio(),
+        now: now
+    )
 }

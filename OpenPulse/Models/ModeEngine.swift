@@ -142,13 +142,13 @@ private struct SoftStartState {
     mutating func complete(syncedTo strength: Int? = nil) {
         enabled = false
         if let s = strength {
-            lastSent = max(1, min(9, s))
+            lastSent = StrengthPresentation.clamp(s)
         }
     }
 
     /// External setStrength — stop ease; track lastSent exactly (raise or lower).
     mutating func noteExternalStrength(_ strength: Int) {
-        let s = max(1, min(9, strength))
+        let s = StrengthPresentation.clamp(strength)
         lastSent = s
         // User took over intensity — do not continue soft steps
         enabled = false
@@ -165,7 +165,7 @@ private struct SoftStartState {
     /// Never undercuts `lastSent` (reconnect / user raise / target drop).
     mutating func stepIfNeeded(elapsed: Int, target: Int) -> Int? {
         guard enabled else { return nil }
-        let cappedTarget = max(1, min(9, target))
+        let cappedTarget = StrengthPresentation.clamp(target)
         let local = localElapsed(elapsed)
         var desired = SoftStart.strength(atElapsed: local, target: cappedTarget)
         if lastSent > 0 {
@@ -200,7 +200,7 @@ private struct SoftStartState {
     /// Never runs after user takeover (raise/lower mid soft).
     mutating func reconnectCatchUp(elapsed: Int, target: Int) -> Int? {
         guard enabled, !userTakenOver else { return nil }
-        let capped = max(1, min(9, target))
+        let capped = StrengthPresentation.clamp(target)
         let local = localElapsed(elapsed)
         var desired = SoftStart.strength(atElapsed: local, target: capped)
         if lastSent > 0 {
@@ -229,7 +229,7 @@ private struct SoftStartState {
     mutating func apply(_ snap: SoftStartSnapshot) {
         enabled = snap.enabled
         userTakenOver = snap.userTakenOver
-        lastSent = max(1, min(9, snap.lastSent))
+        lastSent = StrengthPresentation.clamp(snap.lastSent)
         beginElapsed = max(0, snap.beginElapsed)
     }
 }
@@ -251,11 +251,11 @@ struct StressReliefEngine: ModeEngine {
     mutating func tick(elapsed: Int, totalDuration: Int, baseStrength: Int) -> ModeTickResult {
         if let stepped = soft.stepIfNeeded(elapsed: elapsed, target: baseStrength) {
             let easing = soft.isEasing(elapsed: elapsed, target: baseStrength)
-                || stepped < max(1, min(9, baseStrength))
+                || stepped < StrengthPresentation.clamp(baseStrength)
             return ModeTickResult(
                 commands: [BLEConstants.strengthCommand(stepped)],
                 isStimulationActive: true,
-                effectiveStrength: stepped < max(1, min(9, baseStrength)) ? stepped : nil,
+                effectiveStrength: stepped < StrengthPresentation.clamp(baseStrength) ? stepped : nil,
                 activeChannel: .bilateral,
                 isEasing: easing,
                 statusText: easing ? "Bilateral · Easing in" : "Bilateral · Continuous"
@@ -317,6 +317,11 @@ struct SleepEngine: ModeEngine {
     /// Fixed phase length from session start so ±time does not rewind channel rotation.
     private var phaseLengthSeconds = 0
 
+    /// Each sleep phase is one fifth of the session. The length stays at least one second.
+    static func phaseLength(totalDuration: Int) -> Int {
+        max(1, totalDuration / 5)
+    }
+
     private static let channelSequence = [
         BLEConstants.activateCommand,       // D - bilateral
         BLEConstants.leftChannelCommand,    // A - left
@@ -327,14 +332,14 @@ struct SleepEngine: ModeEngine {
 
     private mutating func ensurePhaseSchedule(totalDuration: Int) {
         if phaseLengthSeconds <= 0 {
-            phaseLengthSeconds = max(1, totalDuration / 5)
+            phaseLengthSeconds = Self.phaseLength(totalDuration: totalDuration)
         }
     }
 
     private func phaseIndex(elapsed: Int, totalDuration: Int) -> Int {
         let len = phaseLengthSeconds > 0
             ? phaseLengthSeconds
-            : max(1, totalDuration / 5)
+            : Self.phaseLength(totalDuration: totalDuration)
         guard len > 0 else { return 0 }
         return min(elapsed / len, 4)
     }
@@ -367,7 +372,7 @@ struct SleepEngine: ModeEngine {
             totalDuration: totalDuration,
             baseStrength: baseStrength
         )
-        let base = max(1, min(9, baseStrength))
+        let base = StrengthPresentation.clamp(baseStrength)
         var target = rawFade
         // Protocol floor survives soft climb (soft steps use lastFade; floor is separate)
         if fadeFloor > 0, fadeFloor < base, fadeFloor < rawFade {
@@ -384,8 +389,8 @@ struct SleepEngine: ModeEngine {
 
     /// Track protocol fade floor when settled below base (not soft steps).
     private mutating func noteSettledComfort(_ comfort: Int, base: Int) {
-        let b = max(1, min(9, base))
-        let c = max(1, min(9, comfort))
+        let b = StrengthPresentation.clamp(base)
+        let c = StrengthPresentation.clamp(comfort)
         if c < b {
             if fadeFloor <= 0 || c < fadeFloor {
                 fadeFloor = c
@@ -398,7 +403,7 @@ struct SleepEngine: ModeEngine {
         softResume.reset()
         userStrengthFloor = 0
         fadeFloor = 0
-        phaseLengthSeconds = max(1, totalDuration / 5)
+        phaseLengthSeconds = Self.phaseLength(totalDuration: totalDuration)
         let initial = soft.begin(target: baseStrength)
         lastFadeStrength = initial
         return [BLEConstants.activateCommand, BLEConstants.strengthCommand(initial)]
@@ -441,7 +446,7 @@ struct SleepEngine: ModeEngine {
             return ModeTickResult(
                 commands: commands,
                 isStimulationActive: true,
-                effectiveStrength: current < max(1, min(9, comfortTarget)) ? current : nil,
+                effectiveStrength: current < StrengthPresentation.clamp(comfortTarget) ? current : nil,
                 activeChannel: activeChannels[phaseForStatus],
                 isEasing: true,
                 statusText: "\(channelName) channel · Easing in"
@@ -459,7 +464,7 @@ struct SleepEngine: ModeEngine {
         }
 
         let channelName = Self.channelNames[phaseForStatus]
-        let fadeNote = fade < max(1, min(9, baseStrength)) ? " · Fading" : ""
+        let fadeNote = fade < StrengthPresentation.clamp(baseStrength) ? " · Fading" : ""
         let status = "\(channelName) channel\(fadeNote)"
 
         let activeChannels: [ActiveChannel] = [.bilateral, .left, .bilateral, .right, .bilateral]
@@ -467,7 +472,7 @@ struct SleepEngine: ModeEngine {
         return ModeTickResult(
             commands: commands,
             isStimulationActive: true,
-            effectiveStrength: fade != max(1, min(9, baseStrength)) ? fade : nil,
+            effectiveStrength: fade != StrengthPresentation.clamp(baseStrength) ? fade : nil,
             activeChannel: activeChannels[phaseForStatus],
             statusText: status
         )
@@ -507,10 +512,10 @@ struct SleepEngine: ModeEngine {
 
     mutating func noteUserStrength(_ strength: Int, previousBase: Int?) {
         soft.noteExternalStrength(strength)
-        let s = max(1, min(9, strength))
+        let s = StrengthPresentation.clamp(strength)
         // Only pin when already in protocol fade — early nudges must still fade later
         if fadeFloor > 0 {
-            let prev = previousBase.map { max(1, min(9, $0)) }
+            let prev = previousBase.map { StrengthPresentation.clamp($0) }
             if s == lastFadeStrength {
                 // Matching felt comfort while lowering base → hold (no same-tick undercut)
                 if let prev, s < prev {
@@ -557,10 +562,10 @@ struct SleepEngine: ModeEngine {
         userStrengthFloor = 0
         // Settle-only persist: c < b means protocol fade (soft steps are not written)
         if let comfort = lastComfortStrength, comfort > 0 {
-            let c = max(1, min(9, comfort))
+            let c = StrengthPresentation.clamp(comfort)
             lastFadeStrength = c
             if let base = sessionStrength {
-                let b = max(1, min(9, base))
+                let b = StrengthPresentation.clamp(base)
                 if c < b {
                     fadeFloor = c
                 }
@@ -571,7 +576,7 @@ struct SleepEngine: ModeEngine {
         }
         // Explicit mid-fade user raise (dedicated key) — holds across kill/extend
         if let pin = pinnedUserFloor, pin > 0 {
-            let p = max(1, min(9, pin))
+            let p = StrengthPresentation.clamp(pin)
             userStrengthFloor = p
             fadeFloor = max(fadeFloor, p)
             lastFadeStrength = max(lastFadeStrength, p)
@@ -587,12 +592,15 @@ struct SleepEngine: ModeEngine {
 // BLE reconnect soft only after user pause (mid-session drop stays full)
 
 struct FocusEngine: ModeEngine {
+    static let onSeconds = 30
+    static let cycleSeconds = 60
+
     private var wasOn = false
     private var soft = SoftStartState()
     private var softResume = SoftResumeGate()
 
     private func isOnPhase(elapsed: Int) -> Bool {
-        (elapsed % 60) < 30
+        (elapsed % Self.cycleSeconds) < Self.onSeconds
     }
 
     mutating func start(baseStrength: Int, totalDuration: Int) -> [String] {
@@ -611,8 +619,8 @@ struct FocusEngine: ModeEngine {
             commands.append(BLEConstants.deactivateCommand)
             wasOn = on
             soft.complete(syncedTo: baseStrength)
-            let cyclePos = elapsed % 60
-            let secsLeft = 60 - cyclePos
+            let cyclePos = elapsed % Self.cycleSeconds
+            let secsLeft = Self.cycleSeconds - cyclePos
             return ModeTickResult(
                 commands: commands,
                 isStimulationActive: false,
@@ -628,8 +636,8 @@ struct FocusEngine: ModeEngine {
             commands.append(BLEConstants.leftChannelCommand)
             commands.append(BLEConstants.strengthCommand(initial))
             wasOn = on
-            let cyclePos = elapsed % 60
-            let secsLeft = 30 - cyclePos
+            let cyclePos = elapsed % Self.cycleSeconds
+            let secsLeft = Self.onSeconds - cyclePos
             let easing = soft.isEasing(elapsed: elapsed, target: baseStrength)
             return ModeTickResult(
                 commands: commands,
@@ -652,12 +660,12 @@ struct FocusEngine: ModeEngine {
                 let current = soft.displayLevel(elapsed: elapsed, target: baseStrength)
                     ?? SoftStart.initialStrength(target: baseStrength)
                 wasOn = on
-                let cyclePos = elapsed % 60
-                let secsLeft = 30 - cyclePos
+                let cyclePos = elapsed % Self.cycleSeconds
+                let secsLeft = Self.onSeconds - cyclePos
                 return ModeTickResult(
                     commands: commands,
                     isStimulationActive: true,
-                    effectiveStrength: current < max(1, min(9, baseStrength)) ? current : nil,
+                    effectiveStrength: current < StrengthPresentation.clamp(baseStrength) ? current : nil,
                     activeChannel: .left,
                     isEasing: true,
                     statusText: "Left channel · Easing in (\(max(0, secsLeft))s)"
@@ -668,8 +676,8 @@ struct FocusEngine: ModeEngine {
 
         wasOn = on
 
-        let cyclePos = elapsed % 60
-        let secsLeft = on ? 30 - cyclePos : 60 - cyclePos
+        let cyclePos = elapsed % Self.cycleSeconds
+        let secsLeft = on ? Self.onSeconds - cyclePos : Self.cycleSeconds - cyclePos
         let status = on
             ? "Left channel · On (\(secsLeft)s)"
             : "Resting · Off (\(secsLeft)s)"
@@ -770,12 +778,12 @@ struct PainReliefEngine: ModeEngine {
 
         let offset = strengthOffset(elapsed: elapsed)
         if offset != lastOffset {
-            let s = max(1, min(9, baseStrength + offset))
+            let s = StrengthPresentation.clamp(baseStrength + offset)
             commands.append(BLEConstants.strengthCommand(s))
             lastOffset = offset
         }
 
-        let currentS = max(1, min(9, baseStrength + offset))
+        let currentS = StrengthPresentation.clamp(baseStrength + offset)
         let trend = offset > 0 ? "Rising" : offset < 0 ? "Falling" : "Base"
         return ModeTickResult(
             commands: commands,
@@ -801,7 +809,7 @@ struct PainReliefEngine: ModeEngine {
         }
         soft.complete(syncedTo: baseStrength)
         let offset = strengthOffset(elapsed: elapsed)
-        let s = max(1, min(9, baseStrength + offset))
+        let s = StrengthPresentation.clamp(baseStrength + offset)
         lastOffset = offset
         return [BLEConstants.activateCommand, BLEConstants.strengthCommand(s)]
     }
@@ -906,7 +914,7 @@ struct HeadacheEngine: ModeEngine {
                 return ModeTickResult(
                     commands: commands,
                     isStimulationActive: true,
-                    effectiveStrength: current < max(1, min(9, baseStrength)) ? current : nil,
+                    effectiveStrength: current < StrengthPresentation.clamp(baseStrength) ? current : nil,
                     activeChannel: .bilateral,
                     isEasing: true,
                     statusText: "Burst · Easing in (\(max(0, secsLeft))s)"

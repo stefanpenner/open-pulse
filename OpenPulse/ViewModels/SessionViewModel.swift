@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import Combine
+import os
 
 @MainActor
 final class SessionViewModel: ObservableObject {
@@ -32,6 +33,14 @@ final class SessionViewModel: ObservableObject {
     @Published var sessionRemindersEnabled: Bool = false
     /// Opt-in local ambient pad during sessions (bundled only — no streaming).
     @Published var ambientMusicEnabled: Bool = false
+    @Published var hapticTicksEnabled: Bool = false
+    /// Opt-in: paired Joy-Cons play the taps.
+    @Published var joyConEnabled: Bool = false
+    @Published private(set) var joyConPlan = JoyConTapper.Plan()
+    @Published private(set) var joyConFound = JoyConTapper.Plan()
+    var joyConStatus: String { JoyConTapper.status(joyConPlan) }
+    var joyConPairingRows: [JoyConPairing.Row] { JoyConPairing.rows(found: joyConFound, working: joyConPlan) }
+    var canTestJoyCon: Bool { JoyConPairing.canTestTaps(working: joyConPlan, sessionPlaying: ambientAudio.isPlaying) }
     /// System denied notifications while toggle is on (Still honesty).
     @Published private(set) var sessionEndAlertsDenied: Bool = false
     /// Brief post-session message for wellness micro-feedback (cleared by UI).
@@ -155,8 +164,9 @@ final class SessionViewModel: ObservableObject {
     /// False until disk restore finishes. The ready publisher emits on subscribe.
     private var acceptsLinkReady = false
 
-    /// When session ends/pauses while disconnected, send deactivate on next ready.
-    /// Backed by UserDefaults so process death cannot leave hardware stim on.
+    /// Durable send-off flag. True for the whole run, and after stop or pause.
+    /// Disk keeps it so the next launch can send off. A dead process cannot send.
+    /// An idle or paused off ACK clears it when no program write remains.
     /// `@Published` so PendingOffBanner dismisses as soon as off ACK lands.
     @Published private(set) var pendingDeactivate = false {
         didSet {
@@ -173,6 +183,12 @@ final class SessionViewModel: ObservableObject {
     private var backgroundWatchTask: Task<Void, Never>?
     private var backgroundPingTask: Task<Void, Never>?
     private var pendingOffRetryTask: Task<Void, Never>?
+    /// A running mode report disagreed with the program. The next tick reasserts.
+    private var modeMismatchReassertDue = false
+    private let modeLog = Logger(subsystem: "io.github.stefanpenner.OpenPulse", category: "Session")
+    private var lastModeReassertAt: Date?
+    /// Least seconds between mismatch reasserts. A stuck mismatch must not blip stim every tick.
+    private let modeReassertMinGap: TimeInterval = 15
     /// Last elapsed second fed to the engine — large jumps need absolute reassert.
     private var lastTickElapsed: Int?
     /// Min wall gap (seconds) before absolute off+reprogram. Must exceed 5s watch + 10s BLE ping
@@ -209,6 +225,16 @@ final class SessionViewModel: ObservableObject {
         sessionEndAlertsEnabled = AppPreferences.sessionEndAlertsEnabled(defaults: defaults)
         sessionRemindersEnabled = AppPreferences.sessionRemindersEnabled(defaults: defaults)
         ambientMusicEnabled = AppPreferences.ambientMusicEnabled(defaults: defaults)
+        hapticTicksEnabled = AppPreferences.hapticTicksEnabled(defaults: defaults)
+        joyConEnabled = AppPreferences.joyConEnabled(defaults: defaults)
+        joyConPlan = self.ambientAudio.joyConPlan
+        joyConFound = self.ambientAudio.joyConFound
+        self.ambientAudio.onJoyConPlanChange = { [weak self] plan in
+            guard let self else { return }
+            self.joyConPlan = plan
+            self.joyConFound = self.ambientAudio.joyConFound
+        }
+        if joyConEnabled { syncAmbientAudio() }
         // Off → resolved (no schedule). On → wait for fetch before any schedule.
         sessionEndAlertsAuthResolved = !sessionEndAlertsEnabled
         // Cold launch: hydrate denied before BG schedule (async on device)
@@ -254,30 +280,17 @@ final class SessionViewModel: ObservableObject {
 
         ble.onWriteSucceeded = { [weak self] cmd in
             guard let self else { return }
-            // Confirmed off while idle — clear sticky pending even if status Q/u still queued
+            // Idle or paused off ACK. A running off ACK does not clear.
             guard SessionSafety.shouldClearPendingDeactivate(
                 command: cmd,
                 isRunning: self.isRunning,
                 hasPendingProgramWrites: self.ble.hasPendingProgramWrites
             ) else { return }
-            let wasPending = self.pendingDeactivate
-            self.pendingDeactivate = false
-            if wasPending, !self.isRunning {
-                // Success haptic only for idle/paused HW off — not start/resume lead-0
-                self.deviceOffConfirmedToken &+= 1
-            }
-            // Battery/charge after safety off ACK (not interleaved with off)
-            if wasPending, self.ble.isReady {
-                self.queryStatus()
-            }
-            // Refresh Island/lock screen while paused (no timer ticks to push LA)
-            if wasPending, self.isRunning || self.isPaused {
-                self.pushLiveActivity()
-            }
-            // Completed LA linger: clear "turning device off" after HW off ACK
-            if wasPending, !self.isRunning, !self.isPaused {
-                self.liveActivity.noteHardwareOffConfirmed()
-            }
+            self.confirmDeviceOff()
+        }
+
+        ble.onModeReport = { [weak self] mode in
+            self?.handleModeReport(mode)
         }
 
         // Nested ObservableObject — forward synchronously (already MainActor)
@@ -622,6 +635,8 @@ final class SessionViewModel: ObservableObject {
         pauseStartDate = nil
         backgroundEntryDate = nil
         lastTickElapsed = nil
+        // Arm before the program. A running off ACK does not clear this flag.
+        pendingDeactivate = true
     }
 
     /// Custom eases in on first start when strength warrants. Other modes stay settled.
@@ -664,7 +679,7 @@ final class SessionViewModel: ObservableObject {
         applyCustomStartStatus()
     }
 
-    /// Pending off stays set until the lead-0 write succeeds.
+    /// The run keeps the off flag. A lead-0 ACK does not clear it.
     private func sendStartProgram(_ commands: [String]) {
         if ble.isReady {
             ble.cancelProgramWrites()
@@ -953,17 +968,45 @@ final class SessionViewModel: ObservableObject {
         }
     }
 
-    /// Opt-in bundled ambient pad during sessions (local only — no streaming).
+    /// Opt-in tick-tock sound during sessions (local synth only).
     func setAmbientMusicEnabled(_ enabled: Bool) {
         ambientMusicEnabled = enabled
         AppPreferences.setAmbientMusicEnabled(enabled, defaults: defaults)
         syncAmbientAudio()
     }
 
+    /// Opt-in left/right haptic taps during sessions, on the same beat as the sound.
+    func setHapticTicksEnabled(_ enabled: Bool) {
+        hapticTicksEnabled = enabled
+        AppPreferences.setHapticTicksEnabled(enabled, defaults: defaults)
+        syncAmbientAudio()
+    }
+
+    /// Opt-in: paired Joy-Cons play the taps. The phone keeps any side they miss.
+    func setJoyConEnabled(_ enabled: Bool) {
+        joyConEnabled = enabled
+        AppPreferences.setJoyConEnabled(enabled, defaults: defaults)
+        syncAmbientAudio()
+    }
+
+    /// The pairing card is on screen: watch for Joy-Cons even with no session.
+    func setJoyConPairingVisible(_ visible: Bool) {
+        ambientAudio.setJoyConPreview(visible)
+        joyConPlan = ambientAudio.joyConPlan
+        joyConFound = ambientAudio.joyConFound
+    }
+
+    /// One tap left, then one tap right, on the Joy-Cons.
+    func testJoyConTaps() {
+        ambientAudio.testJoyConTaps()
+    }
+
     /// Keep optional ambience in sync with session / scene (never required for stim).
     private func syncAmbientAudio() {
         ambientAudio.sync(
-            enabled: ambientMusicEnabled,
+            sound: ambientMusicEnabled,
+            haptics: hapticTicksEnabled,
+            joyCon: joyConEnabled,
             isRunning: isRunning,
             isPaused: isPaused,
             isInBackground: isInBackground
@@ -1145,7 +1188,8 @@ final class SessionViewModel: ObservableObject {
         guard ble.isReady else { return }
         isPaused = false
         isRunning = true
-        // Do not clear pendingDeactivate here — lead-0 ACK clears durable off
+        // Arm the off flag. A lead-0 ACK does not clear it.
+        pendingDeactivate = true
 
         // Accumulate paused duration
         if let pauseStart = pauseStartDate {
@@ -1190,9 +1234,67 @@ final class SessionViewModel: ObservableObject {
         }
     }
 
+    /// Idle or paused: the pack is confirmed off. Clear the durable flag and settle the UI.
+    /// Caller proved it: an off ACK, or a quiet "mode:0" report.
+    private func confirmDeviceOff() {
+        let wasPending = pendingDeactivate
+        pendingDeactivate = false
+        if wasPending, !isRunning {
+            // Success haptic only for idle/paused HW off — not start/resume lead-0
+            deviceOffConfirmedToken &+= 1
+        }
+        // Battery/charge after safety off ACK (not interleaved with off)
+        if wasPending, ble.isReady {
+            queryStatus()
+        }
+        // Refresh Island/lock screen while paused (no timer ticks to push LA)
+        if wasPending, isRunning || isPaused {
+            pushLiveActivity()
+        }
+        // Completed LA linger: clear "turning device off" after HW off ACK
+        if wasPending, !isRunning, !isPaused {
+            liveActivity.noteHardwareOffConfirmed()
+        }
+    }
+
+    /// The pack told us its stim state. Policy: specs/PendingOff.tla (DeviceReport, HostReport).
+    private func handleModeReport(_ mode: DeviceMode) {
+        let action = ModeReportAction.decide(
+            report: mode,
+            isRunning: isRunning,
+            expected: DeviceMode(channel: stimulationActive ? activeChannel : .off),
+            pendingOff: pendingDeactivate,
+            quiet: !ble.hasPendingWrites
+        )
+        switch action {
+        case .ignore:
+            break
+        case .armOff:
+            pendingDeactivate = true
+            flushPendingDeactivateIfNeeded()
+        case .clearPendingOff:
+            confirmDeviceOff()
+        case .reassert:
+            modeLog.warning("Pack mode \(String(describing: mode)) differs from program; reassert on next tick")
+            modeMismatchReassertDue = true
+        }
+    }
+
+    /// Consume a due mismatch reassert. True when it reprogrammed the pack.
+    private func reassertAfterModeMismatchIfDue() -> Bool {
+        guard modeMismatchReassertDue else { return false }
+        modeMismatchReassertDue = false
+        guard ble.isReady else { return false }
+        let t = now()
+        if let last = lastModeReassertAt, t.timeIntervalSince(last) < modeReassertMinGap { return false }
+        lastModeReassertAt = t
+        resumeSessionOnDevice()
+        return true
+    }
+
     /// Send deactivate if a prior stop/pause/expire happened while offline / not ready.
-    /// Idempotent off send while pending. Durable flag clears only on confirmed write success
-    /// (when idle/paused) or Start/Resume reprogram.
+    /// Idempotent off send while pending. The flag clears only on an idle or paused off ACK.
+    /// Start and resume keep the flag.
     func flushPendingDeactivateIfNeeded(linkReady: Bool? = nil) {
         let ready = linkReady ?? ble.isReady
         guard pendingDeactivate, ready else { return }
@@ -1418,7 +1520,7 @@ final class SessionViewModel: ObservableObject {
     }
 
     func setStrength(_ value: Int) {
-        let clamped = max(1, min(9, value))
+        let clamped = StrengthPresentation.clamp(value)
         // Slider release / reassert same value must not pin mid-fade or re-write BLE
         guard clamped != strength else {
             if isRunning || isPaused {
@@ -1556,13 +1658,6 @@ final class SessionViewModel: ObservableObject {
     }
 
     // MARK: - Scene Phase
-
-    func scenePhaseHandler(from oldPhase: Any, to newPhase: Any) {
-        // Import SwiftUI's ScenePhase values via string comparison to avoid
-        // importing SwiftUI in this ViewModel. The caller passes ScenePhase values.
-        scenePhaseTransition(wentToBackground: "\(newPhase)" == "background",
-                             returnedToForeground: "\(oldPhase)" == "background" && "\(newPhase)" != "background")
-    }
 
     func handleBackgroundTransition() {
         scenePhaseTransition(wentToBackground: true, returnedToForeground: false)
@@ -1709,6 +1804,11 @@ final class SessionViewModel: ObservableObject {
 
     // MARK: - Timers
 
+    /// One timer step. Same entry as the 1 s timer. Internal so tests can drive it.
+    func tick() {
+        recalculateFromWallClock(absoluteIfJumped: true)
+    }
+
     private func startCountdown() {
         stopCountdown()
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
@@ -1728,6 +1828,7 @@ final class SessionViewModel: ObservableObject {
         guard isRunning else { return }
 
         touchLastAlive()
+        if reassertAfterModeMismatchIfDue() { return }
         if engine == nil {
             tickCustomProgram()
         } else {
@@ -1918,8 +2019,9 @@ final class SessionViewModel: ObservableObject {
             return
         }
 
+        // Arm before the program. A running off ACK does not clear the flag.
+        pendingDeactivate = true
         // Absolute program: leading off then phase (comfort after offline/pause/gap).
-        // Pending off clears only on lead-0 ACK (durable across process death).
         if ready {
             ble.cancelProgramWrites()
             ble.sendCommand(BLEConstants.deactivateCommand)
@@ -2055,13 +2157,13 @@ final class SessionViewModel: ObservableObject {
         guard selectedMode == .sleep else { return }
         let d = defaults
         if d.integer(forKey: PersistKey.phaseLengthSeconds) <= 0 {
-            d.set(max(1, sessionTotalDuration / 5), forKey: PersistKey.phaseLengthSeconds)
+            d.set(SleepEngine.phaseLength(totalDuration: sessionTotalDuration), forKey: PersistKey.phaseLengthSeconds)
         }
     }
 
     /// Track last comfort strength so restore mid-fade cannot re-raise (only on change).
     private func persistComfortStrength(_ value: Int) {
-        let clamped = max(1, min(9, value))
+        let clamped = StrengthPresentation.clamp(value)
         if defaults.integer(forKey: PersistKey.lastComfortStrength) == clamped { return }
         defaults.set(clamped, forKey: PersistKey.lastComfortStrength)
     }
@@ -2279,6 +2381,9 @@ final class SessionViewModel: ObservableObject {
             // Restore running state — recalculate from wall clock
             remainingSeconds = outcome.remainingSeconds
             isRunning = true
+            // Arm even when the disk flag is false and offlineSince is nil.
+            // A clean kill has no offline stamp. The next launch must still send off.
+            pendingDeactivate = true
             sessionTotalDuration = totalDuration
             engine = resolveEngine()
             if var eng = engine {

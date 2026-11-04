@@ -1,7 +1,7 @@
 import ActivityKit
 import Foundation
 
-/// Shared Activity attributes for app + widget extension (must match exactly).
+/// Activity attributes. The app and the widget both compile this file.
 struct SessionActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable, Sendable {
         var remainingSeconds: Int

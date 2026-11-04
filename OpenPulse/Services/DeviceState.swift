@@ -14,7 +14,18 @@ class DeviceState: NSObject, ObservableObject {
     @Published var isBluetoothOff = false
     /// True after a Batt: reply on the current link. Cached % after disconnect is unconfirmed.
     @Published var batterySampleConfirmed = false
+    /// Signal level from RSSI reads on the current link. Nil when no link.
+    @Published var linkQuality: LinkQuality?
 
+    /// Last known from the `v` and `i` replies. Kept after a disconnect: the device is the same
+    /// paired unit, and the footer only shows identity. The next link overwrites them.
+    @Published var firmwareVersion: String?
+    @Published var deviceName: String?
+
+    /// Last "mode:" the pack reported on this link. Nil until seen; cleared on disconnect.
+    @Published var deviceMode: DeviceMode?
+
+    var onModeReport: (@MainActor (DeviceMode) -> Void)?
     var onDisconnect: (@MainActor () -> Void)?
     var onCommandSent: ((String) -> Void)?
     var onNotification: (@MainActor () -> Void)?

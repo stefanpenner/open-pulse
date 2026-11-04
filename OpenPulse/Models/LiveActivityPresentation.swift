@@ -90,8 +90,8 @@ enum BatteryPresentation {
         percent <= 0
     }
 
-    /// Matches `BLEConstants.lowBatteryThresholdPercent` — local so widget target
-    /// can compile presentation without CoreBluetooth BLEConstants.
+    /// Warn at or below this percent.
+    /// The widget compiles this file and does not import CoreBluetooth.
     static let lowBatteryThresholdPercent = 15
 
     /// Low warn unless we *know* the pack is charging (`true` suppresses; `nil`/false still warn).
@@ -133,6 +133,14 @@ enum BatteryPresentation {
         // Unconfirmed: await fresh Q during grace (stale % must not skip gate)
         guard let elapsed = secondsSinceReady else { return false }
         return elapsed < graceSeconds
+    }
+
+    /// Idle hint for a low pack that can still start. Empty blocks start instead.
+    static func startHint(percent: Int?, isCharging: Bool?) -> String? {
+        guard let pct = percent, !isEmpty(percent: pct), isLow(percent: pct, isCharging: isCharging) else {
+            return nil
+        }
+        return "Battery \(pct)%. Charge soon."
     }
 
     /// Start-gate copy when empty pack or mid-read blocks a session.

@@ -27,6 +27,8 @@ struct SerialBLEWriteQueue: Equatable, Sendable {
     static func isStatusQuery(_ command: String) -> Bool {
         command == BLEConstants.batteryQueryCommand
             || command == BLEConstants.chargingQueryCommand
+            || command == BLEConstants.firmwareQueryCommand
+            || command == BLEConstants.deviceNameQueryCommand
     }
 
     /// Enqueue a command. Deactivate jumps the queue and drops program traffic waiting.

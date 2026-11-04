@@ -472,6 +472,16 @@ struct LiveActivityPresentationTests {
         )
     }
 
+    @Test("Start hint warns on a low pack, not on empty, full, or charging")
+    func batteryStartHint() {
+        #expect(BatteryPresentation.startHint(percent: 12, isCharging: false)?.contains("12%") == true)
+        #expect(BatteryPresentation.startHint(percent: 12, isCharging: nil) != nil)
+        #expect(BatteryPresentation.startHint(percent: 12, isCharging: true) == nil)
+        #expect(BatteryPresentation.startHint(percent: 0, isCharging: false) == nil, "empty blocks start instead")
+        #expect(BatteryPresentation.startHint(percent: 60, isCharging: false) == nil)
+        #expect(BatteryPresentation.startHint(percent: nil, isCharging: false) == nil)
+    }
+
     @Test("Battery presentation pure helpers")
     func batteryPresentation() {
         #expect(BatteryPresentation.isLow(percent: 5, isCharging: false))
@@ -949,6 +959,11 @@ struct LiveActivityPresentationTests {
         #expect(BreathPhasePresentation.statusText(phase: .exhale(progress: 0.8)) == "Exhale")
         #expect(BreathPhasePresentation.statusText(phase: .rest(progress: 0.1)) == "Rest")
         #expect(BreathPhasePresentation.statusText(phase: nil) == nil)
+        #expect(BreathPhasePresentation.guideLabel(phase: .inhale(progress: 0.2)) == "Inhale")
+        #expect(BreathPhasePresentation.guideLabel(phase: .hold(progress: 0.5)) == "Hold")
+        #expect(BreathPhasePresentation.guideLabel(phase: .exhale(progress: 0.8)) == "Exhale")
+        #expect(BreathPhasePresentation.guideLabel(phase: .rest(progress: 0.1)) == "")
+        #expect(BreathPhasePresentation.guideLabel(phase: nil) == "")
     }
 
     @Test("Pending off flushes on ready when idle")

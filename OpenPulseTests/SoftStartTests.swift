@@ -119,18 +119,14 @@ struct SessionEndNotifierTests {
         #expect(!t.localizedCaseInsensitiveContains("therapy"))
     }
 
-    @Test("Schedule is a no-op when disabled or endsAt is past")
-    func scheduleNoOp() {
-        SessionEndNotifier.schedule(
-            endsAt: Date().addingTimeInterval(-10),
-            modeName: "Calm",
-            enabled: true
-        )
-        SessionEndNotifier.schedule(
-            endsAt: Date().addingTimeInterval(60),
-            modeName: "Calm",
-            enabled: false
-        )
+    @Test("No request when disabled or endsAt is past, one request when in the future")
+    func requestOnlyForFutureEnabled() {
+        let now = Date()
+        #expect(SessionEndNotifier.request(endsAt: now.addingTimeInterval(-10), modeName: "Calm", enabled: true, now: now) == nil)
+        #expect(SessionEndNotifier.request(endsAt: now.addingTimeInterval(60), modeName: "Calm", enabled: false, now: now) == nil)
+        let r = SessionEndNotifier.request(endsAt: now.addingTimeInterval(60), modeName: "Calm", enabled: true, now: now)
+        #expect(r?.identifier == SessionEndNotifier.requestIdentifier)
+        #expect((r?.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval == 60)
     }
 
     @Test("canDeliverAlerts maps authorization statuses")

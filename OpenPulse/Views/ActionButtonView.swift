@@ -43,6 +43,7 @@ struct ActionButtonView: View {
                     .accessibilityHint("Ends the session and turns the device off")
                 }
             } else {
+                VStack(spacing: 8) {
                 Button(action: { vm.start() }) {
                     Group {
                         if vm.canStart {
@@ -90,6 +91,15 @@ struct ActionButtonView: View {
                         ? "Begins the \(vm.sessionTitle) session"
                         : (vm.startBlockedReason ?? "Connect your device to start")
                 )
+
+                if vm.canStart, let hint = BatteryPresentation.startHint(
+                    percent: vm.ble.batteryPercentage, isCharging: vm.ble.isCharging
+                ) {
+                    Label(hint, systemImage: "battery.25percent")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Theme.accentAmber)
+                }
+                }
             }
         }
         .sensoryFeedback(trigger: sessionState) { old, new in

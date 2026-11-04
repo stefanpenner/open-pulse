@@ -11,9 +11,9 @@ struct SessionPrivacySettingsSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    // Optional local ambience (bundled pad — no streaming / accounts)
+                    // Optional local ticks (on-device synth — no streaming / accounts)
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("SOUND")
+                        Text("TAPPER")
                             .font(Theme.sectionLabel)
                             .foregroundStyle(Theme.textTertiary)
                             .tracking(1.5)
@@ -26,14 +26,53 @@ struct SessionPrivacySettingsSheet: View {
                                 Text("Calming music")
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(Theme.textPrimary)
-                                Text("Soft ambient pad during sessions. On-device only — no streaming or accounts. Off by default.")
+                                Text("Soft left-right tick-tock during sessions, like tappers. On-device only — no streaming or accounts. Off by default.")
                                     .font(.caption2)
                                     .foregroundStyle(Theme.textTertiary)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
                         .tint(Theme.accentTeal)
-                        .accessibilityHint("Optional. Plays a bundled ambient loop only while a session is active in the foreground.")
+                        .accessibilityHint("Optional. Plays only while a session runs in the foreground.")
+
+                        Toggle(isOn: Binding(
+                            get: { vm.hapticTicksEnabled },
+                            set: { vm.setHapticTicksEnabled($0) }
+                        )) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Haptic taps")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                Text("The phone taps on the same beat: a sharp tap for left, a soft tap for right. Hold the phone or keep it in a pocket. Off by default.")
+                                    .font(.caption2)
+                                    .foregroundStyle(Theme.textTertiary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .tint(Theme.accentTeal)
+                        .accessibilityHint("Optional. Taps only while a session runs in the foreground.")
+
+                        Toggle(isOn: Binding(
+                            get: { vm.joyConEnabled },
+                            set: { vm.setJoyConEnabled($0) }
+                        )) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Use Joy-Con")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                Text(vm.joyConEnabled
+                                     ? vm.joyConStatus
+                                     : "Hold one Joy-Con in each hand. Each taps its own side. Off by default.")
+                                    .font(.caption2)
+                                    .foregroundStyle(Theme.textTertiary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .tint(Theme.accentTeal)
+                        .disabled(!vm.hapticTicksEnabled)
+                        .accessibilityHint("Optional. Needs Haptic taps. Pair your Joy-Cons in Bluetooth settings first.")
+
+                        JoyConPairingCard(vm: vm)
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -144,6 +183,8 @@ struct SessionPrivacySettingsSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .accessibilityElement(children: .combine)
+
+                    DeviceInfoFooter(ble: vm.ble)
                 }
                 .padding(16)
             }
@@ -155,9 +196,83 @@ struct SessionPrivacySettingsSheet: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .onAppear { vm.refreshSessionEndAlertAuthorization() }
+            .onAppear {
+                vm.refreshSessionEndAlertAuthorization()
+                vm.setJoyConPairingVisible(true)
+            }
+            .onDisappear { vm.setJoyConPairingVisible(false) }
         }
         .presentationDetents([.medium, .large])
         .preferredColorScheme(.dark)
+    }
+}
+
+/// Calm pairing help for Joy-Cons: state per side, three steps, a test, and a link to Settings.
+private struct JoyConPairingCard: View {
+    @ObservedObject var vm: SessionViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(JoyConPairing.title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Theme.textSecondary)
+                .accessibilityAddTraits(.isHeader)
+
+            ForEach(vm.joyConPairingRows, id: \.text) { row in
+                Label(row.text, systemImage: row.isReady ? "checkmark.circle.fill" : "circle.dashed")
+                    .font(.caption)
+                    .foregroundStyle(row.isReady ? Theme.accentTeal : Theme.textTertiary)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(row.accessibilityLabel)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(JoyConPairing.steps, id: \.self) { step in
+                    Text(step)
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .accessibilityElement(children: .combine)
+
+            HStack(spacing: 16) {
+                Button(JoyConPairing.testButtonTitle) { vm.testJoyConTaps() }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(vm.canTestJoyCon ? Theme.accentTeal : Theme.textTertiary)
+                    .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+                    .disabled(!vm.canTestJoyCon)
+                    .accessibilityHint(JoyConPairing.testHint)
+
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    Link(JoyConPairing.settingsLinkTitle, destination: url)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.accentTeal)
+                        .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+                        .accessibilityHint(JoyConPairing.settingsNote)
+                }
+            }
+
+            Text(JoyConPairing.settingsNote)
+                .font(.caption2)
+                .foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.top, 4)
+    }
+}
+
+/// Quiet footer: device name and firmware, when the device has told us.
+private struct DeviceInfoFooter: View {
+    @ObservedObject var ble: DeviceState
+
+    var body: some View {
+        if let text = DeviceInfoParser.footer(name: ble.deviceName, firmware: ble.firmwareVersion) {
+            Text(text)
+                .font(.caption2)
+                .foregroundStyle(Theme.textTertiary)
+                .frame(maxWidth: .infinity)
+                .accessibilityLabel("Device " + text)
+        }
     }
 }

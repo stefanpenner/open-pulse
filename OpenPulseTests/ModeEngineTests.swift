@@ -6,23 +6,44 @@ import Testing
 
 @Suite("BLEConstants")
 struct BLEConstantsTests {
-    @Test("Battery percentage at full voltage returns 100")
-    func batteryFull() {
+    @Test("Battery percent follows the official curve: 3.5 V = 0, 3.9 V = 100, linear")
+    func batteryCurvePoints() {
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.9) == 100)
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.7) == 50)
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.6) == 25)
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.56) == 15)
+    }
+
+    @Test("Charging voltages above 3.9 V clamp to 100")
+    func batteryClampsHigh() {
         #expect(BLEConstants.batteryPercentage(fromVoltage: 3.95) == 100)
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.97) == 100)
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 4.0) == 100)
         #expect(BLEConstants.batteryPercentage(fromVoltage: 4.2) == 100)
     }
 
-    @Test("Battery percentage at empty voltage returns 0")
-    func batteryEmpty() {
-        #expect(BLEConstants.batteryPercentage(fromVoltage: 2.5) == 0)
-        #expect(BLEConstants.batteryPercentage(fromVoltage: 2.0) == 0)
+    @Test("A pack at 3.5 V is low but usable: it reads 1, not 0")
+    func batteryUsableFloor() {
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.5) == 1)
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.45) == 1)
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.4) == 1)
+        #expect(!BatteryPresentation.blocksStart(
+            percent: BLEConstants.batteryPercentage(fromVoltage: 3.5), isCharging: false))
     }
 
-    @Test("Battery percentage mid-range")
-    func batteryMidRange() {
-        // Midpoint: (3.95 + 2.5) / 2 = 3.225 → ~50%
-        let pct = BLEConstants.batteryPercentage(fromVoltage: 3.225)
-        #expect(pct == 50)
+    @Test("A pack below 3.4 V is dead: it reads 0 and blocks Start")
+    func batteryDeadReadsZero() {
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.39) == 0)
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 3.0) == 0)
+        #expect(BLEConstants.batteryPercentage(fromVoltage: 2.0) == 0)
+        #expect(BatteryPresentation.blocksStart(
+            percent: BLEConstants.batteryPercentage(fromVoltage: 3.39), isCharging: false))
+    }
+
+    @Test("Low warning fires at the official 15 percent point")
+    func batteryLowWarning() {
+        let pct = BLEConstants.batteryPercentage(fromVoltage: 3.55)
+        #expect(BatteryPresentation.isLow(percent: pct, isCharging: false))
     }
 
     @Test("Strength command format")

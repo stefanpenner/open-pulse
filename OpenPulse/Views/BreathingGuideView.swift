@@ -9,23 +9,20 @@ struct BreathingGuideView: View {
     @ScaledMetric(relativeTo: .largeTitle) private var holdGlowSize: CGFloat = 150
     @ScaledMetric(relativeTo: .largeTitle) private var innerGlowSize: CGFloat = 60
 
-    private var phaseLabel: String {
-        // Pause / offline / incomplete stop-off use shared status (matches Island + hero).
-        // Mid-run durable pending alone must not replace breath phase — use Reconnecting via link.
+    /// Pause, offline, or a finished stop uses the shared status.
+    /// A mid-run pending flag alone does not replace the breath word.
+    private var statusOverride: String? {
         let showPendingOff = PendingOffPresentation.shouldShowBanner(
             isRunning: vm.isRunning,
             pendingDeviceOff: vm.pendingDeactivate
         )
-        if vm.isPaused || showPendingOff || !vm.ble.isReady {
-            return vm.sessionStatusText
-        }
-        guard let phase = vm.breathingPhase else { return "" }
-        switch phase {
-        case .inhale: return "Inhale"
-        case .hold:   return "Hold"
-        case .exhale: return "Exhale"
-        case .rest:   return ""  // quiet gap — no label
-        }
+        guard vm.isPaused || showPendingOff || !vm.ble.isReady else { return nil }
+        return vm.sessionStatusText
+    }
+
+    private var phaseLabel: String {
+        if let statusOverride { return statusOverride }
+        return BreathPhasePresentation.guideLabel(phase: vm.breathingPhase)
     }
 
     private var cycle: BreathingCycle {
@@ -88,13 +85,7 @@ struct BreathingGuideView: View {
     }
 
     private var breathingAccessibilityLabel: String {
-        let showPendingOff = PendingOffPresentation.shouldShowBanner(
-            isRunning: vm.isRunning,
-            pendingDeviceOff: vm.pendingDeactivate
-        )
-        if vm.isPaused || showPendingOff || !vm.ble.isReady {
-            return vm.sessionStatusText
-        }
+        if let statusOverride { return statusOverride }
         let phase = phaseLabel.isEmpty ? "Breathing" : phaseLabel
         let count = phaseCountdown.isEmpty || phaseCountdown == "—" ? "" : ", \(phaseCountdown)"
         let stim = isActive ? ", session active" : ""
