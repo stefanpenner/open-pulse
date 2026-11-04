@@ -4,48 +4,46 @@
   <img src="icon.svg" width="128" height="128" alt="Open Pulse app icon">
 </p>
 
-A native iOS app for controlling [Pulsetto](https://pulsetto.tech) wellness devices over Bluetooth.
-
-Swift 6 / SwiftUI. No dependencies. No tracking. iOS 26+.
+An iOS app that controls a [Pulsetto](https://pulsetto.tech) neck-worn device over Bluetooth.
 
 <p align="center">
-  <img src="screenshot-dark.png" width="280" alt="Mode picker">
-  &nbsp;&nbsp;
-  <img src="screenshot-session.png" width="280" alt="Active session">
+  <img src="screenshot-home.png" width="280" alt="Home screen with duration and intensity controls">
 </p>
 
-## Feelings
+## Why
 
-You pick a feeling. The app runs one engine. Custom stays manual.
+The Pulsetto app needs an account and a subscription. Open Pulse is open source and private. It has no account, no subscription, no network access, and no tracking. It needs iOS 26 or later.
 
-| Feeling | Engine | Default | Behavior |
-|---------|--------|---------|----------|
-| **Stressed** | Stress | 6 min | Bilateral, steady intensity |
-| **Anxious** | Breathe | 5 min | Exhale-gated. Pace is Calm or Meditate |
-| **Can't Sleep** | Sleep | 10 min | Rotating channels, gentle fade-out |
-| **Foggy** | Focus | 6 min | Left side, 30s on / 30s off |
-| **Aching** | Ease | 8 min | Wave, or Burst (2 min on / 30s off) |
+## What
 
-Older saved names still open. Learn uses Focus. Meditation uses Breathe at the Meditate pace. Head comfort uses Ease Burst. Gut comfort uses Stress.
+- Six modes: Stressed, Anxious, Can't Sleep, Foggy, Aching, and Custom.
+- A tapper that plays a tick-tock sound and haptic taps.
+- Battery level and signal strength of the device.
+- Session-end alerts and a Live Activity.
+- Mindful Minutes written to Apple Health. The app does not read Health.
 
-Wellness device control only. This is not a medical treatment. Optional Mindful Minutes writes to Apple Health. The app does not read Health.
+| Feeling | Default | Behavior |
+|---------|---------|----------|
+| Stressed | 6 min | Both sides, steady intensity |
+| Anxious | 5 min | Paced breathing, gated by the exhale |
+| Can't Sleep | 10 min | Rotating channels, fade-out |
+| Foggy | 6 min | Left side, 30 s on and 30 s off |
+| Aching | 8 min | Wave, or burst |
 
-Parameter notes and citations stay in [research.md](research.md).
+This app is not a medical treatment. Parameter notes and citations are in [research.md](research.md).
 
-See [research.md](research.md) for full citations and parameter rationale.
+## How
 
-## Building
+Build:
 
 ```bash
-open OpenPulse.xcodeproj
-# or
 xcodebuild -project OpenPulse.xcodeproj -scheme OpenPulse \
   -destination 'generic/platform=iOS' build
 ```
 
-## Testing
+Run: open `OpenPulse.xcodeproj` in Xcode, choose a device, and press Run.
 
-Fast tests (pure logic, on the Mac, about 3 s). `Package.swift` lists the files.
+Test. Fast tests (pure logic, on the Mac, about 3 s). `Package.swift` lists the files.
 
 ```bash
 swift test
@@ -62,10 +60,5 @@ xcodebuild test-without-building -project OpenPulse.xcodeproj -scheme OpenPulse 
 Make each view model in a test with `testVM(...)`. It uses fakes for ActivityKit, HealthKit,
 notifications, and audio. The real services make slow sync calls to iOS.
 
-## Attribution
-
-Built on the BLE reverse engineering from [PulseLibre](https://github.com/jooray/PulseLibre) by [Juraj Bednar](https://github.com/jooray), with additional protocol work by [hydrasparx/pulsetto](https://github.com/hydrasparx/pulsetto) and [parallaxintelligencepartnership/pulse-libre](https://github.com/parallaxintelligencepartnership/pulse-libre).
-
-## License
-
-[GLWTS](LICENSE)
+Built on the work of [PulseLibre](https://github.com/jooray/PulseLibre) by Juraj Bednar, [hydrasparx/pulsetto](https://github.com/hydrasparx/pulsetto), and [pulse-libre](https://github.com/parallaxintelligencepartnership/pulse-libre).
+License: [GLWTS](LICENSE).
