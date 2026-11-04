@@ -48,10 +48,12 @@ struct IdleSessionLayout: View {
                 .preferredColorScheme(.dark)
         }
         .sheet(isPresented: $showHistory) {
-            SessionHistorySheet(sessions: vm.recentSessions) {
-                vm.clearSessionHistory()
-            }
-            .presentationDetents([.medium, .large])
+            SessionHistorySheet(
+                sessions: vm.recentSessions,
+                onCleared: vm.clearSessionHistory,
+                onDelete: vm.deleteSession
+            )
+            .presentationDetents([.large])
         }
         .sheet(isPresented: $showPrivacySettings) {
             SessionPrivacySettingsSheet(vm: vm)

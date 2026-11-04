@@ -109,6 +109,11 @@ enum SessionHistory {
         }
     }
 
+    /// Delete one session. The other sessions keep their order.
+    static func remove(id: UUID, defaults: UserDefaults = .standard) {
+        save(load(defaults: defaults).filter { $0.id != id }, defaults: defaults)
+    }
+
     static func clear(defaults: UserDefaults = .standard) {
         defaults.removeObject(forKey: storageKey)
     }

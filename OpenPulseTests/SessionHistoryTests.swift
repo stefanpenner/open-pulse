@@ -76,6 +76,18 @@ struct SessionHistoryStreakTests {
         #expect(SessionHistory.count(defaults: d) == 0)
     }
 
+    @Test("Remove deletes one session and keeps the rest")
+    func removeOne() {
+        let d = suiteDefaults()
+        SessionHistory.append(mode: .calm, durationSeconds: 60, strength: 5, completed: true, defaults: d)
+        SessionHistory.append(mode: .focus, durationSeconds: 90, strength: 4, completed: false, defaults: d)
+        let newest = SessionHistory.load(defaults: d)[0]
+        SessionHistory.remove(id: newest.id, defaults: d)
+        let left = SessionHistory.load(defaults: d)
+        #expect(left.count == 1)
+        #expect(left[0].modeRaw == StimulationMode.calm.rawValue)
+    }
+
     @Test("History names include Meditate / Burst variants")
     func historyVariantNames() {
         let d = suiteDefaults()

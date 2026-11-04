@@ -5,6 +5,8 @@ struct SessionHistorySheet: View {
     let sessions: [SessionRecord]
     /// Required wipe callback — parent owns UserDefaults suite (no silent no-op clear).
     var onCleared: () -> Void
+    /// Delete one session by id. The parent owns the store.
+    var onDelete: (UUID) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var confirmClear = false
 
@@ -47,7 +49,6 @@ struct SessionHistorySheet: View {
                                 Spacer()
                                 stat(title: "Minutes", value: "\(totalMinutes)")
                             }
-                            .listRowBackground(Color.clear)
 
                             HStack {
                                 stat(title: "This week", value: "\(weekCompleted)")
@@ -56,7 +57,6 @@ struct SessionHistorySheet: View {
                                 Spacer()
                                 stat(title: "Streak", value: streak > 0 ? "\(streak)d" : "—")
                             }
-                            .listRowBackground(Color.clear)
                             .accessibilityElement(children: .combine)
                             .accessibilityLabel("This week \(weekCompleted) completed, \(weekMinutes) minutes, streak \(streak) days")
                         }
@@ -65,12 +65,13 @@ struct SessionHistorySheet: View {
                             ForEach(sessions) { record in
                                 historyRow(record)
                             }
+                            .onDelete { offsets in
+                                offsets.map { sessions[$0].id }.forEach(onDelete)
+                            }
                         }
                     }
-                    .scrollContentBackground(.hidden)
                 }
             }
-            .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("Your sessions")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -147,6 +148,5 @@ struct SessionHistorySheet: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .listRowBackground(Color.white.opacity(0.04))
     }
 }

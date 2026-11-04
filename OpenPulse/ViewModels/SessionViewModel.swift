@@ -488,6 +488,12 @@ final class SessionViewModel: ObservableObject {
         pause()
     }
 
+    /// Delete one session from the local log.
+    func deleteSession(id: UUID) {
+        SessionHistory.remove(id: id, defaults: defaults)
+        recentSessions = SessionHistory.load(defaults: defaults)
+    }
+
     /// Wipe local session log (privacy-first; never cloud).
     func clearSessionHistory() {
         SessionHistory.clear(defaults: defaults)
