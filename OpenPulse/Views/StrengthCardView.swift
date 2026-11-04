@@ -49,6 +49,7 @@ struct StrengthCardView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Intensity")
         .accessibilityValue(accessibilityValue)
+        .accessibilityIdentifier("session.intensity")
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment: vm.setStrength(vm.strength + 1)

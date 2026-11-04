@@ -31,6 +31,7 @@ struct ActionButtonView: View {
                     .wellnessGlass(.regular.tint(Theme.accentTeal).interactive(), in: .capsule)
                     .disabled(vm.isPaused && !vm.canResume)
                     .accessibilityLabel(vm.isPaused ? "Resume session" : "Pause session")
+                    .accessibilityIdentifier("session.pauseResume")
                     .accessibilityHint(vm.isPaused && !vm.canResume ? "Waiting for device connection" : "")
 
                     Button(action: { vm.stop() }) {
@@ -42,6 +43,7 @@ struct ActionButtonView: View {
                     }
                     .wellnessGlass(.regular.interactive(), in: .circle)
                     .accessibilityLabel("Stop session")
+                    .accessibilityIdentifier("session.stop")
                     .accessibilityHint("Ends the session and turns the device off")
                 }
             } else {
@@ -72,6 +74,7 @@ struct ActionButtonView: View {
                     in: .capsule
                 )
                 .accessibilityLabel(vm.canStart ? "Start \(vm.timerMinutes) minute session" : (vm.startBlockedReason ?? "Start unavailable"))
+                .accessibilityIdentifier("session.start")
                 .accessibilityHint(
                     vm.canStart
                         ? "Begins the \(vm.sessionTitle) session"

@@ -112,6 +112,7 @@ struct IdleSessionLayout: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(vm.sessionTitle). \(vm.sessionSubtitle)")
+        .accessibilityIdentifier("idle.modeHero")
         .accessibilityHint("Opens mode list")
         .disabled(vm.isRunning || vm.isPaused)
     }

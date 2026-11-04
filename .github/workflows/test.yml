@@ -20,7 +20,7 @@ jobs:
           xcodebuild -version
           xcrun simctl list devices available | grep iPhone | tail -5
 
-      - name: Run tests (iOS Simulator)
+      - name: Pick simulator
         run: |
           DEVICE=$(xcrun simctl list devices available -j | python3 -c "
           import json, sys
@@ -35,6 +35,10 @@ jobs:
           print(best)
           ")
           echo "Using simulator: $DEVICE"
+          echo "DEVICE=$DEVICE" >> "$GITHUB_ENV"
+
+      - name: Run tests (iOS Simulator)
+        run: |
           xcodebuild test \
             -project OpenPulse.xcodeproj \
             -scheme OpenPulse \
@@ -42,9 +46,20 @@ jobs:
             -resultBundlePath TestResults \
             CODE_SIGNING_ALLOWED=NO | xcpretty || exit 1
 
+      - name: Run UI tests (iOS Simulator)
+        run: |
+          xcodebuild test \
+            -project OpenPulse.xcodeproj \
+            -scheme OpenPulseUITests \
+            -destination "platform=iOS Simulator,name=$DEVICE" \
+            -resultBundlePath UITestResults \
+            CODE_SIGNING_ALLOWED=NO | xcpretty || exit 1
+
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: TestResults
-          path: TestResults
+          path: |
+            TestResults
+            UITestResults

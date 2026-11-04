@@ -101,6 +101,13 @@
 			remoteGlobalIDString = E30000000000000000000001;
 			remoteInfo = OpenPulseWidget;
 		};
+		CC0000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 330000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E10000000000000000000001;
+			remoteInfo = OpenPulse;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -179,7 +186,16 @@
 		A10000000000000000000030 /* AmbientAudioPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAudioPolicy.swift; sourceTree = "<group>"; };
 		A10000000000000000000031 /* SessionAmbientAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAmbientAudio.swift; sourceTree = "<group>"; };
 		A30000000000000000000008 /* StartSessionControlWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartSessionControlWidget.swift; sourceTree = "<group>"; };
+		D40000000000000000000001 /* OpenPulseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenPulseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		C40000000000000000000001 /* OpenPulseUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OpenPulseUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		220000000000000000000003 /* Frameworks */ = {
@@ -204,6 +220,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		220000000000000000000033 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -212,6 +235,7 @@
 			children = (
 				C10000000000000000000002 /* OpenPulse */,
 				C10000000000000000000008 /* OpenPulseTests */,
+				C40000000000000000000001 /* OpenPulseUITests */,
 				C30000000000000000000001 /* OpenPulseWidget */,
 				C10000000000000000000007 /* Products */,
 			);
@@ -321,6 +345,7 @@
 				D10000000000000000000001 /* OpenPulse.app */,
 				D20000000000000000000001 /* OpenPulseTests.xctest */,
 				D30000000000000000000001 /* OpenPulseWidget.appex */,
+				D40000000000000000000001 /* OpenPulseUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -418,6 +443,26 @@
 			productReference = D30000000000000000000001 /* OpenPulseWidget.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		E40000000000000000000001 /* OpenPulseUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F40000000000000000000001 /* Build configuration list for PBXNativeTarget "OpenPulseUITests" */;
+			buildPhases = (
+				220000000000000000000031 /* Sources */,
+				220000000000000000000033 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DD0000000000000000000003 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				C40000000000000000000001 /* OpenPulseUITests */,
+			);
+			name = OpenPulseUITests;
+			productName = OpenPulseUITests;
+			productReference = D40000000000000000000001 /* OpenPulseUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -429,6 +474,9 @@
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					E20000000000000000000001 = {
+						TestTargetID = E10000000000000000000001;
+					};
+					E40000000000000000000001 = {
 						TestTargetID = E10000000000000000000001;
 					};
 				};
@@ -450,6 +498,7 @@
 				E10000000000000000000001 /* OpenPulse */,
 				E20000000000000000000001 /* OpenPulseTests */,
 				E30000000000000000000001 /* OpenPulseWidget */,
+				E40000000000000000000001 /* OpenPulseUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -567,6 +616,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		220000000000000000000031 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -593,6 +649,11 @@
 			isa = PBXTargetDependency;
 			target = E30000000000000000000001 /* OpenPulseWidget */;
 			targetProxy = CC0000000000000000000002 /* PBXContainerItemProxy */;
+		};
+		DD0000000000000000000003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E10000000000000000000001 /* OpenPulse */;
+			targetProxy = CC0000000000000000000003 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -895,6 +956,48 @@
 			};
 			name = Release;
 		};
+		11000000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = T93925EZUT;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulseUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = OpenPulse;
+			};
+			name = Debug;
+		};
+		11000000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = T93925EZUT;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.9;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulseUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = OpenPulse;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -930,6 +1033,15 @@
 			buildConfigurations = (
 				110000000000000000000007 /* Debug */,
 				110000000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F40000000000000000000001 /* Build configuration list for PBXNativeTarget "OpenPulseUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11000000000000000000000B /* Debug */,
+				11000000000000000000000C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

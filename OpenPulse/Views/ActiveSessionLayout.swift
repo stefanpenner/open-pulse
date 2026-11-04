@@ -150,6 +150,7 @@ private struct LiveTimerStepper: View {
             .frame(width: 236, height: 236)
             .accessibilityElement(children: .combine)
             .accessibilityValue("\(Int((vm.progress * 100).rounded())) percent complete")
+            .accessibilityIdentifier("session.clock")
 
             HStack(spacing: Theme.spaceM) {
                 stepButton("minus", enabled: canDecrease) { vm.decreaseTimer() }
