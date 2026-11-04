@@ -20,21 +20,6 @@ Open Pulse also adds a tapper: a left-right tick-tock sound, phone taps, or both
 
 Open Pulse is not made by or affiliated with Pulsetto. Pulsetto is a trademark of its owner.
 
-## What
-
-| Feeling | Default | Pattern |
-|---------|---------|---------|
-| Stressed | 6 min | Both sides, steady strength |
-| Anxious | 5 min | Paced breathing. Stimulation is on during the breath out. |
-| Can't Sleep | 10 min | Sides change. Strength fades at the end. |
-| Foggy | 6 min | Left side, 30 s on, 30 s off |
-| Aching | 8 min | Strength moves in a slow wave |
-| Custom | 10 min | You set it |
-
-Optional: a session-end alert, and Mindful Minutes in Apple Health.
-
-Not a medical treatment. Sources: [research.md](research.md).
-
 ## How
 
 Run: open `OpenPulse.xcodeproj` in Xcode and press Run.
@@ -55,4 +40,4 @@ xcodebuild test-without-building -project OpenPulse.xcodeproj -scheme OpenPulse 
 
 ## Credits
 
-Built on [PulseLibre](https://github.com/jooray/PulseLibre) by Juraj Bednar, [hydrasparx/pulsetto](https://github.com/hydrasparx/pulsetto), and [pulse-libre](https://github.com/parallaxintelligencepartnership/pulse-libre). License: [GLWTS](LICENSE).
+Inspired by [PulseLibre](https://github.com/jooray/PulseLibre) by Juraj Bednar, [hydrasparx/pulsetto](https://github.com/hydrasparx/pulsetto), and [pulse-libre](https://github.com/parallaxintelligencepartnership/pulse-libre). Their reverse engineering of the device protocol made this app possible. License: [GLWTS](LICENSE).
