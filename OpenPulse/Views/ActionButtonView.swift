@@ -65,7 +65,7 @@ struct ActionButtonView: View {
                                 }
                             }
                         } else {
-                            Text(vm.startBlockedReason ?? "Waiting…")
+                            Text(vm.startButtonTitle)
                                 .font(Theme.buttonLabel)
                                 .lineLimit(2)
                                 .minimumScaleFactor(0.8)

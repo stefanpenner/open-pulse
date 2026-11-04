@@ -88,6 +88,12 @@ final class SessionViewModel: ObservableObject {
             )
     }
 
+    /// The Start label. The status pill shows link state, so a link block keeps "Start".
+    var startButtonTitle: String {
+        if ble.isBluetoothOff || !ble.isReady { return "Start" }
+        return startBlockedReason ?? "Start"
+    }
+
     /// User-facing reason Start is blocked (empty when canStart).
     var startBlockedReason: String? {
         guard !isRunning, !isPaused else { return nil }

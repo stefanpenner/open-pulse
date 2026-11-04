@@ -768,6 +768,18 @@ struct StartGateTests {
         #expect(vm.startBlockedReason != nil)
     }
 
+    @Test("Start says Start while the link is down. The status pill owns that state.")
+    @MainActor func startTitleDefersLinkStateToPill() {
+        let (vm, _) = makeVM()
+        vm.ble.isConnected = false
+        vm.ble.isReady = false
+        #expect(vm.startButtonTitle == "Start")
+        vm.ble.isConnected = true
+        #expect(vm.startButtonTitle == "Start")
+        vm.ble.isReady = true
+        #expect(vm.startButtonTitle == "Start")
+    }
+
     @Test("canStart is true when idle and ready")
     @MainActor func canStartWhenReady() {
         let (vm, _) = makeVM()
