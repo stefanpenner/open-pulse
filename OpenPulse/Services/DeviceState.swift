@@ -14,6 +14,8 @@ class DeviceState: NSObject, ObservableObject {
     @Published var isBluetoothOff = false
     /// True after a Batt: reply on the current link. Cached % after disconnect is unconfirmed.
     @Published var batterySampleConfirmed = false
+    /// Signal level from RSSI reads on the current link. Nil when no link.
+    @Published var linkQuality: LinkQuality?
 
     var onDisconnect: (@MainActor () -> Void)?
     var onCommandSent: ((String) -> Void)?

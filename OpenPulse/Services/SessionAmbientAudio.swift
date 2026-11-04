@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreHaptics
 import Foundation
 
 // MARK: - Testable seam
@@ -7,7 +8,8 @@ import Foundation
 protocol SessionAmbientAudioPlaying: AnyObject {
     var isPlaying: Bool { get }
     func sync(
-        enabled: Bool,
+        sound: Bool,
+        haptics: Bool,
         isRunning: Bool,
         isPaused: Bool,
         isInBackground: Bool
@@ -15,54 +17,76 @@ protocol SessionAmbientAudioPlaying: AnyObject {
     func stop(fade: Bool)
 }
 
-/// Calming music: a soft left/right tick-tock during sessions, like tappers.
+/// The session tapper: a soft left/right tick-tock sound, haptic taps, or both, on one beat.
 /// Privacy-first: local synth only, no file, no network.
 @MainActor
 final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
+    private struct Outputs: Equatable {
+        let sound: Bool
+        let haptics: Bool
+    }
+
     private var tickEngine: AVAudioEngine?
     private var tickNode: AVAudioPlayerNode?
+    private var hapticEngine: CHHapticEngine?
+    private var hapticPlayer: CHHapticAdvancedPatternPlayer?
     private var fadeTask: Task<Void, Never>?
+    private var outputs: Outputs?
+    private var fadingOut = false
     private(set) var isPlaying: Bool = false
 
     func sync(
-        enabled: Bool,
+        sound: Bool,
+        haptics: Bool,
         isRunning: Bool,
         isPaused: Bool,
         isInBackground: Bool
     ) {
         let want = AmbientAudioPolicy.shouldPlay(
-            enabled: enabled,
+            enabled: sound || haptics,
             isRunning: isRunning,
             isPaused: isPaused,
             isInBackground: isInBackground
         )
-        if want {
-            startIfNeeded()
-        } else if isPlaying {
-            stop(fade: true)
+        guard want else {
+            if isPlaying { stop(fade: true) }
+            return
         }
+        let next = Outputs(sound: sound, haptics: haptics)
+        // A changed output restarts both, so the sound and the taps share one beat.
+        if isPlaying, outputs != next { stopNow() }
+        start(next)
     }
 
     func stop(fade: Bool) {
         fadeTask?.cancel()
         fadeTask = nil
         guard isPlaying else { return }
+        stopHaptics()
         let startVol = tickNode?.volume ?? 0
         guard fade, startVol > 0.02 else {
             stopNow()
             return
         }
+        fadingOut = true
         fadeTask = ramp(from: startVol, to: 0, seconds: AmbientAudioPolicy.fadeOutSeconds) { [weak self] in
             self?.stopNow()
         }
     }
 
-    private func startIfNeeded() {
-        if isPlaying, fadeTask == nil { return }
-        configureSession()
-        guard startTicks() else { return }
+    private func start(_ next: Outputs) {
+        if isPlaying, !fadingOut { return }
+        // Mid fade-out: restart clean, so the sound and the taps share one beat.
+        if fadingOut { stopNow() }
+        if next.sound {
+            configureSession()
+            _ = startTicks()
+        }
+        if next.haptics { startHaptics() }
+        guard tickNode != nil || hapticPlayer != nil else { return }
+        outputs = next
         isPlaying = true
-        fadeTask?.cancel()
+        guard tickNode != nil else { return }
         let from = tickNode?.volume ?? 0
         fadeTask = ramp(from: from, to: AmbientAudioPolicy.targetVolume, seconds: AmbientAudioPolicy.fadeInSeconds) { [weak self] in
             self?.fadeTask = nil
@@ -70,13 +94,18 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
     }
 
     private func stopNow() {
+        fadeTask?.cancel()
+        fadeTask = nil
+        fadingOut = false
+        stopHaptics()
+        let hadSound = tickEngine != nil
         tickNode?.stop()
         tickEngine?.stop()
         tickNode = nil
         tickEngine = nil
+        outputs = nil
         isPlaying = false
-        fadeTask = nil
-        deactivateSessionIfIdle()
+        if hadSound { deactivateSessionIfIdle() }
     }
 
     // MARK: - Level
@@ -99,7 +128,7 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
         }
     }
 
-    // MARK: - Sources
+    // MARK: - Sound
 
     /// Loops one rendered stereo buffer: tick left, then tock right.
     private func startTicks() -> Bool {
@@ -140,6 +169,49 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
         return buffer
     }
 
+    // MARK: - Haptics
+
+    /// Loops the tap pattern on the phone's haptic motor. No-op on hardware without haptics.
+    private func startHaptics() {
+        guard hapticPlayer == nil, CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        do {
+            let engine = try CHHapticEngine()
+            engine.playsHapticsOnly = true
+            engine.isAutoShutdownEnabled = false
+            try engine.start()
+            let player = try engine.makeAdvancedPlayer(with: Self.tapPattern())
+            player.loopEnabled = true
+            player.loopEnd = BilateralTicks.loopSeconds
+            try player.start(atTime: CHHapticTimeImmediate)
+            hapticEngine = engine
+            hapticPlayer = player
+        } catch {
+            hapticEngine?.stop()
+            hapticEngine = nil
+        }
+    }
+
+    private func stopHaptics() {
+        try? hapticPlayer?.stop(atTime: CHHapticTimeImmediate)
+        hapticEngine?.stop()
+        hapticPlayer = nil
+        hapticEngine = nil
+    }
+
+    private static func tapPattern() throws -> CHHapticPattern {
+        let events = BilateralTicks.hapticTaps.map { tap in
+            CHHapticEvent(
+                eventType: .hapticTransient,
+                parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: tap.intensity),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: tap.sharpness),
+                ],
+                relativeTime: tap.time
+            )
+        }
+        return try CHHapticPattern(events: events, parameters: [])
+    }
+
     // MARK: - Session
 
     private func configureSession() {
@@ -154,24 +226,27 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
     }
 }
 
-/// No-op double for unit tests (no AVAudio hardware).
+/// No-op double for unit tests (no AVAudio or haptic hardware).
 @MainActor
 final class NullAmbientAudio: SessionAmbientAudioPlaying {
     private(set) var isPlaying = false
-    private(set) var lastSyncEnabled: Bool?
+    private(set) var lastSyncSound: Bool?
+    private(set) var lastSyncHaptics: Bool?
     private(set) var syncCount = 0
     private(set) var stopCount = 0
 
     func sync(
-        enabled: Bool,
+        sound: Bool,
+        haptics: Bool,
         isRunning: Bool,
         isPaused: Bool,
         isInBackground: Bool
     ) {
         syncCount += 1
-        lastSyncEnabled = enabled
+        lastSyncSound = sound
+        lastSyncHaptics = haptics
         isPlaying = AmbientAudioPolicy.shouldPlay(
-            enabled: enabled,
+            enabled: sound || haptics,
             isRunning: isRunning,
             isPaused: isPaused,
             isInBackground: isInBackground

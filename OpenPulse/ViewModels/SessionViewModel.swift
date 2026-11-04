@@ -32,6 +32,7 @@ final class SessionViewModel: ObservableObject {
     @Published var sessionRemindersEnabled: Bool = false
     /// Opt-in local ambient pad during sessions (bundled only — no streaming).
     @Published var ambientMusicEnabled: Bool = false
+    @Published var hapticTicksEnabled: Bool = false
     /// System denied notifications while toggle is on (Still honesty).
     @Published private(set) var sessionEndAlertsDenied: Bool = false
     /// Brief post-session message for wellness micro-feedback (cleared by UI).
@@ -210,6 +211,7 @@ final class SessionViewModel: ObservableObject {
         sessionEndAlertsEnabled = AppPreferences.sessionEndAlertsEnabled(defaults: defaults)
         sessionRemindersEnabled = AppPreferences.sessionRemindersEnabled(defaults: defaults)
         ambientMusicEnabled = AppPreferences.ambientMusicEnabled(defaults: defaults)
+        hapticTicksEnabled = AppPreferences.hapticTicksEnabled(defaults: defaults)
         // Off → resolved (no schedule). On → wait for fetch before any schedule.
         sessionEndAlertsAuthResolved = !sessionEndAlertsEnabled
         // Cold launch: hydrate denied before BG schedule (async on device)
@@ -956,17 +958,25 @@ final class SessionViewModel: ObservableObject {
         }
     }
 
-    /// Opt-in bundled ambient pad during sessions (local only — no streaming).
+    /// Opt-in tick-tock sound during sessions (local synth only).
     func setAmbientMusicEnabled(_ enabled: Bool) {
         ambientMusicEnabled = enabled
         AppPreferences.setAmbientMusicEnabled(enabled, defaults: defaults)
         syncAmbientAudio()
     }
 
+    /// Opt-in left/right haptic taps during sessions, on the same beat as the sound.
+    func setHapticTicksEnabled(_ enabled: Bool) {
+        hapticTicksEnabled = enabled
+        AppPreferences.setHapticTicksEnabled(enabled, defaults: defaults)
+        syncAmbientAudio()
+    }
+
     /// Keep optional ambience in sync with session / scene (never required for stim).
     private func syncAmbientAudio() {
         ambientAudio.sync(
-            enabled: ambientMusicEnabled,
+            sound: ambientMusicEnabled,
+            haptics: hapticTicksEnabled,
             isRunning: isRunning,
             isPaused: isPaused,
             isInBackground: isInBackground

@@ -135,6 +135,14 @@ enum BatteryPresentation {
         return elapsed < graceSeconds
     }
 
+    /// Idle hint for a low pack that can still start. Empty blocks start instead.
+    static func startHint(percent: Int?, isCharging: Bool?) -> String? {
+        guard let pct = percent, !isEmpty(percent: pct), isLow(percent: pct, isCharging: isCharging) else {
+            return nil
+        }
+        return "Battery \(pct)%. Charge soon."
+    }
+
     /// Start-gate copy when empty pack or mid-read blocks a session.
     static let startBlockedEmptyCopy = "Charge your Pulsetto"
     static let startBlockedReadingCopy = "Checking battery…"

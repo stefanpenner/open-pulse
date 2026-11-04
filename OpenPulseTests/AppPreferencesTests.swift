@@ -55,6 +55,14 @@ struct AppPreferencesTests {
         AppPreferences.setAmbientMusicEnabled(false, defaults: d)
         #expect(!AppPreferences.ambientMusicEnabled(defaults: d))
     }
+
+    @Test("Haptic taps default off and stick when enabled")
+    func hapticTicksToggle() {
+        let d = UserDefaults(suiteName: "test.prefs.haptic.\(UUID().uuidString)")!
+        #expect(!AppPreferences.hapticTicksEnabled(defaults: d))
+        AppPreferences.setHapticTicksEnabled(true, defaults: d)
+        #expect(AppPreferences.hapticTicksEnabled(defaults: d))
+    }
 }
 
 @Suite("AmbientAudioPolicy")

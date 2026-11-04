@@ -48,6 +48,16 @@ struct BilateralTicksTests {
         #expect(zeroCrossings(loop.left[..<half]) > zeroCrossings(loop.right[half...]))
     }
 
+    @Test("Haptic taps: sharp left on beat 0, soft right on beat 1")
+    func hapticTaps() {
+        let taps = BilateralTicks.hapticTaps
+        #expect(taps.map(\.time) == [0, BilateralTicks.beatSeconds])
+        #expect(taps.map(\.side) == [.left, .right])
+        #expect(taps[0].sharpness > taps[1].sharpness)
+        #expect(taps.allSatisfy { $0.intensity > 0 && $0.intensity <= 1 })
+        #expect(BilateralTicks.loopSeconds == BilateralTicks.beatSeconds * 2)
+    }
+
     private func peak(_ s: ArraySlice<Float>) -> Float {
         s.map(abs).max() ?? 0
     }

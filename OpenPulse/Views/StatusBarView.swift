@@ -45,6 +45,10 @@ struct StatusBarView: View {
 
                     Spacer(minLength: 0)
 
+                    if vm.ble.isReady, let quality = vm.ble.linkQuality {
+                        linkInfo(quality)
+                    }
+
                     if let pct = vm.ble.batteryPercentage {
                         batteryInfo(pct)
                     }
@@ -154,6 +158,26 @@ struct StatusBarView: View {
                 .foregroundStyle(color)
         }
         .modifier(ConnectionChipTransition(reduceMotion: reduceMotion))
+    }
+
+    /// Signal bars. A weak link also says so, because a drop pauses the session.
+    private func linkInfo(_ quality: LinkQuality) -> some View {
+        let weak = quality == .weak
+        let color = weak ? Theme.accentAmber : Theme.textSecondary
+        return HStack(spacing: 4) {
+            Image(systemName: "cellularbars", variableValue: quality.bars)
+                .font(.caption2)
+                .foregroundStyle(color)
+                .symbolEffect(.pulse, isActive: weak && !reduceMotion)
+            if weak {
+                Text("Weak")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(color)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(quality.label)
+        .accessibilityHint(quality.hint ?? "")
     }
 
     private func batteryInfo(_ pct: Int) -> some View {

@@ -23,6 +23,8 @@ final class BluetoothManager: DeviceState {
     private var retryCount = 0
     private var intentionalDisconnect = false
     private var connectTimeoutTask: Task<Void, Never>?
+    private var rssiTask: Task<Void, Never>?
+    private var rssiMeter = LinkQualityMeter()
 
     override init() {
         super.init()
@@ -174,6 +176,25 @@ final class BluetoothManager: DeviceState {
         // Clear charge truth — stale "charging" must not bypass empty start gate after reconnect
         isCharging = nil
         batteryVoltage = nil
+        stopRSSIPolling()
+    }
+
+    /// Read RSSI while the link is ready. The reply comes in didReadRSSI.
+    private func startRSSIPolling() {
+        rssiTask?.cancel()
+        rssiTask = Task { [weak self] in
+            while !Task.isCancelled, let self, self.isReady {
+                self.peripheral?.readRSSI()
+                try? await Task.sleep(for: .seconds(LinkQuality.pollSeconds))
+            }
+        }
+    }
+
+    private func stopRSSIPolling() {
+        rssiTask?.cancel()
+        rssiTask = nil
+        rssiMeter.reset()
+        linkQuality = nil
     }
 
     /// The radio is off. Drop the link so the screen cannot say Connected.
@@ -403,6 +424,7 @@ extension BluetoothManager: CBPeripheralDelegate {
                 batterySampleConfirmed = false
                 isReady = true
                 connectTimeoutTask?.cancel()
+                startRSSIPolling()
                 connectTimeoutTask = nil
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(50))
@@ -433,6 +455,7 @@ extension BluetoothManager: CBPeripheralDelegate {
             batterySampleConfirmed = false
             isReady = true
             connectTimeoutTask?.cancel()
+            startRSSIPolling()
             connectTimeoutTask = nil
             // Delay status queries so session safety (off / reconnect program) can enqueue first
             Task { @MainActor in
@@ -441,6 +464,15 @@ extension BluetoothManager: CBPeripheralDelegate {
                 self.sendCommand(BLEConstants.batteryQueryCommand)
                 self.sendCommand(BLEConstants.chargingQueryCommand)
             }
+        }
+    }
+
+    nonisolated func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
+        guard error == nil else { return }
+        let rssi = RSSI.intValue
+        Task { @MainActor in
+            guard peripheral === self.peripheral, self.isReady else { return }
+            self.linkQuality = self.rssiMeter.add(rssi: rssi)
         }
     }
 

@@ -12,6 +12,7 @@ enum AppPreferences {
     static let sessionReminderMorningHourKey = "prefs.sessionReminderMorningHour"
     static let sessionReminderEveningHourKey = "prefs.sessionReminderEveningHour"
     static let ambientMusicEnabledKey = "prefs.ambientMusicEnabled"
+    static let hapticTicksEnabledKey = "prefs.hapticTicksEnabled"
 
     static func hasCompletedOnboarding(defaults: UserDefaults = .standard) -> Bool {
         defaults.bool(forKey: onboardingCompletedKey)
@@ -114,13 +115,22 @@ enum AppPreferences {
         max(0, min(23, hour))
     }
 
-    /// Opt-in local ambient pad during sessions. Off by default. Bundled audio only — no streaming.
+    /// Opt-in tick-tock sound during sessions. Off by default. Local synth only.
     static func ambientMusicEnabled(defaults: UserDefaults = .standard) -> Bool {
         defaults.bool(forKey: ambientMusicEnabledKey)
     }
 
     static func setAmbientMusicEnabled(_ enabled: Bool, defaults: UserDefaults = .standard) {
         defaults.set(enabled, forKey: ambientMusicEnabledKey)
+    }
+
+    /// Opt-in left/right haptic taps during sessions. Off by default.
+    static func hapticTicksEnabled(defaults: UserDefaults = .standard) -> Bool {
+        defaults.bool(forKey: hapticTicksEnabledKey)
+    }
+
+    static func setHapticTicksEnabled(_ enabled: Bool, defaults: UserDefaults = .standard) {
+        defaults.set(enabled, forKey: hapticTicksEnabledKey)
     }
 }
 

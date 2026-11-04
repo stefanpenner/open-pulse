@@ -13,7 +13,7 @@ struct SessionPrivacySettingsSheet: View {
                 VStack(spacing: 16) {
                     // Optional local ticks (on-device synth — no streaming / accounts)
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("SOUND")
+                        Text("TAPPER")
                             .font(Theme.sectionLabel)
                             .foregroundStyle(Theme.textTertiary)
                             .tracking(1.5)
@@ -33,7 +33,24 @@ struct SessionPrivacySettingsSheet: View {
                             }
                         }
                         .tint(Theme.accentTeal)
-                        .accessibilityHint("Optional. Plays a bundled ambient loop only while a session is active in the foreground.")
+                        .accessibilityHint("Optional. Plays only while a session runs in the foreground.")
+
+                        Toggle(isOn: Binding(
+                            get: { vm.hapticTicksEnabled },
+                            set: { vm.setHapticTicksEnabled($0) }
+                        )) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Haptic taps")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                Text("The phone taps on the same beat: a sharp tap for left, a soft tap for right. Hold the phone or keep it in a pocket. Off by default.")
+                                    .font(.caption2)
+                                    .foregroundStyle(Theme.textTertiary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .tint(Theme.accentTeal)
+                        .accessibilityHint("Optional. Taps only while a session runs in the foreground.")
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)

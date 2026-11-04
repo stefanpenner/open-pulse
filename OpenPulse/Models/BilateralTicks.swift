@@ -16,6 +16,21 @@ enum BilateralTicks {
     private static let attackSeconds = 0.002
     private static let decaySeconds = 0.012
 
+    struct HapticTap: Equatable {
+        let time: TimeInterval
+        let side: Side
+        let intensity: Float
+        let sharpness: Float
+    }
+
+    static var loopSeconds: TimeInterval { beatSeconds * 2 }
+
+    /// A phone has one haptic motor, so the sides differ by feel: a sharp tick, then a soft tock.
+    static let hapticTaps: [HapticTap] = [
+        HapticTap(time: 0, side: .left, intensity: 0.6, sharpness: 0.8),
+        HapticTap(time: beatSeconds, side: .right, intensity: 0.5, sharpness: 0.2),
+    ]
+
     static func side(beat: Int) -> Side {
         beat.isMultiple(of: 2) ? .left : .right
     }

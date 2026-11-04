@@ -472,6 +472,16 @@ struct LiveActivityPresentationTests {
         )
     }
 
+    @Test("Start hint warns on a low pack, not on empty, full, or charging")
+    func batteryStartHint() {
+        #expect(BatteryPresentation.startHint(percent: 12, isCharging: false)?.contains("12%") == true)
+        #expect(BatteryPresentation.startHint(percent: 12, isCharging: nil) != nil)
+        #expect(BatteryPresentation.startHint(percent: 12, isCharging: true) == nil)
+        #expect(BatteryPresentation.startHint(percent: 0, isCharging: false) == nil, "empty blocks start instead")
+        #expect(BatteryPresentation.startHint(percent: 60, isCharging: false) == nil)
+        #expect(BatteryPresentation.startHint(percent: nil, isCharging: false) == nil)
+    }
+
     @Test("Battery presentation pure helpers")
     func batteryPresentation() {
         #expect(BatteryPresentation.isLow(percent: 5, isCharging: false))

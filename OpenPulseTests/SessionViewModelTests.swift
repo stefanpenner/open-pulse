@@ -4136,6 +4136,20 @@ struct AmbientMusicSessionTests {
         #expect(audio.isPlaying)
     }
 
+    @Test("Haptic taps alone run the tapper with no sound")
+    @MainActor func hapticsAlonePlay() {
+        let audio = NullAmbientAudio()
+        let (vm, _) = makeVM(ambientAudio: audio)
+        #expect(!vm.hapticTicksEnabled)
+        vm.setHapticTicksEnabled(true)
+        simulateRunning(vm, mode: .calm)
+        #expect(audio.isPlaying)
+        #expect(audio.lastSyncHaptics == true)
+        #expect(audio.lastSyncSound == false)
+        vm.pause()
+        #expect(!audio.isPlaying)
+    }
+
     @Test("Stop fades ambient off")
     @MainActor func stopEndsAmbient() {
         let audio = NullAmbientAudio()
