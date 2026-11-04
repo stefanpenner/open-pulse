@@ -18,7 +18,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         vm.start()
@@ -44,7 +44,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.strength = 5
         bridge.bind(vm)
         bridge.requestNudgeStrength(by: 1)
@@ -58,7 +58,7 @@ struct SessionActionBridgeTests {
         let suite = "test.bridge.idle.\(UUID().uuidString)"
         let d = UserDefaults(suiteName: suite)!
         let mock = MockDeviceTransport()
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         bridge.bind(vm)
         #expect(!vm.isRunning)
         bridge.requestPause()
@@ -77,7 +77,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         vm.start()
@@ -97,7 +97,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         vm.pause()
@@ -133,7 +133,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         bridge.bind(vm)
@@ -151,7 +151,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         bridge.bind(vm)
@@ -175,7 +175,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         bridge.bind(vm)
         mock.becomeReady()
         bridge.drainPending()
@@ -194,7 +194,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         bridge.bind(vm)
@@ -210,7 +210,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         #expect(vm.isRunning)
@@ -245,7 +245,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         vm.sessionStartDate = Date().addingTimeInterval(-Double(vm.timerMinutes * 60 + 30))
@@ -269,7 +269,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         mock.reset()
@@ -295,7 +295,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         bridge.bind(vm)
@@ -314,7 +314,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         bridge.bind(vm)
@@ -339,7 +339,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         bridge.bind(vm)
@@ -367,7 +367,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         bridge.bind(vm)
@@ -385,7 +385,7 @@ struct SessionActionBridgeTests {
         mock.isReady = true
         mock.batteryPercentage = 0
         mock.isCharging = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         bridge.bind(vm)
@@ -405,7 +405,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         vm.pause()
@@ -433,7 +433,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         vm.pause()
@@ -456,7 +456,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         bridge.bind(vm)
@@ -473,7 +473,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         vm.sessionStartDate = Date().addingTimeInterval(-Double(vm.timerMinutes * 60 + 30))
@@ -583,7 +583,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         vm.pause()
@@ -608,7 +608,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.start()
         #expect(vm.isRunning)
@@ -640,7 +640,7 @@ struct SessionActionBridgeTests {
         mock.isReady = false
         mock.batteryPercentage = 0
         mock.isCharging = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.selectMode(.stressRelief)
         vm.strength = 5
         bridge.bind(vm)
@@ -661,7 +661,7 @@ struct SessionActionBridgeTests {
         mock.isReady = true
         mock.batteryPercentage = 0
         mock.isCharging = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(vm.canStart, "live charging empty may start")
         // Simulate disconnect cleanup contract (keep % , clear charge truth)
         mock.isConnected = false
@@ -686,7 +686,7 @@ struct SessionActionBridgeTests {
         mock.isReady = true
         mock.batteryPercentage = nil
         mock.isCharging = false
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         vm.now = { t0 }
         // Re-seed ready clock with inject
         mock.isReady = false
@@ -715,7 +715,7 @@ struct SessionActionBridgeTests {
         let mock = MockDeviceTransport()
         mock.isConnected = true
         mock.isReady = true
-        let vm = SessionViewModel(defaults: d, ble: mock)
+        let vm = testVM(defaults: d, ble: mock)
         #expect(!vm.isRunning)
         #expect(!vm.isPaused)
         mock.reset()

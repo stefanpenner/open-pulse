@@ -224,7 +224,7 @@ struct SessionDurationTests {
     @MainActor func idleDuration() {
         let suiteName = "test.duration.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
-        let vm = SessionViewModel(defaults: defaults, ble: MockDeviceTransport())
+        let vm = testVM(defaults: defaults, ble: MockDeviceTransport())
         vm.timerMinutes = 8
         #expect(vm.sessionDurationSeconds == 480)
     }
@@ -234,7 +234,7 @@ struct SessionDurationTests {
         let suiteName = "test.duration.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         let mock = MockDeviceTransport()
-        let vm = SessionViewModel(defaults: defaults, ble: mock)
+        let vm = testVM(defaults: defaults, ble: mock)
         mock.becomeReady()
         vm.selectMode(.sleep)
         vm.start()

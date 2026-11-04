@@ -68,3 +68,26 @@ final class MockDeviceTransport: DeviceState {
         cancelProgramWritesCount = 0
     }
 }
+
+/// A view model wired to fakes only. Real ActivityKit, HealthKit, notifications, and audio
+/// make slow sync calls to iOS (about 3 s per Live Activity start), so tests must not touch them.
+@MainActor
+func testVM(
+    defaults: UserDefaults,
+    ble: DeviceState,
+    endNotifier: (any SessionEndNotifying)? = nil,
+    mindfulStore: (any MindfulMinutesWriting)? = nil,
+    liveActivity: (any SessionLiveActivityPresenting)? = nil,
+    ambientAudio: (any SessionAmbientAudioPlaying)? = nil,
+    now: @escaping () -> Date = { Date() }
+) -> SessionViewModel {
+    SessionViewModel(
+        defaults: defaults,
+        ble: ble,
+        endNotifier: endNotifier ?? RecordingSessionEndNotifier(),
+        mindfulStore: mindfulStore ?? RecordingMindfulMinutesStore(),
+        liveActivity: liveActivity ?? RecordingLiveActivity(),
+        ambientAudio: ambientAudio ?? NullAmbientAudio(),
+        now: now
+    )
+}

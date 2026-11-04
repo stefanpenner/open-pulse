@@ -15,3 +15,7 @@ CLAUDE.md
 
 # Agent scratch. Product research stays in research.md.
 research-round*.md
+
+# SwiftPM (fast tests)
+.build/
+.swiftpm/

@@ -87,7 +87,13 @@ enum SessionEndNotifier {
     /// Schedule a one-shot local alert at `endsAt` if enabled and still in the future.
     static func schedule(endsAt: Date, modeName: String, enabled: Bool, now: Date = Date()) {
         cancel()
-        guard enabled, endsAt > now else { return }
+        guard let request = request(endsAt: endsAt, modeName: modeName, enabled: enabled, now: now) else { return }
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+
+    /// The alert to schedule, or nil when disabled or `endsAt` is past. Pure.
+    static func request(endsAt: Date, modeName: String, enabled: Bool, now: Date) -> UNNotificationRequest? {
+        guard enabled, endsAt > now else { return nil }
 
         let content = UNMutableNotificationContent()
         content.title = title()
@@ -96,12 +102,11 @@ enum SessionEndNotifier {
 
         let interval = max(1, endsAt.timeIntervalSince(now))
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
-        let request = UNNotificationRequest(
+        return UNNotificationRequest(
             identifier: requestIdentifier,
             content: content,
             trigger: trigger
         )
-        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
 
     /// Request alert permission (call when user opts in).

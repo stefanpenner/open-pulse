@@ -15,15 +15,14 @@ protocol SessionAmbientAudioPlaying: AnyObject {
     func stop(fade: Bool)
 }
 
-/// Optional local hi-fi pad during sessions. Privacy-first: bundled file only, no network.
+/// Calming music: a soft left/right tick-tock during sessions, like tappers.
+/// Privacy-first: local synth only, no file, no network.
 @MainActor
 final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
-    private var player: AVAudioPlayer?
+    private var tickEngine: AVAudioEngine?
+    private var tickNode: AVAudioPlayerNode?
     private var fadeTask: Task<Void, Never>?
     private(set) var isPlaying: Bool = false
-
-    /// Bundle override for tests.
-    var bundle: Bundle = .main
 
     func sync(
         enabled: Bool,
@@ -39,7 +38,7 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
         )
         if want {
             startIfNeeded()
-        } else if isPlaying || player != nil {
+        } else if isPlaying {
             stop(fade: true)
         }
     }
@@ -47,83 +46,101 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
     func stop(fade: Bool) {
         fadeTask?.cancel()
         fadeTask = nil
-        guard let player else {
-            isPlaying = false
+        guard isPlaying else { return }
+        let startVol = tickNode?.volume ?? 0
+        guard fade, startVol > 0.02 else {
+            stopNow()
             return
         }
-        if !fade || player.volume <= 0.02 {
-            player.stop()
-            self.player = nil
-            isPlaying = false
-            deactivateSessionIfIdle()
-            return
-        }
-        let startVol = player.volume
-        let steps = 12
-        let stepDur = AmbientAudioPolicy.fadeOutSeconds / Double(steps)
-        fadeTask = Task { @MainActor [weak self] in
-            for i in 1...steps {
-                guard !Task.isCancelled, let self, let p = self.player else { return }
-                let t = Float(i) / Float(steps)
-                p.volume = startVol * (1 - t)
-                try? await Task.sleep(for: .seconds(stepDur))
-            }
-            guard let self else { return }
-            self.player?.stop()
-            self.player = nil
-            self.isPlaying = false
-            self.deactivateSessionIfIdle()
+        fadeTask = ramp(from: startVol, to: 0, seconds: AmbientAudioPolicy.fadeOutSeconds) { [weak self] in
+            self?.stopNow()
         }
     }
 
     private func startIfNeeded() {
-        if let player, player.isPlaying {
-            isPlaying = true
-            return
-        }
-        guard preparePlayer() else { return }
+        if isPlaying, fadeTask == nil { return }
         configureSession()
-        player?.volume = 0
-        player?.numberOfLoops = -1
-        player?.play()
-        isPlaying = player?.isPlaying == true
-        fadeIn()
-    }
-
-    private func preparePlayer() -> Bool {
-        if player != nil { return true }
-        guard let url = bundle.url(
-            forResource: AmbientAudioPolicy.resourceName,
-            withExtension: AmbientAudioPolicy.resourceExtension
-        ) else {
-            return false
-        }
-        do {
-            let p = try AVAudioPlayer(contentsOf: url)
-            p.prepareToPlay()
-            p.numberOfLoops = -1
-            player = p
-            return true
-        } catch {
-            player = nil
-            return false
-        }
-    }
-
-    private func fadeIn() {
+        guard startTicks() else { return }
+        isPlaying = true
         fadeTask?.cancel()
-        let target = AmbientAudioPolicy.targetVolume
+        let from = tickNode?.volume ?? 0
+        fadeTask = ramp(from: from, to: AmbientAudioPolicy.targetVolume, seconds: AmbientAudioPolicy.fadeInSeconds) { [weak self] in
+            self?.fadeTask = nil
+        }
+    }
+
+    private func stopNow() {
+        tickNode?.stop()
+        tickEngine?.stop()
+        tickNode = nil
+        tickEngine = nil
+        isPlaying = false
+        fadeTask = nil
+        deactivateSessionIfIdle()
+    }
+
+    // MARK: - Level
+
+    private func setLevel(_ level: Float) {
+        tickNode?.volume = level
+    }
+
+    private func ramp(from: Float, to: Float, seconds: TimeInterval, done: @escaping @MainActor () -> Void) -> Task<Void, Never> {
         let steps = 14
-        let stepDur = AmbientAudioPolicy.fadeInSeconds / Double(steps)
-        fadeTask = Task { @MainActor [weak self] in
+        let stepDur = seconds / Double(steps)
+        return Task { @MainActor [weak self] in
             for i in 1...steps {
-                guard !Task.isCancelled, let self, let p = self.player else { return }
-                p.volume = target * (Float(i) / Float(steps))
+                guard !Task.isCancelled, let self else { return }
+                self.setLevel(from + (to - from) * Float(i) / Float(steps))
                 try? await Task.sleep(for: .seconds(stepDur))
             }
-            self?.player?.volume = target
+            guard !Task.isCancelled else { return }
+            done()
         }
     }
+
+    // MARK: - Sources
+
+    /// Loops one rendered stereo buffer: tick left, then tock right.
+    private func startTicks() -> Bool {
+        if tickNode != nil { return true }
+        let engine = AVAudioEngine()
+        let node = AVAudioPlayerNode()
+        let rate = engine.outputNode.outputFormat(forBus: 0).sampleRate
+        guard rate > 0,
+              let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2),
+              let buffer = Self.tickBuffer(format: format) else {
+            return false
+        }
+        engine.attach(node)
+        engine.connect(node, to: engine.mainMixerNode, format: format)
+        node.volume = 0
+        do {
+            try engine.start()
+        } catch {
+            return false
+        }
+        node.scheduleBuffer(buffer, at: nil, options: .loops)
+        node.play()
+        tickEngine = engine
+        tickNode = node
+        return true
+    }
+
+    private static func tickBuffer(format: AVAudioFormat) -> AVAudioPCMBuffer? {
+        let loop = BilateralTicks.renderLoop(sampleRate: format.sampleRate)
+        let frames = AVAudioFrameCount(loop.left.count)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames),
+              let channels = buffer.floatChannelData else {
+            return nil
+        }
+        buffer.frameLength = frames
+        loop.left.withUnsafeBufferPointer { channels[0].update(from: $0.baseAddress!, count: $0.count) }
+        loop.right.withUnsafeBufferPointer { channels[1].update(from: $0.baseAddress!, count: $0.count) }
+        return buffer
+    }
+
+    // MARK: - Session
 
     private func configureSession() {
         let session = AVAudioSession.sharedInstance()

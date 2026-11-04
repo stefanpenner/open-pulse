@@ -11,7 +11,7 @@ struct SessionPrivacySettingsSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    // Optional local ambience (bundled pad — no streaming / accounts)
+                    // Optional local ticks (on-device synth — no streaming / accounts)
                     VStack(alignment: .leading, spacing: 10) {
                         Text("SOUND")
                             .font(Theme.sectionLabel)
@@ -26,7 +26,7 @@ struct SessionPrivacySettingsSheet: View {
                                 Text("Calming music")
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(Theme.textPrimary)
-                                Text("Soft ambient pad during sessions. On-device only — no streaming or accounts. Off by default.")
+                                Text("Soft left-right tick-tock during sessions, like tappers. On-device only — no streaming or accounts. Off by default.")
                                     .font(.caption2)
                                     .foregroundStyle(Theme.textTertiary)
                                     .fixedSize(horizontal: false, vertical: true)

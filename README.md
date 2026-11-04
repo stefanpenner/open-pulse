@@ -43,6 +43,25 @@ xcodebuild -project OpenPulse.xcodeproj -scheme OpenPulse \
   -destination 'generic/platform=iOS' build
 ```
 
+## Testing
+
+Fast tests (pure logic, on the Mac, about 3 s). `Package.swift` lists the files.
+
+```bash
+swift test
+```
+
+All tests (on the simulator, about 1.5 s after the build). Build once, then run:
+
+```bash
+D='platform=iOS Simulator,name=iPhone 17'
+xcodebuild build-for-testing -project OpenPulse.xcodeproj -scheme OpenPulse -destination "$D" -derivedDataPath build/sim -quiet
+xcodebuild test-without-building -project OpenPulse.xcodeproj -scheme OpenPulse -destination "$D" -derivedDataPath build/sim
+```
+
+Make each view model in a test with `testVM(...)`. It uses fakes for ActivityKit, HealthKit,
+notifications, and audio. The real services make slow sync calls to iOS.
+
 ## Attribution
 
 Built on the BLE reverse engineering from [PulseLibre](https://github.com/jooray/PulseLibre) by [Juraj Bednar](https://github.com/jooray), with additional protocol work by [hydrasparx/pulsetto](https://github.com/hydrasparx/pulsetto) and [parallaxintelligencepartnership/pulse-libre](https://github.com/parallaxintelligencepartnership/pulse-libre).
