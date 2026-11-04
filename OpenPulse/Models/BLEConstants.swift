@@ -41,6 +41,8 @@ enum BLEConstants {
     static let deactivateCommand = "0\n"
     static let batteryQueryCommand = "Q\n"
     static let chargingQueryCommand = "u\n"
+    static let firmwareQueryCommand = "v\n"     // reply "fw:1.1.22"
+    static let deviceNameQueryCommand = "i\n"   // reply "Pulsetto_ST_02"
 
     /// Clamps to device range 1…9 before formatting.
     static func strengthCommand(_ level: Int) -> String {

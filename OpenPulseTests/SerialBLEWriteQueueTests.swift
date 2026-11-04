@@ -4,6 +4,16 @@ import Testing
 
 @Suite("SerialBLEWriteQueue")
 struct SerialBLEWriteQueueTests {
+    @Test("Device info queries count as status, not program writes")
+    func deviceInfoIsStatus() {
+        var q = SerialBLEWriteQueue()
+        q.enqueue(BLEConstants.firmwareQueryCommand)
+        q.enqueue(BLEConstants.deviceNameQueryCommand)
+        #expect(!q.hasPendingProgramWrites)
+        q.enqueue("0\n")
+        #expect(q.waiting.first == "0\n")
+    }
+
     @Test("Enqueue program cmds then beginWrite starts single head")
     func singleFlightBegin() {
         var q = SerialBLEWriteQueue()

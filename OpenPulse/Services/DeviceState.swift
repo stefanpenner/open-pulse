@@ -17,6 +17,11 @@ class DeviceState: NSObject, ObservableObject {
     /// Signal level from RSSI reads on the current link. Nil when no link.
     @Published var linkQuality: LinkQuality?
 
+    /// Last known from the `v` and `i` replies. Kept after a disconnect: the device is the same
+    /// paired unit, and the footer only shows identity. The next link overwrites them.
+    @Published var firmwareVersion: String?
+    @Published var deviceName: String?
+
     var onDisconnect: (@MainActor () -> Void)?
     var onCommandSent: ((String) -> Void)?
     var onNotification: (@MainActor () -> Void)?

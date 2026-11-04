@@ -162,6 +162,15 @@ final class BluetoothManager: DeviceState {
         }
     }
 
+    /// Status queries after the link is ready. Device info goes last, once per link.
+    /// All are status writes: an "off" jumps ahead of them in the queue.
+    private func sendLinkStatusQueries() {
+        sendCommand(BLEConstants.batteryQueryCommand)
+        sendCommand(BLEConstants.chargingQueryCommand)
+        sendCommand(BLEConstants.firmwareQueryCommand)
+        sendCommand(BLEConstants.deviceNameQueryCommand)
+    }
+
     private func cleanup() {
         clearWriteQueue()
         // Drop delegate so late CB callbacks cannot finish a new session's in-flight write
@@ -429,8 +438,7 @@ extension BluetoothManager: CBPeripheralDelegate {
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(50))
                     guard self.isReady else { return }
-                    self.sendCommand(BLEConstants.batteryQueryCommand)
-                    self.sendCommand(BLEConstants.chargingQueryCommand)
+                    self.sendLinkStatusQueries()
                 }
             }
         }
@@ -461,8 +469,7 @@ extension BluetoothManager: CBPeripheralDelegate {
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(50))
                 guard self.isReady else { return }
-                self.sendCommand(BLEConstants.batteryQueryCommand)
-                self.sendCommand(BLEConstants.chargingQueryCommand)
+                self.sendLinkStatusQueries()
             }
         }
     }
@@ -534,6 +541,18 @@ extension BluetoothManager: CBPeripheralDelegate {
                     self.batteryPercentage = pct
                     self.batterySampleConfirmed = true
                 }
+            }
+        }
+
+        // Device info: "fw:1.1.22" and "Pulsetto_ST_02"
+        if let str = String(data: data, encoding: .utf8) {
+            switch DeviceInfoParser.parse(str) {
+            case .firmware(let version):
+                Task { @MainActor in self.firmwareVersion = version }
+            case .name(let name):
+                Task { @MainActor in self.deviceName = name }
+            case nil:
+                break
             }
         }
     }

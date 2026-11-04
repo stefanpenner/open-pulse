@@ -69,6 +69,8 @@
 		B2000000000000000000000E /* LinkQualityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* LinkQualityTests.swift */; };
 		B10000000000000000000033 /* BilateralTicks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000033 /* BilateralTicks.swift */; };
 		B10000000000000000000034 /* LinkQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000034 /* LinkQuality.swift */; };
+		B10000000000000000000060 /* DeviceInfoParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000060 /* DeviceInfoParser.swift */; };
+		B20000000000000000000030 /* DeviceInfoParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* DeviceInfoParserTests.swift */; };
 		B2000000000000000000000B /* MindfulSessionRangeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* MindfulSessionRangeTests.swift */; };
 		B2000000000000000000000C /* SessionActionBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* SessionActionBridgeTests.swift */; };
 		B1000000000000000000002D /* OpenPulseIntentRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002D /* OpenPulseIntentRelay.swift */; };
@@ -161,6 +163,8 @@
 		A2000000000000000000000E /* LinkQualityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkQualityTests.swift; sourceTree = "<group>"; };
 		A10000000000000000000033 /* BilateralTicks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BilateralTicks.swift; sourceTree = "<group>"; };
 		A10000000000000000000034 /* LinkQuality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkQuality.swift; sourceTree = "<group>"; };
+		A10000000000000000000060 /* DeviceInfoParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfoParser.swift; sourceTree = "<group>"; };
+		A20000000000000000000030 /* DeviceInfoParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfoParserTests.swift; sourceTree = "<group>"; };
 		A2000000000000000000000B /* MindfulSessionRangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MindfulSessionRangeTests.swift; sourceTree = "<group>"; };
 		A2000000000000000000000C /* SessionActionBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActionBridgeTests.swift; sourceTree = "<group>"; };
 		A1000000000000000000002D /* OpenPulseIntentRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPulseIntentRelay.swift; sourceTree = "<group>"; };
@@ -247,6 +251,7 @@
 				A10000000000000000000030 /* AmbientAudioPolicy.swift */,
 				A10000000000000000000033 /* BilateralTicks.swift */,
 				A10000000000000000000034 /* LinkQuality.swift */,
+				A10000000000000000000060 /* DeviceInfoParser.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -328,6 +333,7 @@
 				A2000000000000000000000A /* SoftStartTests.swift */,
 				A2000000000000000000000D /* BilateralTicksTests.swift */,
 				A2000000000000000000000E /* LinkQualityTests.swift */,
+				A20000000000000000000030 /* DeviceInfoParserTests.swift */,
 				A2000000000000000000000B /* MindfulSessionRangeTests.swift */,
 				A2000000000000000000000C /* SessionActionBridgeTests.swift */,
 			);
@@ -508,6 +514,7 @@
 				B10000000000000000000030 /* AmbientAudioPolicy.swift in Sources */,
 				B10000000000000000000033 /* BilateralTicks.swift in Sources */,
 				B10000000000000000000034 /* LinkQuality.swift in Sources */,
+				B10000000000000000000060 /* DeviceInfoParser.swift in Sources */,
 				B10000000000000000000031 /* SessionAmbientAudio.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -528,6 +535,7 @@
 				B2000000000000000000000A /* SoftStartTests.swift in Sources */,
 				B2000000000000000000000D /* BilateralTicksTests.swift in Sources */,
 				B2000000000000000000000E /* LinkQualityTests.swift in Sources */,
+				B20000000000000000000030 /* DeviceInfoParserTests.swift in Sources */,
 				B2000000000000000000000B /* MindfulSessionRangeTests.swift in Sources */,
 				B2000000000000000000000C /* SessionActionBridgeTests.swift in Sources */,
 			);

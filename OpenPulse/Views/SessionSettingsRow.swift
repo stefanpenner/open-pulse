@@ -161,6 +161,8 @@ struct SessionPrivacySettingsSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .accessibilityElement(children: .combine)
+
+                    DeviceInfoFooter(ble: vm.ble)
                 }
                 .padding(16)
             }
@@ -176,5 +178,20 @@ struct SessionPrivacySettingsSheet: View {
         }
         .presentationDetents([.medium, .large])
         .preferredColorScheme(.dark)
+    }
+}
+
+/// Quiet footer: device name and firmware, when the device has told us.
+private struct DeviceInfoFooter: View {
+    @ObservedObject var ble: DeviceState
+
+    var body: some View {
+        if let text = DeviceInfoParser.footer(name: ble.deviceName, firmware: ble.firmwareVersion) {
+            Text(text)
+                .font(.caption2)
+                .foregroundStyle(Theme.textTertiary)
+                .frame(maxWidth: .infinity)
+                .accessibilityLabel("Device " + text)
+        }
     }
 }

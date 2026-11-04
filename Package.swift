@@ -16,6 +16,7 @@ let package = Package(
                 "Models/AutonomicState.swift",
                 "Models/BLEConstants.swift",
                 "Models/BilateralTicks.swift",
+                "Models/DeviceInfoParser.swift",
                 "Models/LinkQuality.swift",
                 "Models/BreathPhasePresentation.swift",
                 "Models/LiveActivityPresentation.swift",
@@ -39,6 +40,7 @@ let package = Package(
             path: "OpenPulseTests",
             sources: [
                 "BilateralTicksTests.swift",
+                "DeviceInfoParserTests.swift",
                 "LinkQualityTests.swift",
                 "LiveActivityPresentationTests.swift",
                 "MindfulSessionRangeTests.swift",
