@@ -15,8 +15,13 @@ enum BLEConstants {
     static let centralRestoreIdentifier = "io.github.stefanpenner.OpenPulse.central"
 
     // Battery voltage thresholds
-    static let batteryFullVoltage: Double = 3.95
-    static let batteryEmptyVoltage: Double = 2.5
+    // Official Pulsetto app curve (PulseLibre App.js, pulse-libre-desktop main.py):
+    // 3.5 V = 0 %, 3.9 V = 100 %, linear between.
+    static let batteryFullVoltage: Double = 3.9
+    static let batteryEmptyVoltage: Double = 3.5
+    /// Below this the pack is dead and reads 0 %. Between this and
+    /// `batteryEmptyVoltage` the pack is low but usable and reads 1 %.
+    static let batteryDeadVoltage: Double = 3.4
 
     // Intervals
     static let keepaliveInterval: TimeInterval = 10
@@ -42,10 +47,14 @@ enum BLEConstants {
         "\(StrengthPresentation.clamp(level))\n"
     }
 
-    // Battery calculation
+    /// Pure voltage-to-percent map. Linear 3.5…3.9 V, clamped to 0…100.
+    /// 0 means dead (below 3.4 V) and blocks Start, so a usable pack at
+    /// 3.4…3.5 V floors at 1.
     static func batteryPercentage(fromVoltage voltage: Double) -> Int {
         if voltage >= batteryFullVoltage { return 100 }
-        if voltage <= batteryEmptyVoltage { return 0 }
-        return Int(((voltage - batteryEmptyVoltage) / (batteryFullVoltage - batteryEmptyVoltage)) * 100)
+        if voltage < batteryDeadVoltage { return 0 }
+        let span = batteryFullVoltage - batteryEmptyVoltage
+        let linear = Int((((voltage - batteryEmptyVoltage) / span) * 100).rounded())
+        return max(1, linear)
     }
 }
