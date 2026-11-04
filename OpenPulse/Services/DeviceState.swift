@@ -22,6 +22,10 @@ class DeviceState: NSObject, ObservableObject {
     @Published var firmwareVersion: String?
     @Published var deviceName: String?
 
+    /// Last "mode:" the pack reported on this link. Nil until seen; cleared on disconnect.
+    @Published var deviceMode: DeviceMode?
+
+    var onModeReport: (@MainActor (DeviceMode) -> Void)?
     var onDisconnect: (@MainActor () -> Void)?
     var onCommandSent: ((String) -> Void)?
     var onNotification: (@MainActor () -> Void)?

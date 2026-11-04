@@ -184,6 +184,7 @@ final class BluetoothManager: DeviceState {
         batterySampleConfirmed = false
         // Clear charge truth — stale "charging" must not bypass empty start gate after reconnect
         isCharging = nil
+        deviceMode = nil
         batteryVoltage = nil
         stopRSSIPolling()
     }
@@ -524,6 +525,15 @@ extension BluetoothManager: CBPeripheralDelegate {
             let charging = bytes[2] == 0x31
             Task { @MainActor in
                 self.isCharging = charging
+            }
+            return
+        }
+
+        // Stim state notice: "mode:0|A|C|D"
+        if let str = String(data: data, encoding: .utf8), let mode = DeviceMode(report: str) {
+            Task { @MainActor in
+                self.deviceMode = mode
+                self.onModeReport?(mode)
             }
             return
         }

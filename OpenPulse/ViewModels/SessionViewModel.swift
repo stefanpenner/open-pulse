@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import Combine
+import os
 
 @MainActor
 final class SessionViewModel: ObservableObject {
@@ -182,6 +183,12 @@ final class SessionViewModel: ObservableObject {
     private var backgroundWatchTask: Task<Void, Never>?
     private var backgroundPingTask: Task<Void, Never>?
     private var pendingOffRetryTask: Task<Void, Never>?
+    /// A running mode report disagreed with the program. The next tick reasserts.
+    private var modeMismatchReassertDue = false
+    private let modeLog = Logger(subsystem: "io.github.stefanpenner.OpenPulse", category: "Session")
+    private var lastModeReassertAt: Date?
+    /// Least seconds between mismatch reasserts. A stuck mismatch must not blip stim every tick.
+    private let modeReassertMinGap: TimeInterval = 15
     /// Last elapsed second fed to the engine — large jumps need absolute reassert.
     private var lastTickElapsed: Int?
     /// Min wall gap (seconds) before absolute off+reprogram. Must exceed 5s watch + 10s BLE ping
@@ -279,24 +286,11 @@ final class SessionViewModel: ObservableObject {
                 isRunning: self.isRunning,
                 hasPendingProgramWrites: self.ble.hasPendingProgramWrites
             ) else { return }
-            let wasPending = self.pendingDeactivate
-            self.pendingDeactivate = false
-            if wasPending, !self.isRunning {
-                // Success haptic only for idle/paused HW off — not start/resume lead-0
-                self.deviceOffConfirmedToken &+= 1
-            }
-            // Battery/charge after safety off ACK (not interleaved with off)
-            if wasPending, self.ble.isReady {
-                self.queryStatus()
-            }
-            // Refresh Island/lock screen while paused (no timer ticks to push LA)
-            if wasPending, self.isRunning || self.isPaused {
-                self.pushLiveActivity()
-            }
-            // Completed LA linger: clear "turning device off" after HW off ACK
-            if wasPending, !self.isRunning, !self.isPaused {
-                self.liveActivity.noteHardwareOffConfirmed()
-            }
+            self.confirmDeviceOff()
+        }
+
+        ble.onModeReport = { [weak self] mode in
+            self?.handleModeReport(mode)
         }
 
         // Nested ObservableObject — forward synchronously (already MainActor)
@@ -1240,6 +1234,64 @@ final class SessionViewModel: ObservableObject {
         }
     }
 
+    /// Idle or paused: the pack is confirmed off. Clear the durable flag and settle the UI.
+    /// Caller proved it: an off ACK, or a quiet "mode:0" report.
+    private func confirmDeviceOff() {
+        let wasPending = pendingDeactivate
+        pendingDeactivate = false
+        if wasPending, !isRunning {
+            // Success haptic only for idle/paused HW off — not start/resume lead-0
+            deviceOffConfirmedToken &+= 1
+        }
+        // Battery/charge after safety off ACK (not interleaved with off)
+        if wasPending, ble.isReady {
+            queryStatus()
+        }
+        // Refresh Island/lock screen while paused (no timer ticks to push LA)
+        if wasPending, isRunning || isPaused {
+            pushLiveActivity()
+        }
+        // Completed LA linger: clear "turning device off" after HW off ACK
+        if wasPending, !isRunning, !isPaused {
+            liveActivity.noteHardwareOffConfirmed()
+        }
+    }
+
+    /// The pack told us its stim state. Policy: specs/PendingOff.tla (DeviceReport, HostReport).
+    private func handleModeReport(_ mode: DeviceMode) {
+        let action = ModeReportAction.decide(
+            report: mode,
+            isRunning: isRunning,
+            expected: DeviceMode(channel: stimulationActive ? activeChannel : .off),
+            pendingOff: pendingDeactivate,
+            quiet: !ble.hasPendingWrites
+        )
+        switch action {
+        case .ignore:
+            break
+        case .armOff:
+            pendingDeactivate = true
+            flushPendingDeactivateIfNeeded()
+        case .clearPendingOff:
+            confirmDeviceOff()
+        case .reassert:
+            modeLog.warning("Pack mode \(String(describing: mode)) differs from program; reassert on next tick")
+            modeMismatchReassertDue = true
+        }
+    }
+
+    /// Consume a due mismatch reassert. True when it reprogrammed the pack.
+    private func reassertAfterModeMismatchIfDue() -> Bool {
+        guard modeMismatchReassertDue else { return false }
+        modeMismatchReassertDue = false
+        guard ble.isReady else { return false }
+        let t = now()
+        if let last = lastModeReassertAt, t.timeIntervalSince(last) < modeReassertMinGap { return false }
+        lastModeReassertAt = t
+        resumeSessionOnDevice()
+        return true
+    }
+
     /// Send deactivate if a prior stop/pause/expire happened while offline / not ready.
     /// Idempotent off send while pending. The flag clears only on an idle or paused off ACK.
     /// Start and resume keep the flag.
@@ -1752,6 +1804,11 @@ final class SessionViewModel: ObservableObject {
 
     // MARK: - Timers
 
+    /// One timer step. Same entry as the 1 s timer. Internal so tests can drive it.
+    func tick() {
+        recalculateFromWallClock(absoluteIfJumped: true)
+    }
+
     private func startCountdown() {
         stopCountdown()
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
@@ -1771,6 +1828,7 @@ final class SessionViewModel: ObservableObject {
         guard isRunning else { return }
 
         touchLastAlive()
+        if reassertAfterModeMismatchIfDue() { return }
         if engine == nil {
             tickCustomProgram()
         } else {

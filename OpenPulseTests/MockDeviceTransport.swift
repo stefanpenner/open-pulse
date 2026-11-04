@@ -53,6 +53,18 @@ final class MockDeviceTransport: DeviceState {
         }
     }
 
+    /// Inject an unprompted "mode:" notice, as the pack would send it.
+    func reportMode(_ text: String) {
+        guard let mode = DeviceMode(report: text) else { return }
+        deviceMode = mode
+        onModeReport?(mode)
+    }
+
+    /// Mirror the cleanup of a real link drop.
+    func dropLink() {
+        deviceMode = nil
+    }
+
     /// Raise ready edge (fires `@Published` → VM ready sink).
     /// Default confirms battery so session Start tests stay green; pass `false` to test first-Q gate.
     func becomeReady(confirmBattery: Bool = true) {
