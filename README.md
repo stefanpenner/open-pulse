@@ -12,7 +12,13 @@ An iOS app for the [Pulsetto](https://pulsetto.tech) neck device. Version 0.9. N
 
 ## Why
 
-The Pulsetto app needs an account and a subscription. Open Pulse needs neither. It sends no data off the phone.
+The official app needs an account and an online login. When you are offline, or when its login service is down, you may not be able to use the device.
+
+Open Pulse is an open alternative. It talks to the device directly over Bluetooth. It needs no account and no internet. It sends no data off the phone.
+
+Open Pulse also adds a tapper: a left-right tick-tock sound, phone taps, or both. You can turn it on to run during the session, with the stimulation.
+
+Open Pulse is not made by or affiliated with Pulsetto. Pulsetto is a trademark of its owner.
 
 ## What
 
@@ -25,7 +31,7 @@ The Pulsetto app needs an account and a subscription. Open Pulse needs neither. 
 | Aching | 8 min | Strength moves in a slow wave |
 | Custom | 10 min | You set it |
 
-Optional: a left-right tick-tock sound and haptic taps, a session-end alert, and Mindful Minutes in Apple Health.
+Optional: a session-end alert, and Mindful Minutes in Apple Health.
 
 Not a medical treatment. Sources: [research.md](research.md).
 
