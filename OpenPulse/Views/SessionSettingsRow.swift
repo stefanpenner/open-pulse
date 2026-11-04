@@ -71,6 +71,8 @@ struct SessionPrivacySettingsSheet: View {
                         .tint(Theme.accentTeal)
                         .disabled(!vm.hapticTicksEnabled)
                         .accessibilityHint("Optional. Needs Haptic taps. Pair your Joy-Cons in Bluetooth settings first.")
+
+                        JoyConPairingCard(vm: vm)
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -194,10 +196,69 @@ struct SessionPrivacySettingsSheet: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .onAppear { vm.refreshSessionEndAlertAuthorization() }
+            .onAppear {
+                vm.refreshSessionEndAlertAuthorization()
+                vm.setJoyConPairingVisible(true)
+            }
+            .onDisappear { vm.setJoyConPairingVisible(false) }
         }
         .presentationDetents([.medium, .large])
         .preferredColorScheme(.dark)
+    }
+}
+
+/// Calm pairing help for Joy-Cons: state per side, three steps, a test, and a link to Settings.
+private struct JoyConPairingCard: View {
+    @ObservedObject var vm: SessionViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(JoyConPairing.title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Theme.textSecondary)
+                .accessibilityAddTraits(.isHeader)
+
+            ForEach(vm.joyConPairingRows, id: \.text) { row in
+                Label(row.text, systemImage: row.isReady ? "checkmark.circle.fill" : "circle.dashed")
+                    .font(.caption)
+                    .foregroundStyle(row.isReady ? Theme.accentTeal : Theme.textTertiary)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(row.accessibilityLabel)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(JoyConPairing.steps, id: \.self) { step in
+                    Text(step)
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .accessibilityElement(children: .combine)
+
+            HStack(spacing: 16) {
+                Button(JoyConPairing.testButtonTitle) { vm.testJoyConTaps() }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(vm.canTestJoyCon ? Theme.accentTeal : Theme.textTertiary)
+                    .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+                    .disabled(!vm.canTestJoyCon)
+                    .accessibilityHint(JoyConPairing.testHint)
+
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    Link(JoyConPairing.settingsLinkTitle, destination: url)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.accentTeal)
+                        .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+                        .accessibilityHint(JoyConPairing.settingsNote)
+                }
+            }
+
+            Text(JoyConPairing.settingsNote)
+                .font(.caption2)
+                .foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.top, 4)
     }
 }
 
