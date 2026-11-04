@@ -18,6 +18,12 @@ protocol SessionAmbientAudioPlaying: AnyObject {
     func stop(fade: Bool)
     /// Which Joy-Con plays which side. Empty when none is found or the setting is off.
     var joyConPlan: JoyConTapper.Plan { get }
+    /// Every Joy-Con iOS shows, even one that cannot tap.
+    var joyConFound: JoyConTapper.Plan { get }
+    /// Watch for Joy-Cons while the pairing card shows, even with no session.
+    func setJoyConPreview(_ on: Bool)
+    /// One tap left, then one tap right. Ignored while a session plays.
+    func testJoyConTaps()
     var onJoyConPlanChange: (@MainActor (JoyConTapper.Plan) -> Void)? { get set }
 }
 
@@ -46,14 +52,36 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
     private var lastRequest: Request?
     var onJoyConPlanChange: (@MainActor (JoyConTapper.Plan) -> Void)?
     var joyConPlan: JoyConTapper.Plan { joyCons.plan }
+    var joyConFound: JoyConTapper.Plan { joyCons.found }
+    private var joyConPreview = false
 
     override init() {
         super.init()
-        joyCons.onChange = { [weak self] plan in
+        joyCons.onChange = { [weak self] in
             guard let self else { return }
-            self.onJoyConPlanChange?(plan)
+            self.onJoyConPlanChange?(self.joyCons.plan)
             if self.lastRequest?.joyCon == true { self.resync() }
         }
+    }
+
+    func setJoyConPreview(_ on: Bool) {
+        joyConPreview = on
+        updateJoyConWatch()
+    }
+
+    func testJoyConTaps() {
+        guard !isPlaying else { return }
+        joyCons.playTest()
+    }
+
+    private func updateJoyConWatch() {
+        if lastRequest?.joyCon == true || joyConPreview { joyCons.watch() } else { joyCons.unwatch() }
+    }
+
+    /// Who taps each side now. The pure reducer decides.
+    private func routing(_ r: Request) -> JoyConTapper.Routing {
+        JoyConTapper.route(haptics: r.haptics, joyCon: r.joyCon, playing: true,
+                           candidates: joyCons.candidates, failed: joyCons.failedIDs)
     }
 
     private func resync() {
@@ -79,9 +107,10 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
         isPaused: Bool,
         isInBackground: Bool
     ) {
-        lastRequest = Request(sound: sound, haptics: haptics, joyCon: joyCon,
+        let request = Request(sound: sound, haptics: haptics, joyCon: joyCon,
                               isRunning: isRunning, isPaused: isPaused, isInBackground: isInBackground)
-        if joyCon { joyCons.watch() } else { joyCons.unwatch() }
+        lastRequest = request
+        updateJoyConWatch()
         let want = AmbientAudioPolicy.shouldPlay(
             enabled: sound || haptics,
             isRunning: isRunning,
@@ -90,11 +119,13 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
         )
         guard want else {
             if isPlaying { stop(fade: true) }
+            // A new session retries a Joy-Con whose engine failed.
+            joyCons.retryFailed()
             return
         }
         // Joy-Cons take the sides they cover. The phone taps only the rest.
-        let plan = joyCon && haptics ? joyCons.plan : JoyConTapper.Plan()
-        let next = Outputs(sound: sound, phoneSides: haptics ? plan.phoneSides : [], joyCons: plan)
+        let routed = routing(request)
+        let next = Outputs(sound: sound, phoneSides: routed.phone, joyCons: routed.plan)
         // A changed output restarts both, so the sound and the taps share one beat.
         if isPlaying, outputs != next { stopNow() }
         start(next)
@@ -120,14 +151,20 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
         if isPlaying, !fadingOut { return }
         // Mid fade-out: restart clean, so the sound and the taps share one beat.
         if fadingOut { stopNow() }
+        // Joy-Cons first: their engines are slow, and a failed one gives its side to the phone.
+        joyCons.startTaps(next.joyCons)
+        var final = next
+        if let request = lastRequest, joyCons.plan != next.joyCons {
+            let routed = routing(request)
+            final = Outputs(sound: next.sound, phoneSides: routed.phone, joyCons: routed.plan)
+        }
         if next.sound {
             configureSession()
             _ = startTicks()
         }
-        startHaptics(sides: next.phoneSides)
-        joyCons.startTaps(next.joyCons)
+        startHaptics(sides: final.phoneSides)
         guard tickNode != nil || hapticPlayer != nil || joyCons.isTapping else { return }
-        outputs = next
+        outputs = final
         isPlaying = true
         guard tickNode != nil else { return }
         let from = tickNode?.volume ?? 0
@@ -279,6 +316,9 @@ final class NullAmbientAudio: SessionAmbientAudioPlaying {
     private(set) var lastSyncHaptics: Bool?
     private(set) var lastSyncJoyCon: Bool?
     private(set) var joyConPlan = JoyConTapper.Plan()
+    private(set) var joyConFound = JoyConTapper.Plan()
+    private(set) var joyConPreview = false
+    private(set) var joyConTestCount = 0
     var onJoyConPlanChange: (@MainActor (JoyConTapper.Plan) -> Void)?
     private(set) var syncCount = 0
     private(set) var stopCount = 0
@@ -304,9 +344,17 @@ final class NullAmbientAudio: SessionAmbientAudioPlaying {
     }
 
     /// Test hook: pretend these Joy-Cons are paired.
-    func setPlan(_ plan: JoyConTapper.Plan) {
+    func setPlan(_ plan: JoyConTapper.Plan, found: JoyConTapper.Plan? = nil) {
         joyConPlan = plan
+        joyConFound = found ?? plan
         onJoyConPlanChange?(plan)
+    }
+
+    func setJoyConPreview(_ on: Bool) { joyConPreview = on }
+
+    func testJoyConTaps() {
+        guard !isPlaying else { return }
+        joyConTestCount += 1
     }
 
     func stop(fade: Bool) {

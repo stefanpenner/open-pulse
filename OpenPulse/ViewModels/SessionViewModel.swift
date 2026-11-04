@@ -36,7 +36,10 @@ final class SessionViewModel: ObservableObject {
     /// Opt-in: paired Joy-Cons play the taps.
     @Published var joyConEnabled: Bool = false
     @Published private(set) var joyConPlan = JoyConTapper.Plan()
+    @Published private(set) var joyConFound = JoyConTapper.Plan()
     var joyConStatus: String { JoyConTapper.status(joyConPlan) }
+    var joyConPairingRows: [JoyConPairing.Row] { JoyConPairing.rows(found: joyConFound, working: joyConPlan) }
+    var canTestJoyCon: Bool { JoyConPairing.canTestTaps(working: joyConPlan, sessionPlaying: ambientAudio.isPlaying) }
     /// System denied notifications while toggle is on (Still honesty).
     @Published private(set) var sessionEndAlertsDenied: Bool = false
     /// Brief post-session message for wellness micro-feedback (cleared by UI).
@@ -218,7 +221,12 @@ final class SessionViewModel: ObservableObject {
         hapticTicksEnabled = AppPreferences.hapticTicksEnabled(defaults: defaults)
         joyConEnabled = AppPreferences.joyConEnabled(defaults: defaults)
         joyConPlan = self.ambientAudio.joyConPlan
-        self.ambientAudio.onJoyConPlanChange = { [weak self] plan in self?.joyConPlan = plan }
+        joyConFound = self.ambientAudio.joyConFound
+        self.ambientAudio.onJoyConPlanChange = { [weak self] plan in
+            guard let self else { return }
+            self.joyConPlan = plan
+            self.joyConFound = self.ambientAudio.joyConFound
+        }
         if joyConEnabled { syncAmbientAudio() }
         // Off → resolved (no schedule). On → wait for fetch before any schedule.
         sessionEndAlertsAuthResolved = !sessionEndAlertsEnabled
@@ -985,6 +993,18 @@ final class SessionViewModel: ObservableObject {
         joyConEnabled = enabled
         AppPreferences.setJoyConEnabled(enabled, defaults: defaults)
         syncAmbientAudio()
+    }
+
+    /// The pairing card is on screen: watch for Joy-Cons even with no session.
+    func setJoyConPairingVisible(_ visible: Bool) {
+        ambientAudio.setJoyConPreview(visible)
+        joyConPlan = ambientAudio.joyConPlan
+        joyConFound = ambientAudio.joyConFound
+    }
+
+    /// One tap left, then one tap right, on the Joy-Cons.
+    func testJoyConTaps() {
+        ambientAudio.testJoyConTaps()
     }
 
     /// Keep optional ambience in sync with session / scene (never required for stim).

@@ -8,6 +8,20 @@ enum JoyConTapper {
     struct Candidate: Equatable {
         let id: Int
         let kind: Kind
+        /// False when the controller has no haptics, or a pair cannot split its handles.
+        var canTap = true
+    }
+
+    /// Which handle localities a controller supports.
+    struct Handles: Equatable {
+        let left: Bool
+        let right: Bool
+    }
+
+    /// What the app taps now. Mirrors `Reapply` in specs/JoyConTapper.tla.
+    struct Routing: Equatable {
+        let phone: Set<BilateralTicks.Side>
+        let plan: Plan
     }
 
     struct Slot: Equatable {
@@ -32,15 +46,62 @@ enum JoyConTapper {
         var phoneSides: Set<BilateralTicks.Side> { Set([BilateralTicks.Side.left, .right]).subtracting(covered) }
     }
 
-    /// The Joy-Con kind from the controller name or product category. Nil for any other device.
-    /// Apple has no Joy-Con constant, so this reads the name text.
+    /// The Joy-Con kind from the product category or the name. Nil for any other device.
+    /// iOS 16+ reports the category "Nintendo Switch Joy-Con (L)", "(R)", or "(L/R)".
+    /// Apple has no Joy-Con constant, so this reads the text. The category comes first.
     static func kind(name: String?, category: String?) -> Kind? {
+        guard isJoyCon(name: name, category: category) else { return nil }
+        return sideKind(category) ?? sideKind(name)
+    }
+
+    /// A Joy-Con with its tap ability, or nil for any other device.
+    /// Order: the category, then the name, then the handle localities.
+    /// The text is exact (SDL reads it). A single Joy-Con may list both handles, so localities alone could call it a pair.
+    static func classify(name: String?, category: String?, haptics: Handles?) -> (kind: Kind, canTap: Bool)? {
+        guard isJoyCon(name: name, category: category) else { return nil }
+        let kind = sideKind(category) ?? sideKind(name) ?? localityKind(haptics)
+        guard let kind else { return nil }
+        guard let haptics else { return (kind, false) }
+        // A pair taps by handle. Without both handles it would tap both sides at once.
+        return (kind, kind != .pair || (haptics.left && haptics.right))
+    }
+
+    private static func isJoyCon(name: String?, category: String?) -> Bool {
         let text = [name, category].compactMap { $0 }.joined(separator: " ").lowercased()
-        guard text.contains("joy-con") || text.contains("joycon") || text.contains("joy con") else { return nil }
+        return ["joy-con", "joycon", "joy con"].contains(where: text.contains)
+    }
+
+    private static func sideKind(_ raw: String?) -> Kind? {
+        guard let text = raw?.lowercased() else { return nil }
         if ["(l/r)", "l/r", "(l+r)", "pair"].contains(where: text.contains) { return .pair }
         if text.contains("(l)") || text.contains("left") || text.hasSuffix(" l") { return .left }
         if text.contains("(r)") || text.contains("right") || text.hasSuffix(" r") { return .right }
         return nil
+    }
+
+    /// One handle: that side. Both handles: a pair. None: no answer.
+    private static func localityKind(_ haptics: Handles?) -> Kind? {
+        switch (haptics?.left, haptics?.right) {
+        case (true?, true?): .pair
+        case (true?, _): .left
+        case (_, true?): .right
+        default: nil
+        }
+    }
+
+    /// Who taps each side. Each side has one player while the session plays with haptics on.
+    /// A controller that cannot tap, or whose engine failed, hands its side to the phone.
+    static func route(
+        haptics: Bool,
+        joyCon: Bool,
+        playing: Bool,
+        candidates: [Candidate],
+        failed: Set<Int>
+    ) -> Routing {
+        guard playing, haptics else { return Routing(phone: [], plan: Plan()) }
+        let usable = candidates.filter { $0.canTap && !failed.contains($0.id) }
+        let plan = joyCon ? plan(usable) : Plan()
+        return Routing(phone: plan.phoneSides, plan: plan)
     }
 
     /// Single Joy-Cons take their own side first. A pair fills any side left empty.
