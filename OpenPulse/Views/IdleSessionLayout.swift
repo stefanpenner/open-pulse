@@ -6,9 +6,6 @@ struct IdleSessionLayout: View {
     @ObservedObject var vm: SessionViewModel
     @State private var showModeSheet = false
     @State private var showHistory = false
-    /// Expand intensity until the user has stored a level.
-    @State private var showStrength = false
-    @State private var didSeedStrengthDisclosure = false
     @State private var showPrivacySettings = false
     @State private var infoMode: StimulationMode? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -23,11 +20,12 @@ struct IdleSessionLayout: View {
 
     var body: some View {
         VStack(spacing: Theme.spaceM) {
-            connection
+            pendingOff
             modeHero
             durationChoices
+            StrengthCardView(vm: vm, showIdleComfortHint: false)
+            Spacer(minLength: 0)
             startControl
-            strengthDisclosure
             wellnessLine
         }
         .toolbar { toolbarContent }
@@ -58,7 +56,6 @@ struct IdleSessionLayout: View {
         .sheet(isPresented: $showPrivacySettings) {
             SessionPrivacySettingsSheet(vm: vm)
         }
-        .onAppear(perform: seedStrengthDisclosure)
         .onAppear(perform: openFixtureSheet)
     }
 
@@ -72,19 +69,16 @@ struct IdleSessionLayout: View {
         }
     }
 
-    private var connection: some View {
-        VStack(spacing: Theme.spaceM) {
-            if vm.pendingDeactivate {
-                if reduceMotion {
-                    PendingOffBanner(isReady: vm.ble.isReady)
-                        .transition(.opacity)
-                } else {
-                    PendingOffBanner(isReady: vm.ble.isReady)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
+    @ViewBuilder
+    private var pendingOff: some View {
+        if vm.pendingDeactivate {
+            if reduceMotion {
+                PendingOffBanner(isReady: vm.ble.isReady)
+                    .transition(.opacity)
+            } else {
+                PendingOffBanner(isReady: vm.ble.isReady)
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
-
-            Spacer(minLength: Theme.spaceS)
         }
     }
 
@@ -93,10 +87,10 @@ struct IdleSessionLayout: View {
             showModeSheet = true
         } label: {
             VStack(spacing: 6) {
-                Text(vm.sessionTitle.uppercased())
+                Label(vm.sessionTitle, systemImage: "chevron.down")
+                    .labelStyle(TrailingIconLabelStyle())
                     .font(Theme.heroMode)
                     .foregroundStyle(Theme.textPrimary)
-                    .tracking(dynamicTypeSize.isAccessibilitySize ? 0.5 : 2)
                     .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 0.85 : 0.7)
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
                     .multilineTextAlignment(.center)
@@ -108,10 +102,6 @@ struct IdleSessionLayout: View {
                     .contentTransition(reduceMotion ? .identity : .numericText())
                     .minimumScaleFactor(0.85)
                     .lineLimit(1)
-
-                Text("Tap to change")
-                    .font(.caption2)
-                    .foregroundStyle(Theme.textTertiary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.spaceL)
@@ -165,8 +155,6 @@ struct IdleSessionLayout: View {
                     label: { $0.label }
                 )
             }
-
-            Spacer(minLength: Theme.spaceS)
         }
     }
 
@@ -180,39 +168,6 @@ struct IdleSessionLayout: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .accessibilityLabel(SessionDurationOptions.softStartComfortHint)
-        }
-    }
-
-    private var strengthDisclosure: some View {
-        VStack(spacing: Theme.spaceM) {
-            Button {
-                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
-                    showStrength.toggle()
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    Text("Intensity")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(Theme.textTertiary)
-                    Text("\(vm.strength)")
-                        .font(.caption.weight(.semibold).monospacedDigit())
-                        .foregroundStyle(Theme.textSecondary)
-                    Image(systemName: showStrength ? "chevron.up" : "chevron.down")
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textTertiary)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Intensity \(vm.strength)")
-            .accessibilityHint(showStrength ? "Collapse intensity control" : "Expand intensity control")
-
-            if showStrength {
-                StrengthCardView(vm: vm, showIdleComfortHint: false)
-                    .transition(.opacity)
-            }
         }
     }
 
@@ -238,13 +193,6 @@ struct IdleSessionLayout: View {
             .padding(.top, Theme.spaceXS)
     }
 
-    private func seedStrengthDisclosure() {
-        guard !didSeedStrengthDisclosure else { return }
-        didSeedStrengthDisclosure = true
-        let hasStored = AppPreferences.lastStrength(defaults: vm.defaults) != nil
-        showStrength = IntensityIdlePolicy.expandByDefault(hasStoredStrength: hasStored)
-    }
-
     @ViewBuilder
     private func advancedSegmented<T: Hashable & Identifiable>(
         title: String,
@@ -253,10 +201,9 @@ struct IdleSessionLayout: View {
         label: @escaping (T) -> String
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title.uppercased())
+            Text(title)
                 .font(Theme.sectionLabel)
                 .foregroundStyle(Theme.textTertiary)
-                .tracking(1.5)
                 .accessibilityAddTraits(.isHeader)
 
             HStack(spacing: 8) {
@@ -435,10 +382,9 @@ struct ModeInfoSheet: View {
 
                     if !mode.researchLinks.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("RESEARCH")
+                            Text("Research")
                                 .font(Theme.sectionLabel)
                                 .foregroundStyle(Theme.textTertiary)
-                                .tracking(1.5)
 
                             ForEach(mode.researchLinks, id: \.url) { link in
                                 if let url = URL(string: link.url) {
@@ -475,6 +421,18 @@ struct ModeInfoSheet: View {
                     Button("Done") { dismiss() }
                 }
             }
+        }
+    }
+}
+
+/// Title first, then a small icon, so the mode name reads as a menu.
+private struct TrailingIconLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            configuration.title
+            configuration.icon
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Theme.textTertiary)
         }
     }
 }

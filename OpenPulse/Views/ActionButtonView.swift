@@ -75,7 +75,6 @@ struct ActionButtonView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: controlSize)
-                    .padding(.vertical, 12)
                     .padding(.horizontal, 16)
                     .contentShape(Capsule())
                 }

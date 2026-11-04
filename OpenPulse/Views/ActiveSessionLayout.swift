@@ -210,10 +210,9 @@ private struct ChannelCommandPanel: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Text("CHANNEL")
+            Text("Channel")
                 .font(Theme.sectionLabel)
                 .foregroundStyle(Theme.textTertiary)
-                .tracking(1.5)
                 .accessibilityAddTraits(.isHeader)
             HStack(spacing: 6) {
                 ForEach(buttons, id: \.cmd) { btn in

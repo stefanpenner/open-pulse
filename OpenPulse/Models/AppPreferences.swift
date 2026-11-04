@@ -133,11 +133,3 @@ enum AppPreferences {
         defaults.set(enabled, forKey: hapticTicksEnabledKey)
     }
 }
-
-/// Expand the idle intensity control until a level is stored.
-enum IntensityIdlePolicy {
-    /// True when Still should open the intensity control by default.
-    static func expandByDefault(hasStoredStrength: Bool) -> Bool {
-        !hasStoredStrength
-    }
-}

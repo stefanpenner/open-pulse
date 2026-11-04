@@ -18,10 +18,9 @@ struct DurationPresetRow: View {
     var body: some View {
         if !vm.isRunning, !vm.isPaused {
             VStack(alignment: .leading, spacing: 8) {
-                Text("DURATION")
+                Text("Duration")
                     .font(Theme.sectionLabel)
                     .foregroundStyle(Theme.textTertiary)
-                    .tracking(1.5)
                     .accessibilityAddTraits(.isHeader)
 
                 ViewThatFits(in: .horizontal) {

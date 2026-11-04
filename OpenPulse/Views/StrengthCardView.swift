@@ -20,10 +20,9 @@ struct StrengthCardView: View {
         VStack(spacing: 14) {
             // Section header
             VStack(spacing: 4) {
-                Text("INTENSITY")
+                Text("Intensity")
                     .font(Theme.sectionLabel)
                     .foregroundStyle(Theme.textTertiary)
-                    .tracking(1.5)
                     .accessibilityAddTraits(.isHeader)
 
                 if let eff = vm.effectiveStrength, vm.isRunning {
@@ -66,7 +65,7 @@ struct StrengthCardView: View {
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
                     .frame(minWidth: controlSize + 28, minHeight: controlSize)
-                    .wellnessGlass(.regular.tint(Theme.accentBlue), in: .capsule)
+                    .wellnessGlass(.regular.tint(Theme.accentTeal), in: .capsule)
                     .contentTransition(reduceMotion ? .identity : .numericText())
                     .animation(reduceMotion ? nil : .default, value: vm.strength)
                     .accessibilityLabel("Target intensity \(vm.strength) of 9")
@@ -99,7 +98,7 @@ struct StrengthCardView: View {
                     in: 1...9,
                     step: 1
                 )
-                .tint(Theme.accentBlue)
+                .tint(Theme.accentTeal)
                 .accessibilityLabel("Intensity")
                 .accessibilityValue("\(vm.strength)")
 

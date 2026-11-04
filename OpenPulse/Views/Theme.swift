@@ -48,7 +48,7 @@ enum Theme {
     // MARK: - Type Scale (Dynamic Type friendly where system fonts allow)
 
     /// Section headers: "SESSION TIMER", "INTENSITY LEVEL"
-    static let sectionLabel = Font.caption.weight(.semibold).width(.expanded)
+    static let sectionLabel = Font.subheadline.weight(.semibold)
     /// Card subtitles: mode name, effective strength
     static let cardSubtitle = Font.caption2.weight(.medium)
     /// Hero numbers: timer display (scales with Dynamic Type)

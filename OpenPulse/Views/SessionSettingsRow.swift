@@ -13,10 +13,9 @@ struct SessionPrivacySettingsSheet: View {
                 VStack(spacing: 16) {
                     // Optional local ticks (on-device synth — no streaming / accounts)
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("TAPPER")
+                        Text("Tapper")
                             .font(Theme.sectionLabel)
                             .foregroundStyle(Theme.textTertiary)
-                            .tracking(1.5)
 
                         Toggle(isOn: Binding(
                             get: { vm.ambientMusicEnabled },
@@ -58,10 +57,9 @@ struct SessionPrivacySettingsSheet: View {
 
                     // Privacy-first Health integration (write-only Mindful Minutes)
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("APPLE HEALTH")
+                        Text("Apple Health")
                             .font(Theme.sectionLabel)
                             .foregroundStyle(Theme.textTertiary)
-                            .tracking(1.5)
 
                         Toggle(isOn: Binding(
                             get: { vm.mindfulMinutesEnabled },
@@ -86,10 +84,9 @@ struct SessionPrivacySettingsSheet: View {
 
                     // Opt-in session end alert (local only — no tracking)
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("NOTIFICATIONS")
+                        Text("Notifications")
                             .font(Theme.sectionLabel)
                             .foregroundStyle(Theme.textTertiary)
-                            .tracking(1.5)
 
                         Toggle(isOn: Binding(
                             get: { vm.sessionEndAlertsEnabled },

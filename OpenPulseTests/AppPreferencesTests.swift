@@ -39,12 +39,6 @@ struct AppPreferencesTests {
         #expect(!AppPreferences.sessionEndAlertsEnabled(defaults: d))
     }
 
-    @Test("Intensity expands on idle until a last strength is stored")
-    func intensityIdleExpandPolicy() {
-        #expect(IntensityIdlePolicy.expandByDefault(hasStoredStrength: false))
-        #expect(!IntensityIdlePolicy.expandByDefault(hasStoredStrength: true))
-    }
-
     @Test("Ambient music defaults off and sticks when enabled")
     func ambientMusicToggle() {
         let suite = "test.prefs.ambient.\(UUID().uuidString)"
