@@ -143,12 +143,12 @@ struct StatusBarView: View {
             }
             if let icon {
                 Image(systemName: icon)
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(color)
                     .accessibilityHidden(true)
             }
             Text(text)
-                .font(.caption2.weight(.medium))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(color)
         }
         .modifier(ConnectionChipTransition(reduceMotion: reduceMotion))
@@ -157,15 +157,15 @@ struct StatusBarView: View {
     /// Signal bars. A weak link also says so, because a drop pauses the session.
     private func linkInfo(_ quality: LinkQuality) -> some View {
         let weak = quality == .weak
-        let color = weak ? Theme.accentAmber : Theme.textSecondary
+        let color = weak ? Theme.accentAmber : Theme.textPrimary.opacity(0.85)
         return HStack(spacing: 4) {
             Image(systemName: "cellularbars", variableValue: quality.bars)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(color)
                 .symbolEffect(.pulse, isActive: weak && !reduceMotion)
             if weak {
                 Text("Weak")
-                    .font(.caption2.weight(.medium))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(color)
             }
         }
@@ -178,23 +178,23 @@ struct StatusBarView: View {
         let charging = vm.ble.isCharging
         let confirmed = vm.ble.batterySampleConfirmed
         let low = BatteryPresentation.isLow(percent: pct, isCharging: charging)
-        let color = low ? Theme.disconnectedRed : Theme.textSecondary
+        let color = low ? Theme.disconnectedRed : Theme.textPrimary.opacity(0.85)
 
         return HStack(spacing: 4) {
             Image(systemName: BatteryPresentation.iconName(percent: pct))
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(color)
                 .symbolEffect(.pulse, isActive: low && !reduceMotion)
                 .accessibilityHidden(true)
 
             Text(BatteryPresentation.chipText(percent: pct, sampleConfirmed: confirmed))
-                .font(.caption2.monospacedDigit().weight(.medium))
+                .font(.caption.monospacedDigit().weight(.medium))
                 .foregroundStyle(color)
                 .accessibilityHidden(true)
 
             if charging == true {
                 Image(systemName: "bolt.fill")
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(Theme.accentTeal)
                     .accessibilityHidden(true)
             }

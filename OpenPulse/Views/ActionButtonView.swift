@@ -49,23 +49,8 @@ struct ActionButtonView: View {
                 Button(action: { vm.start() }) {
                     Group {
                         if vm.canStart {
-                            if dynamicTypeSize.isAccessibilitySize {
-                                VStack(spacing: 2) {
-                                    Text("Start")
-                                        .font(Theme.buttonLabel)
-                                    Text("\(vm.timerMinutes) min")
-                                        .font(.caption.weight(.medium))
-                                        .foregroundStyle(.white.opacity(0.6))
-                                }
-                            } else {
-                                HStack(spacing: 6) {
-                                    Text("Start")
-                                        .font(Theme.buttonLabel)
-                                    Text("\(vm.timerMinutes) min")
-                                        .font(.caption.weight(.medium))
-                                        .foregroundStyle(.white.opacity(0.6))
-                                }
-                            }
+                            Text("Start")
+                                .font(Theme.buttonLabel)
                         } else {
                             Text(vm.startButtonTitle)
                                 .font(Theme.buttonLabel)

@@ -94,6 +94,13 @@ final class SessionViewModel: ObservableObject {
         return startBlockedReason ?? "Start"
     }
 
+    /// The line under Start. It names the fix when Bluetooth is off.
+    var startHint: String {
+        ble.isBluetoothOff
+            ? "Turn on Bluetooth in Control Center."
+            : SessionDurationOptions.softStartComfortHint
+    }
+
     /// User-facing reason Start is blocked (empty when canStart).
     var startBlockedReason: String? {
         guard !isRunning, !isPaused else { return nil }
@@ -593,6 +600,13 @@ final class SessionViewModel: ObservableObject {
     /// Display title — always engine mode (honesty after restore/normalize).
     var sessionTitle: String {
         selectedMode.name
+    }
+
+    /// One line under the title: when to use this session.
+    var sessionSubtitle: String {
+        if selectedMode == .custom { return "Manual timer and intensity" }
+        let feeling = selectedFeeling ?? AutonomicState.pickerFeeling(for: selectedMode)
+        return feeling?.whenToUse ?? selectedMode.summary
     }
 
     // MARK: - Actions

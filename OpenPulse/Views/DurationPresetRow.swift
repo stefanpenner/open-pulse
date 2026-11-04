@@ -90,7 +90,7 @@ struct DurationPresetRow: View {
     ) -> some View {
         let base = Button(action: action) {
             Text(title)
-                .font(.caption.weight(.semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(selected ? .white : Theme.textSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)

@@ -20,6 +20,24 @@ struct SessionHistoryStreakTests {
         #expect(items[1].completed)
     }
 
+    @Test("A row names its outcome only when the session ended early")
+    func outcomeOnlyWhenEarly() {
+        let done = SessionRecord(endedAt: .now, modeRaw: "calm", durationSeconds: 60, strength: 4, completed: true)
+        let early = SessionRecord(endedAt: .now, modeRaw: "calm", durationSeconds: 60, strength: 4, completed: false)
+        #expect(done.outcomeLabel == nil)
+        #expect(early.outcomeLabel == "Ended early")
+    }
+
+    @Test("Duration text: minutes, plus seconds only when not zero")
+    func durationText() {
+        func rec(_ s: Int) -> SessionRecord {
+            SessionRecord(endedAt: .now, modeRaw: "calm", durationSeconds: s, strength: 4, completed: true)
+        }
+        #expect(rec(240).durationText == "4 min")
+        #expect(rec(250).durationText == "4 min 10 s")
+        #expect(rec(45).durationText == "45 s")
+    }
+
     @Test("currentStreak counts consecutive completed days with yesterday grace")
     func streakGrace() {
         let d = suiteDefaults()

@@ -31,34 +31,38 @@ struct HeroTimerView: View {
                     .accessibilityLabel(status)
             }
 
-            // Progress bar — the clock is LiveTimerStepper above
-            GeometryReader { geo in
-                Capsule()
-                    .fill(Color.white.opacity(0.1))
-                    .frame(height: isA11yType ? 6 : 4)
-                    .overlay(alignment: .leading) {
-                        Capsule()
-                            .fill(vm.selectedMode.accentColor.opacity(0.9))
-                            .shadow(
-                                color: reduceMotion
-                                    ? .clear
-                                    : vm.selectedMode.accentColor.opacity(0.28),
-                                radius: 4
-                            )
-                            .frame(width: geo.size.width * vm.progress)
-                            .animation(
-                                reduceMotion ? nil : .linear(duration: 1),
-                                value: vm.progress
-                            )
-                    }
-            }
-            .frame(height: isA11yType ? 6 : 4)
-            .padding(.horizontal, 8)
-            .accessibilityElement(children: .ignore)
-            // Time lives on LiveTimerStepper — progress reports percent only (no dual clock VO)
-            .accessibilityLabel("Session progress")
-            .accessibilityValue("\(Int((vm.progress * 100).rounded())) percent complete")
+            // The ring shows progress. The bar is only for large type.
+            if isA11yType { progressBar }
         }
         .padding(.horizontal, 24)
+    }
+
+    private var progressBar: some View {
+        GeometryReader { geo in
+            Capsule()
+                .fill(Color.white.opacity(0.1))
+                .frame(height: isA11yType ? 6 : 4)
+                .overlay(alignment: .leading) {
+                    Capsule()
+                        .fill(vm.selectedMode.accentColor.opacity(0.9))
+                        .shadow(
+                            color: reduceMotion
+                                ? .clear
+                                : vm.selectedMode.accentColor.opacity(0.28),
+                            radius: 4
+                        )
+                        .frame(width: geo.size.width * vm.progress)
+                        .animation(
+                            reduceMotion ? nil : .linear(duration: 1),
+                            value: vm.progress
+                        )
+                }
+        }
+        .frame(height: isA11yType ? 6 : 4)
+        .padding(.horizontal, 8)
+        .accessibilityElement(children: .ignore)
+        // Time lives on LiveTimerStepper — progress reports percent only (no dual clock VO)
+        .accessibilityLabel("Session progress")
+        .accessibilityValue("\(Int((vm.progress * 100).rounded())) percent complete")
     }
 }

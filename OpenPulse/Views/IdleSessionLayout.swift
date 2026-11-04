@@ -7,7 +7,6 @@ struct IdleSessionLayout: View {
     @State private var showModeSheet = false
     @State private var showHistory = false
     @State private var showPrivacySettings = false
-    @State private var infoMode: StimulationMode? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -21,12 +20,13 @@ struct IdleSessionLayout: View {
     var body: some View {
         VStack(spacing: Theme.spaceM) {
             pendingOff
-            modeHero
-            durationChoices
-            StrengthCardView(vm: vm, showIdleComfortHint: false)
             Spacer(minLength: 0)
+            modeHero
+            Spacer(minLength: 0)
+            durationChoices
+            StrengthCardView(vm: vm)
             startControl
-            wellnessLine
+                .padding(.top, Theme.spaceS)
         }
         .toolbar { toolbarContent }
         .animation(
@@ -39,12 +39,7 @@ struct IdleSessionLayout: View {
         )
         .sheet(isPresented: $showModeSheet) {
             ModeSelectSheet(vm: vm)
-                .presentationDetents([.medium, .large])
-                .preferredColorScheme(.dark)
-        }
-        .sheet(item: $infoMode) { mode in
-            ModeInfoSheet(mode: mode)
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.large])
                 .preferredColorScheme(.dark)
         }
         .sheet(isPresented: $showHistory) {
@@ -88,7 +83,17 @@ struct IdleSessionLayout: View {
         Button {
             showModeSheet = true
         } label: {
-            VStack(spacing: 6) {
+            VStack(spacing: Theme.spaceS) {
+                Image(systemName: vm.selectedFeeling?.icon ?? vm.selectedMode.icon)
+                    .font(.system(size: 52, weight: .light))
+                    .foregroundStyle(modeAccent)
+                    .symbolEffect(.breathe, options: .repeating, isActive: !reduceMotion)
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(width: 120, height: 120)
+                    .wellnessGlass(.regular.tint(modeAccent.opacity(0.25)), in: .circle)
+                    .shadow(color: modeAccent.opacity(reduceMotion ? 0 : 0.35), radius: 24)
+                    .padding(.bottom, Theme.spaceS)
+                    .accessibilityHidden(true)
                 Label(vm.sessionTitle, systemImage: "chevron.down")
                     .labelStyle(TrailingIconLabelStyle())
                     .font(Theme.heroMode)
@@ -97,35 +102,18 @@ struct IdleSessionLayout: View {
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-
-                Text("\(vm.timerMinutes) min")
-                    .font(.title3.weight(.light).monospacedDigit())
-                    .foregroundStyle(modeAccent.opacity(0.9))
-                    .contentTransition(reduceMotion ? .identity : .numericText())
-                    .minimumScaleFactor(0.85)
-                    .lineLimit(1)
+                Text(vm.sessionSubtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.spaceL)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(vm.sessionTitle), \(vm.timerMinutes) minutes")
+        .accessibilityLabel("\(vm.sessionTitle). \(vm.sessionSubtitle)")
         .accessibilityHint("Opens mode list")
         .disabled(vm.isRunning || vm.isPaused)
-        .overlay(alignment: .topTrailing) { modeInfoButton }
-    }
-
-    /// Info explains the mode, so it sits by the mode name.
-    private var modeInfoButton: some View {
-        Button("About \(vm.sessionTitle)", systemImage: "info") {
-            infoMode = vm.selectedMode == .custom
-                ? .custom
-                : (vm.selectedFeeling?.primaryMode ?? vm.selectedMode)
-        }
-        .labelStyle(.iconOnly)
-        .buttonStyle(.glass)
-        .buttonBorderShape(.circle)
-        .padding(.top, Theme.spaceL)
     }
 
     private var durationChoices: some View {
@@ -164,12 +152,23 @@ struct IdleSessionLayout: View {
         VStack(spacing: Theme.spaceM) {
             ActionButtonView(vm: vm)
 
-            Text(SessionDurationOptions.softStartComfortHint)
-                .font(.caption)
-                .foregroundStyle(Theme.textSecondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-                .accessibilityLabel(SessionDurationOptions.softStartComfortHint)
+            Group {
+                if vm.ble.isBluetoothOff {
+                    Label(vm.startHint, systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Theme.accentAmber)
+                        .padding(.horizontal, Theme.spaceL)
+                        .frame(minHeight: 36)
+                        .wellnessGlass(.regular.tint(Theme.accentAmber.opacity(0.15)), in: .capsule)
+                } else {
+                    Text(vm.startHint)
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(minHeight: 36)
         }
     }
 
@@ -185,14 +184,6 @@ struct IdleSessionLayout: View {
             Button("Settings", systemImage: "gearshape") { showPrivacySettings = true }
                 .accessibilityHint("Tapper, Mindful Minutes, and alerts. On-device only.")
         }
-    }
-
-    private var wellnessLine: some View {
-        Text("Wellness device control — not a medical treatment.")
-            .font(.caption2)
-            .foregroundStyle(Theme.textTertiary)
-            .multilineTextAlignment(.center)
-            .padding(.top, Theme.spaceXS)
     }
 
     @ViewBuilder
@@ -215,7 +206,7 @@ struct IdleSessionLayout: View {
                         selection.wrappedValue = option
                     } label: {
                         Text(label(option))
-                            .font(.caption.weight(.semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundStyle(selected ? .white : Theme.textSecondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
@@ -246,6 +237,7 @@ struct IdleSessionLayout: View {
 struct ModeSelectSheet: View {
     @ObservedObject var vm: SessionViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var infoMode: StimulationMode?
 
     var body: some View {
         NavigationStack {
@@ -257,7 +249,8 @@ struct ModeSelectSheet: View {
                             subtitle: state.whenToUse,
                             icon: state.icon,
                             accent: state.accentColor,
-                            selected: isFeelingSelected(state)
+                            selected: isFeelingSelected(state),
+                            info: state.primaryMode
                         ) {
                             vm.selectFeeling(state)
                             dismiss()
@@ -269,7 +262,8 @@ struct ModeSelectSheet: View {
                         subtitle: "Manual timer and intensity",
                         icon: "slider.horizontal.3",
                         accent: Theme.textSecondary,
-                        selected: vm.selectedMode == .custom && vm.selectedFeeling == nil
+                        selected: vm.selectedMode == .custom && vm.selectedFeeling == nil,
+                        info: .custom
                     ) {
                         vm.selectMode(.custom)
                         dismiss()
@@ -277,17 +271,20 @@ struct ModeSelectSheet: View {
                 } header: {
                     Text("Session")
                 } footer: {
-                    Text("Five sessions plus Custom. Stress is the default. Wellness only — not a medical treatment.")
+                    Text("Tap \(Image(systemName: "info.circle")) to learn how a session works. Wellness only. Not a medical treatment.")
                 }
             }
-            .scrollContentBackground(.hidden)
-            .background(Theme.backgroundGradient.ignoresSafeArea())
+            .tint(Theme.accentTeal)
             .navigationTitle("Session")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
+            }
+            .sheet(item: $infoMode) { mode in
+                ModeInfoSheet(mode: mode)
+                    .presentationDetents([.medium, .large])
             }
         }
     }
@@ -306,42 +303,51 @@ struct ModeSelectSheet: View {
         icon: String,
         accent: Color,
         selected: Bool,
+        info: StimulationMode,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundStyle(accent)
-                    .frame(width: 28)
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Theme.textPrimary)
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(Theme.textTertiary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 0)
-
-                if selected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Theme.accentTeal)
+        HStack(spacing: 12) {
+            Button(action: action) {
+                HStack(spacing: 14) {
+                    Image(systemName: icon)
+                        .font(.title3)
+                        .foregroundStyle(accent)
+                        .frame(width: 28)
                         .accessibilityHidden(true)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text(subtitle)
+                            .font(.footnote)
+                            .foregroundStyle(Theme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    if selected {
+                        Image(systemName: "checkmark")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(Theme.accentTeal)
+                            .accessibilityHidden(true)
+                    }
                 }
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
             }
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .accessibilityLabel(title)
+            .accessibilityHint(subtitle)
+            .accessibilityAddTraits(selected ? .isSelected : [])
+
+            Button("About \(title)", systemImage: "info.circle") { infoMode = info }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+                .foregroundStyle(Theme.textSecondary)
+                .frame(minWidth: 44, minHeight: 44)
         }
-        .buttonStyle(.plain)
-        .listRowBackground(Theme.solidSurfaceElevated.opacity(0.6))
-        .accessibilityLabel(title)
-        .accessibilityHint(subtitle)
-        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 

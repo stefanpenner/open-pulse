@@ -33,6 +33,18 @@ struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
         self.easePatternRaw = easePatternRaw
     }
 
+    /// Shown only for the exception. A completed session needs no label.
+    var outcomeLabel: String? {
+        completed ? nil : "Ended early"
+    }
+
+    var durationText: String {
+        let s = max(0, durationSeconds)
+        let (mins, secs) = (s / 60, s % 60)
+        if mins == 0 { return "\(secs) s" }
+        return secs == 0 ? "\(mins) min" : "\(mins) min \(secs) s"
+    }
+
     /// Display name including Meditate / Burst when relevant.
     var modeName: String {
         let base = StimulationMode(rawValue: modeRaw)?.name ?? modeRaw

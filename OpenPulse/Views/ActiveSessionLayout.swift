@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ActiveSessionLayout: View {
     @ObservedObject var vm: SessionViewModel
-    @State private var showingInfo = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -32,11 +31,6 @@ struct ActiveSessionLayout: View {
                     .fixedSize()
             }
         }
-        .sheet(isPresented: $showingInfo) {
-            ModeInfoSheet(mode: vm.selectedMode)
-                .presentationDetents([.medium])
-                .preferredColorScheme(.dark)
-        }
     }
 
     @ViewBuilder
@@ -65,17 +59,6 @@ struct ActiveSessionLayout: View {
                         .accessibilityAddTraits(.isHeader)
                         .accessibilityLabel("\(vm.sessionTitle) session")
 
-                    if vm.selectedMode != .custom {
-                        Button { showingInfo = true } label: {
-                            Image(systemName: "info.circle")
-                                .font(isA11yType ? .body : .caption)
-                                .foregroundStyle(vm.selectedMode.accentColor.opacity(0.45))
-                                .frame(minWidth: 44, minHeight: 44)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("About \(vm.sessionTitle)")
-                    }
                 }
 
                 ChannelIndicatorView(
@@ -91,20 +74,9 @@ struct ActiveSessionLayout: View {
                 if vm.selectedMode.usesBreathingGuide {
                     BreathingGuideView(vm: vm)
                 } else {
-                    LiveTimerStepper(vm: vm, isHero: true)
                     HeroTimerView(vm: vm)
+                    LiveTimerStepper(vm: vm, isHero: true)
                 }
-
-                // Still motion budget: Tide owns the field for Breathe — no competing wave
-                if vm.stimulationActive, !vm.selectedMode.usesBreathingGuide {
-                    IntensityWaveView(
-                        strength: vm.strength,
-                        effectiveStrength: vm.effectiveStrength,
-                        accentColor: vm.selectedMode.accentColor
-                    )
-                    .padding(.horizontal, 20)
-                }
-
                 if heroHeight != nil {
                     Spacer(minLength: 0)
                 }
@@ -113,7 +85,7 @@ struct ActiveSessionLayout: View {
 
             // Bottom: controls
             VStack(spacing: 8) {
-                StrengthCardView(vm: vm, showIdleComfortHint: false)
+                StrengthCardView(vm: vm)
 
                 // ±time for all modes (engine already anchors Sleep phase / fade)
                 if vm.selectedMode.usesBreathingGuide {
@@ -130,6 +102,7 @@ struct ActiveSessionLayout: View {
 
                 ActionButtonView(vm: vm)
             }
+            .padding(.top, heroHeight == nil ? 0 : Theme.spaceXL)
         }
     }
 }
@@ -150,7 +123,72 @@ private struct LiveTimerStepper: View {
     }
 
     var body: some View {
-        HStack(spacing: isHero ?Theme.spaceL : 6) {
+        Group {
+            if isHero && !isA11yType { ringClock } else { inlineClock }
+        }
+        // User ± only — not every wall-clock second; light haptic under Reduce Motion
+        .sensoryFeedback(
+            reduceMotion ? .impact(weight: .light) : .selection,
+            trigger: vm.userAdjustedRemainingToken
+        )
+    }
+
+    /// The clock sits inside a progress ring. Labeled buttons sit under it.
+    private var ringClock: some View {
+        let accent = vm.selectedMode.accentColor
+        return VStack(spacing: Theme.spaceL) {
+            ZStack {
+                Circle().stroke(Color.white.opacity(0.08), lineWidth: 8)
+                Circle()
+                    .trim(from: 0, to: vm.progress)
+                    .stroke(accent, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .shadow(color: accent.opacity(reduceMotion ? 0 : 0.45), radius: 8)
+                    .animation(reduceMotion ? nil : .linear(duration: 1), value: vm.progress)
+                timeText
+            }
+            .frame(width: 236, height: 236)
+            .accessibilityElement(children: .combine)
+            .accessibilityValue("\(Int((vm.progress * 100).rounded())) percent complete")
+
+            HStack(spacing: Theme.spaceM) {
+                stepButton("minus", enabled: canDecrease) { vm.decreaseTimer() }
+                    .accessibilityLabel("Subtract one minute")
+                stepButton("plus", enabled: true) { vm.increaseTimer() }
+                    .accessibilityLabel("Add one minute")
+            }
+        }
+    }
+
+    private func stepButton(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label("1 min", systemImage: symbol)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(enabled ? Theme.textPrimary : Theme.textTertiary.opacity(0.4))
+                .padding(.horizontal, Theme.spaceL)
+                .frame(minHeight: 44)
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .wellnessGlass(.regular.interactive(), in: .capsule)
+    }
+
+    private var timeText: some View {
+        Text(vm.displayTime)
+            .font(timeFont)
+            .foregroundStyle(Theme.textPrimary)
+            .minimumScaleFactor(0.75)
+            .lineLimit(1)
+            .contentTransition(reduceMotion ? .identity : .numericText())
+            .animation(reduceMotion ? nil : .default, value: vm.remainingSeconds)
+            .accessibilityLabel(
+                LiveActivityPresentation.timeAccessibility(remainingSeconds: vm.remainingSeconds)
+            )
+    }
+
+    private var inlineClock: some View {
+        HStack(spacing: isHero ? Theme.spaceL : 6) {
             Button { vm.decreaseTimer() } label: {
                 Image(systemName: "minus")
                     .font(.body.weight(.semibold))
@@ -192,11 +230,6 @@ private struct LiveTimerStepper: View {
             .accessibilityHint("Add one minute")
         }
         .padding(.vertical, 4)
-        // User ± only — not every wall-clock second; light haptic under Reduce Motion
-        .sensoryFeedback(
-            reduceMotion ? .impact(weight: .light) : .selection,
-            trigger: vm.userAdjustedRemainingToken
-        )
     }
 }
 

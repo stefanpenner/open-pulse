@@ -10,14 +10,6 @@ struct SessionHistorySheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var confirmClear = false
 
-    private var totalCompleted: Int {
-        sessions.filter(\.completed).count
-    }
-
-    private var totalMinutes: Int {
-        sessions.reduce(0) { $0 + max(0, $1.durationSeconds) } / 60
-    }
-
     private var weekCompleted: Int {
         SessionHistory.completedThisWeek(from: sessions)
     }
@@ -43,22 +35,17 @@ struct SessionHistorySheet: View {
                     List {
                         Section {
                             HStack {
-                                stat(title: "Sessions", value: "\(sessions.count)")
+                                stat(title: "Sessions", value: "\(weekCompleted)")
                                 Spacer()
-                                stat(title: "Completed", value: "\(totalCompleted)")
+                                stat(title: "Minutes", value: "\(weekMinutes)")
                                 Spacer()
-                                stat(title: "Minutes", value: "\(totalMinutes)")
+                                stat(title: "Day streak", value: streak > 0 ? "\(streak)" : "—")
                             }
-
-                            HStack {
-                                stat(title: "This week", value: "\(weekCompleted)")
-                                Spacer()
-                                stat(title: "Week min", value: "\(weekMinutes)")
-                                Spacer()
-                                stat(title: "Streak", value: streak > 0 ? "\(streak)d" : "—")
-                            }
+                            .padding(.horizontal, Theme.spaceS)
                             .accessibilityElement(children: .combine)
-                            .accessibilityLabel("This week \(weekCompleted) completed, \(weekMinutes) minutes, streak \(streak) days")
+                            .accessibilityLabel("This week: \(weekCompleted) sessions, \(weekMinutes) minutes. Streak: \(streak) days.")
+                        } header: {
+                            Text("This week")
                         }
 
                         Section("History") {
@@ -109,20 +96,17 @@ struct SessionHistorySheet: View {
     private func stat(title: String, value: String) -> some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.title3.weight(.semibold).monospacedDigit())
+                .font(.title2.weight(.semibold).monospacedDigit())
                 .foregroundStyle(Theme.textPrimary)
             Text(title)
                 .font(.caption2)
-                .foregroundStyle(Theme.textTertiary)
+                .foregroundStyle(Theme.textSecondary)
         }
         .accessibilityElement(children: .combine)
     }
 
     private func historyRow(_ record: SessionRecord) -> some View {
-        let mins = max(0, record.durationSeconds / 60)
-        let secs = max(0, record.durationSeconds % 60)
-        let timeText = mins > 0 ? "\(mins)m \(secs)s" : "\(secs)s"
-        return HStack(spacing: 12) {
+        HStack(spacing: 12) {
             Image(systemName: StimulationMode(rawValue: record.modeRaw)?.icon ?? "circle")
                 .foregroundStyle(StimulationMode(rawValue: record.modeRaw)?.accentColor ?? Theme.textSecondary)
                 .frame(width: 28)
@@ -139,12 +123,14 @@ struct SessionHistorySheet: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text(timeText)
-                    .font(.caption.monospacedDigit().weight(.medium))
+                Text(record.durationText)
+                    .font(.subheadline.monospacedDigit())
                     .foregroundStyle(Theme.textSecondary)
-                Text(record.completed ? "Done" : "Stopped")
-                    .font(.caption2)
-                    .foregroundStyle(record.completed ? Theme.connectedGreen : Theme.textTertiary)
+                if let outcome = record.outcomeLabel {
+                    Text(outcome)
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textTertiary)
+                }
             }
         }
         .accessibilityElement(children: .combine)

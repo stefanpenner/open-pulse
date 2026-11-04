@@ -1,9 +1,9 @@
 import SwiftUI
 
+/// Intensity: one control, one number. The number is the target.
+/// During the soft ease-in, the ring under the number fills to the target.
 struct StrengthCardView: View {
     @ObservedObject var vm: SessionViewModel
-    /// Idle Still already shows the shared comfort line — hide duplicate here.
-    var showIdleComfortHint: Bool = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -11,110 +11,87 @@ struct StrengthCardView: View {
         dynamicTypeSize.isAccessibilitySize ? 56 : 48
     }
 
-    /// True when Active line already owns intensity VO (avoid dual announcements).
-    private var showsActiveIntensityLine: Bool {
-        vm.isRunning && vm.effectiveStrength != nil
+    /// 0…1 of the target that the device runs now. Nil when idle.
+    private var rampFraction: Double? {
+        guard vm.isRunning, let eff = vm.effectiveStrength, vm.strength > 0 else { return nil }
+        return min(1, Double(eff) / Double(vm.strength))
     }
 
     var body: some View {
-        VStack(spacing: 14) {
-            // Section header
-            VStack(spacing: 4) {
-                Text("Intensity")
-                    .font(Theme.sectionLabel)
-                    .foregroundStyle(Theme.textTertiary)
-                    .accessibilityAddTraits(.isHeader)
+        HStack(spacing: Theme.spaceM) {
+            Text("Intensity")
+                .font(Theme.sectionLabel)
+                .foregroundStyle(Theme.textSecondary)
+                .accessibilityHidden(true)
 
-                if let eff = vm.effectiveStrength, vm.isRunning {
-                    Text(eff == 0 ? "Off" : "Active: \(eff)")
-                        .font(Theme.cardSubtitle)
-                        .foregroundStyle(vm.selectedMode.accentColor)
-                        .accessibilityLabel(
-                            SessionDurationOptions.activeIntensityAccessibility(
-                                effective: eff,
-                                target: vm.strength
-                            )
-                        )
-                } else if showIdleComfortHint, !vm.isRunning, !vm.isPaused {
-                    // Shared Still comfort line (settings sheet only by default)
-                    Text(SessionDurationOptions.softStartComfortHint)
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textTertiary)
-                        .multilineTextAlignment(.center)
-                        .accessibilityLabel(SessionDurationOptions.softStartComfortHint)
-                }
-            }
+            Spacer(minLength: 0)
 
-            // Strength display with +/- buttons
-            HStack(spacing: 20) {
-                Button {
-                    vm.setStrength(vm.strength - 1)
-                } label: {
-                    Image(systemName: "minus")
-                        .font(.body.weight(.medium))
-                        .frame(width: controlSize, height: controlSize)
-                        .contentShape(Circle())
-                }
-                .wellnessGlass(.regular.interactive(), in: .circle)
-                .accessibilityLabel("Decrease intensity")
+            nudge("minus", label: "Decrease intensity", by: -1)
+                .disabled(vm.strength <= 1)
 
-                // Strength badge — target control (Active line owns effective VO)
-                Text("\(vm.strength)")
-                    .font(Theme.heroNumber)
-                    .foregroundStyle(.white)
-                    .minimumScaleFactor(0.7)
-                    .lineLimit(1)
-                    .frame(minWidth: controlSize + 28, minHeight: controlSize)
-                    .wellnessGlass(.regular.tint(Theme.accentTeal), in: .capsule)
-                    .contentTransition(reduceMotion ? .identity : .numericText())
-                    .animation(reduceMotion ? nil : .default, value: vm.strength)
-                    .accessibilityLabel("Target intensity \(vm.strength) of 9")
-                    .accessibilityHidden(showsActiveIntensityLine)
+            Text("\(vm.strength)")
+                .font(Theme.heroNumber)
+                .foregroundStyle(.white)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+                .frame(minWidth: controlSize + 12, minHeight: controlSize)
+                .overlay(alignment: .bottom) { rampBar }
+                .contentTransition(reduceMotion ? .identity : .numericText())
+                .animation(reduceMotion ? nil : .default, value: vm.strength)
+                .accessibilityHidden(true)
 
-                Button {
-                    vm.setStrength(vm.strength + 1)
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.body.weight(.medium))
-                        .frame(width: controlSize, height: controlSize)
-                        .contentShape(Circle())
-                }
-                .wellnessGlass(.regular.interactive(), in: .circle)
-                .accessibilityLabel("Increase intensity")
-            }
-
-            // Slider
-            HStack(spacing: 10) {
-                Text("1")
-                    .font(.caption2.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(Theme.textTertiary)
-                    .accessibilityHidden(true)
-
-                Slider(
-                    value: Binding(
-                        get: { Double(vm.strength) },
-                        set: { vm.setStrength(Int($0.rounded())) }
-                    ),
-                    in: 1...9,
-                    step: 1
-                )
-                .tint(Theme.accentTeal)
-                .accessibilityLabel("Intensity")
-                .accessibilityValue("\(vm.strength)")
-
-                Text("9")
-                    .font(.caption2.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(Theme.textTertiary)
-                    .accessibilityHidden(true)
+            nudge("plus", label: "Increase intensity", by: 1)
+                .disabled(vm.strength >= 9)
+        }
+        .padding(.horizontal, Theme.spaceL)
+        .padding(.vertical, 12)
+        .wellnessContentSurface(in: RoundedRectangle(cornerRadius: 16))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Intensity")
+        .accessibilityValue(accessibilityValue)
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: vm.setStrength(vm.strength + 1)
+            case .decrement: vm.setStrength(vm.strength - 1)
+            @unknown default: break
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-        // Content card = solid surface; ± / badge keep glass (control layer)
-        .wellnessContentSurface(in: RoundedRectangle(cornerRadius: 16))
         .sensoryFeedback(
             reduceMotion ? .impact(weight: .light) : .selection,
             trigger: vm.strength
         )
+    }
+
+    private var accessibilityValue: String {
+        if let eff = vm.effectiveStrength, vm.isRunning, eff != vm.strength {
+            return SessionDurationOptions.activeIntensityAccessibility(effective: eff, target: vm.strength)
+        }
+        return "\(vm.strength) of 9"
+    }
+
+    /// A thin bar under the number. It shows only while the device eases in.
+    @ViewBuilder
+    private var rampBar: some View {
+        if let f = rampFraction, f < 1 {
+            Capsule()
+                .fill(Theme.textTertiary.opacity(0.4))
+                .frame(width: 28, height: 3)
+                .overlay(alignment: .leading) {
+                    Capsule().fill(vm.selectedMode.accentColor).frame(width: 28 * f, height: 3)
+                }
+                .offset(y: 2)
+                .animation(reduceMotion ? nil : .easeInOut, value: f)
+        }
+    }
+
+    private func nudge(_ icon: String, label: String, by delta: Int) -> some View {
+        Button(label, systemImage: icon) { vm.setStrength(vm.strength + delta) }
+            .labelStyle(.iconOnly)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(Theme.textPrimary)
+            .frame(width: controlSize, height: controlSize)
+            .contentShape(Circle())
+            .buttonStyle(.plain)
+            .wellnessGlass(.regular.interactive(), in: .circle)
     }
 }

@@ -780,6 +780,24 @@ struct StartGateTests {
         #expect(vm.startButtonTitle == "Start")
     }
 
+    @Test("The idle subtitle says when to use the session")
+    @MainActor func sessionSubtitleSaysWhenToUse() {
+        let (vm, _) = makeVM()
+        vm.selectFeeling(.wired)
+        #expect(vm.sessionSubtitle == AutonomicState.wired.whenToUse)
+        vm.selectMode(.custom)
+        #expect(vm.sessionSubtitle == "Manual timer and intensity")
+    }
+
+    @Test("Bluetooth off: the line under Start tells the user how to fix it")
+    @MainActor func startHintNamesBluetoothFix() {
+        let (vm, _) = makeVM()
+        vm.ble.isBluetoothOff = true
+        #expect(vm.startHint == "Turn on Bluetooth in Control Center.")
+        vm.ble.isBluetoothOff = false
+        #expect(vm.startHint == SessionDurationOptions.softStartComfortHint)
+    }
+
     @Test("canStart is true when idle and ready")
     @MainActor func canStartWhenReady() {
         let (vm, _) = makeVM()

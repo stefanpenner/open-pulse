@@ -55,6 +55,7 @@ struct SessionPrivacySettingsSheet: View {
                     VStack(spacing: 6) {
                         Text(PrivacyTrustCopy.nothingLeavesPhone).fontWeight(.semibold)
                         Text(PrivacyTrustCopy.privateByDesign)
+                        Text("Wellness device control. Not a medical treatment.")
                         DeviceInfoFooter(ble: vm.ble)
                     }
                     .frame(maxWidth: .infinity)

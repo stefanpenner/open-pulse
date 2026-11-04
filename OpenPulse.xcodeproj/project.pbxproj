@@ -28,7 +28,6 @@
 		B10000000000000000000013 /* IdleSessionLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* IdleSessionLayout.swift */; };
 		B10000000000000000000014 /* ActiveSessionLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* ActiveSessionLayout.swift */; };
 		B10000000000000000000015 /* ChannelIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* ChannelIndicatorView.swift */; };
-		B10000000000000000000016 /* IntensityWaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* IntensityWaveView.swift */; };
 		B10000000000000000000017 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* AppPreferences.swift */; };
 		B10000000000000000000018 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000018 /* OnboardingView.swift */; };
 		B1000000000000000000001A /* SessionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001A /* SessionHistory.swift */; };
@@ -126,7 +125,6 @@
 		A10000000000000000000013 /* IdleSessionLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdleSessionLayout.swift; sourceTree = "<group>"; };
 		A10000000000000000000014 /* ActiveSessionLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSessionLayout.swift; sourceTree = "<group>"; };
 		A10000000000000000000015 /* ChannelIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelIndicatorView.swift; sourceTree = "<group>"; };
-		A10000000000000000000016 /* IntensityWaveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntensityWaveView.swift; sourceTree = "<group>"; };
 		A10000000000000000000017 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPreferences.swift; sourceTree = "<group>"; };
 		A10000000000000000000018 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		A1000000000000000000001A /* SessionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistory.swift; sourceTree = "<group>"; };
@@ -309,7 +307,6 @@
 				A10000000000000000000013 /* IdleSessionLayout.swift */,
 				A10000000000000000000014 /* ActiveSessionLayout.swift */,
 				A10000000000000000000015 /* ChannelIndicatorView.swift */,
-				A10000000000000000000016 /* IntensityWaveView.swift */,
 				A10000000000000000000018 /* OnboardingView.swift */,
 				A10000000000000000000024 /* PendingOffBanner.swift */,
 				A1000000000000000000001C /* DurationPresetRow.swift */,
@@ -501,7 +498,6 @@
 				B10000000000000000000013 /* IdleSessionLayout.swift in Sources */,
 				B10000000000000000000014 /* ActiveSessionLayout.swift in Sources */,
 				B10000000000000000000015 /* ChannelIndicatorView.swift in Sources */,
-				B10000000000000000000016 /* IntensityWaveView.swift in Sources */,
 				B10000000000000000000017 /* AppPreferences.swift in Sources */,
 				B10000000000000000000018 /* OnboardingView.swift in Sources */,
 				B10000000000000000000024 /* PendingOffBanner.swift in Sources */,
