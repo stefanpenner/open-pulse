@@ -4,7 +4,7 @@
   <img src="icon.svg" width="128" height="128" alt="Open Pulse app icon">
 </p>
 
-An iOS app that controls a [Pulsetto](https://pulsetto.tech) neck-worn device over Bluetooth.
+An iOS app for the [Pulsetto](https://pulsetto.tech) neck device. Version 0.9. Needs iOS 26.
 
 <p align="center">
   <img src="screenshot-home.png" width="280" alt="Home screen with duration and intensity controls">
@@ -12,44 +12,34 @@ An iOS app that controls a [Pulsetto](https://pulsetto.tech) neck-worn device ov
 
 ## Why
 
-The Pulsetto app needs an account and a subscription. Open Pulse is open source and private. It has no account, no subscription, no network access, and no tracking. It needs iOS 26 or later.
+The Pulsetto app needs an account and a subscription. Open Pulse needs neither. It sends no data off the phone.
 
 ## What
 
-- Six modes: Stressed, Anxious, Can't Sleep, Foggy, Aching, and Custom.
-- A tapper that plays a tick-tock sound and haptic taps.
-- Battery level and signal strength of the device.
-- Session-end alerts and a Live Activity.
-- Mindful Minutes written to Apple Health. The app does not read Health.
+| Feeling | Default | Pattern |
+|---------|---------|---------|
+| Stressed | 6 min | Both sides, steady strength |
+| Anxious | 5 min | Paced breathing. Stimulation is on during the breath out. |
+| Can't Sleep | 10 min | Sides change. Strength fades at the end. |
+| Foggy | 6 min | Left side, 30 s on, 30 s off |
+| Aching | 8 min | Strength moves in a slow wave |
+| Custom | 10 min | You set it |
 
-| Feeling | Default | Behavior |
-|---------|---------|----------|
-| Stressed | 6 min | Both sides, steady intensity |
-| Anxious | 5 min | Paced breathing, gated by the exhale |
-| Can't Sleep | 10 min | Rotating channels, fade-out |
-| Foggy | 6 min | Left side, 30 s on and 30 s off |
-| Aching | 8 min | Wave, or burst |
+Optional: a left-right tick-tock sound and haptic taps, a session-end alert, and Mindful Minutes in Apple Health.
 
-This app is not a medical treatment. Parameter notes and citations are in [research.md](research.md).
+Not a medical treatment. Sources: [research.md](research.md).
 
 ## How
 
-Build:
+Run: open `OpenPulse.xcodeproj` in Xcode and press Run.
 
-```bash
-xcodebuild -project OpenPulse.xcodeproj -scheme OpenPulse \
-  -destination 'generic/platform=iOS' build
-```
-
-Run: open `OpenPulse.xcodeproj` in Xcode, choose a device, and press Run.
-
-Test. Fast tests (pure logic, on the Mac, about 3 s). `Package.swift` lists the files.
+Test on the Mac (fast):
 
 ```bash
 swift test
 ```
 
-All tests (on the simulator, about 1.5 s after the build). Build once, then run:
+Test on the simulator (all tests):
 
 ```bash
 D='platform=iOS Simulator,name=iPhone 17'
@@ -57,8 +47,6 @@ xcodebuild build-for-testing -project OpenPulse.xcodeproj -scheme OpenPulse -des
 xcodebuild test-without-building -project OpenPulse.xcodeproj -scheme OpenPulse -destination "$D" -derivedDataPath build/sim
 ```
 
-Make each view model in a test with `testVM(...)`. It uses fakes for ActivityKit, HealthKit,
-notifications, and audio. The real services make slow sync calls to iOS.
+## Credits
 
-Built on the work of [PulseLibre](https://github.com/jooray/PulseLibre) by Juraj Bednar, [hydrasparx/pulsetto](https://github.com/hydrasparx/pulsetto), and [pulse-libre](https://github.com/parallaxintelligencepartnership/pulse-libre).
-License: [GLWTS](LICENSE).
+Built on [PulseLibre](https://github.com/jooray/PulseLibre) by Juraj Bednar, [hydrasparx/pulsetto](https://github.com/hydrasparx/pulsetto), and [pulse-libre](https://github.com/parallaxintelligencepartnership/pulse-libre). License: [GLWTS](LICENSE).
