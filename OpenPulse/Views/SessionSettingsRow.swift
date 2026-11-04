@@ -51,6 +51,26 @@ struct SessionPrivacySettingsSheet: View {
                         }
                         .tint(Theme.accentTeal)
                         .accessibilityHint("Optional. Taps only while a session runs in the foreground.")
+
+                        Toggle(isOn: Binding(
+                            get: { vm.joyConEnabled },
+                            set: { vm.setJoyConEnabled($0) }
+                        )) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Use Joy-Con")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                Text(vm.joyConEnabled
+                                     ? vm.joyConStatus
+                                     : "Hold one Joy-Con in each hand. Each taps its own side. Off by default.")
+                                    .font(.caption2)
+                                    .foregroundStyle(Theme.textTertiary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .tint(Theme.accentTeal)
+                        .disabled(!vm.hapticTicksEnabled)
+                        .accessibilityHint("Optional. Needs Haptic taps. Pair your Joy-Cons in Bluetooth settings first.")
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)

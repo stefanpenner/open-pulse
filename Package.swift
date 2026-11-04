@@ -17,6 +17,7 @@ let package = Package(
                 "Models/BLEConstants.swift",
                 "Models/BilateralTicks.swift",
                 "Models/DeviceInfoParser.swift",
+                "Models/JoyConTapper.swift",
                 "Models/LinkQuality.swift",
                 "Models/BreathPhasePresentation.swift",
                 "Models/LiveActivityPresentation.swift",
@@ -41,6 +42,7 @@ let package = Package(
             sources: [
                 "BilateralTicksTests.swift",
                 "DeviceInfoParserTests.swift",
+                "JoyConTapperTests.swift",
                 "LinkQualityTests.swift",
                 "LiveActivityPresentationTests.swift",
                 "MindfulSessionRangeTests.swift",

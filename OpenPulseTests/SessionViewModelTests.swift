@@ -4150,6 +4150,36 @@ struct AmbientMusicSessionTests {
         #expect(!audio.isPlaying)
     }
 
+    @Test("Use Joy-Con is off by default and reaches the tapper")
+    @MainActor func joyConOptIn() {
+        let audio = NullAmbientAudio()
+        let (vm, _) = makeVM(ambientAudio: audio)
+        #expect(!vm.joyConEnabled)
+        vm.setHapticTicksEnabled(true)
+        #expect(audio.lastSyncJoyCon == false)
+        vm.setJoyConEnabled(true)
+        #expect(vm.joyConEnabled)
+        #expect(audio.lastSyncJoyCon == true)
+    }
+
+    @Test("Joy-Con setting persists")
+    @MainActor func joyConPersists() {
+        let defaults = UserDefaults(suiteName: "test.joycon.\(UUID().uuidString)")!
+        let (vm, _) = makeVM(defaults: defaults)
+        vm.setJoyConEnabled(true)
+        let (again, _) = makeVM(defaults: defaults)
+        #expect(again.joyConEnabled)
+    }
+
+    @Test("Joy-Con status follows the paired controllers")
+    @MainActor func joyConStatus() {
+        let audio = NullAmbientAudio()
+        let (vm, _) = makeVM(ambientAudio: audio)
+        #expect(vm.joyConStatus == "No Joy-Con found. Pair them in Bluetooth settings.")
+        audio.setPlan(JoyConTapper.plan([.init(id: 0, kind: .pair)]))
+        #expect(vm.joyConStatus == "Left and right Joy-Con ready.")
+    }
+
     @Test("Stop fades ambient off")
     @MainActor func stopEndsAmbient() {
         let audio = NullAmbientAudio()

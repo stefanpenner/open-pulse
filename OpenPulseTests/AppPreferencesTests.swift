@@ -63,6 +63,14 @@ struct AppPreferencesTests {
         AppPreferences.setHapticTicksEnabled(true, defaults: d)
         #expect(AppPreferences.hapticTicksEnabled(defaults: d))
     }
+
+    @Test("Joy-Con default off and stick when enabled")
+    func joyConToggle() {
+        let d = UserDefaults(suiteName: "test.prefs.joycon.\(UUID().uuidString)")!
+        #expect(!AppPreferences.joyConEnabled(defaults: d))
+        AppPreferences.setJoyConEnabled(true, defaults: d)
+        #expect(AppPreferences.joyConEnabled(defaults: d))
+    }
 }
 
 @Suite("AmbientAudioPolicy")

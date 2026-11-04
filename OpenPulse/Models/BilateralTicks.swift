@@ -31,6 +31,11 @@ enum BilateralTicks {
         HapticTap(time: beatSeconds, side: .right, intensity: 0.5, sharpness: 0.2),
     ]
 
+    /// The taps for the given sides only, on the same beat times as the full loop.
+    static func hapticTaps(for sides: Set<Side>) -> [HapticTap] {
+        hapticTaps.filter { sides.contains($0.side) }
+    }
+
     static func side(beat: Int) -> Side {
         beat.isMultiple(of: 2) ? .left : .right
     }

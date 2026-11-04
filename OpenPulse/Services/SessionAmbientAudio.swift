@@ -10,11 +10,15 @@ protocol SessionAmbientAudioPlaying: AnyObject {
     func sync(
         sound: Bool,
         haptics: Bool,
+        joyCon: Bool,
         isRunning: Bool,
         isPaused: Bool,
         isInBackground: Bool
     )
     func stop(fade: Bool)
+    /// Which Joy-Con plays which side. Empty when none is found or the setting is off.
+    var joyConPlan: JoyConTapper.Plan { get }
+    var onJoyConPlanChange: (@MainActor (JoyConTapper.Plan) -> Void)? { get set }
 }
 
 /// The session tapper: a soft left/right tick-tock sound, haptic taps, or both, on one beat.
@@ -23,7 +27,39 @@ protocol SessionAmbientAudioPlaying: AnyObject {
 final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
     private struct Outputs: Equatable {
         let sound: Bool
+        /// Sides the phone taps.
+        let phoneSides: Set<BilateralTicks.Side>
+        /// Sides the Joy-Cons tap.
+        let joyCons: JoyConTapper.Plan
+    }
+
+    private struct Request {
+        let sound: Bool
         let haptics: Bool
+        let joyCon: Bool
+        let isRunning: Bool
+        let isPaused: Bool
+        let isInBackground: Bool
+    }
+
+    private let joyCons = JoyConHaptics()
+    private var lastRequest: Request?
+    var onJoyConPlanChange: (@MainActor (JoyConTapper.Plan) -> Void)?
+    var joyConPlan: JoyConTapper.Plan { joyCons.plan }
+
+    override init() {
+        super.init()
+        joyCons.onChange = { [weak self] plan in
+            guard let self else { return }
+            self.onJoyConPlanChange?(plan)
+            if self.lastRequest?.joyCon == true { self.resync() }
+        }
+    }
+
+    private func resync() {
+        guard let r = lastRequest else { return }
+        sync(sound: r.sound, haptics: r.haptics, joyCon: r.joyCon,
+             isRunning: r.isRunning, isPaused: r.isPaused, isInBackground: r.isInBackground)
     }
 
     private var tickEngine: AVAudioEngine?
@@ -38,10 +74,14 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
     func sync(
         sound: Bool,
         haptics: Bool,
+        joyCon: Bool,
         isRunning: Bool,
         isPaused: Bool,
         isInBackground: Bool
     ) {
+        lastRequest = Request(sound: sound, haptics: haptics, joyCon: joyCon,
+                              isRunning: isRunning, isPaused: isPaused, isInBackground: isInBackground)
+        if joyCon { joyCons.watch() } else { joyCons.unwatch() }
         let want = AmbientAudioPolicy.shouldPlay(
             enabled: sound || haptics,
             isRunning: isRunning,
@@ -52,7 +92,9 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
             if isPlaying { stop(fade: true) }
             return
         }
-        let next = Outputs(sound: sound, haptics: haptics)
+        // Joy-Cons take the sides they cover. The phone taps only the rest.
+        let plan = joyCon && haptics ? joyCons.plan : JoyConTapper.Plan()
+        let next = Outputs(sound: sound, phoneSides: haptics ? plan.phoneSides : [], joyCons: plan)
         // A changed output restarts both, so the sound and the taps share one beat.
         if isPlaying, outputs != next { stopNow() }
         start(next)
@@ -82,8 +124,9 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
             configureSession()
             _ = startTicks()
         }
-        if next.haptics { startHaptics() }
-        guard tickNode != nil || hapticPlayer != nil else { return }
+        startHaptics(sides: next.phoneSides)
+        joyCons.startTaps(next.joyCons)
+        guard tickNode != nil || hapticPlayer != nil || joyCons.isTapping else { return }
         outputs = next
         isPlaying = true
         guard tickNode != nil else { return }
@@ -172,14 +215,15 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
     // MARK: - Haptics
 
     /// Loops the tap pattern on the phone's haptic motor. No-op on hardware without haptics.
-    private func startHaptics() {
-        guard hapticPlayer == nil, CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+    private func startHaptics(sides: Set<BilateralTicks.Side>) {
+        guard !sides.isEmpty, hapticPlayer == nil,
+              CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
         do {
             let engine = try CHHapticEngine()
             engine.playsHapticsOnly = true
             engine.isAutoShutdownEnabled = false
             try engine.start()
-            let player = try engine.makeAdvancedPlayer(with: Self.tapPattern())
+            let player = try engine.makeAdvancedPlayer(with: Self.tapPattern(for: sides))
             player.loopEnabled = true
             player.loopEnd = BilateralTicks.loopSeconds
             try player.start(atTime: CHHapticTimeImmediate)
@@ -192,14 +236,15 @@ final class SessionAmbientAudio: NSObject, SessionAmbientAudioPlaying {
     }
 
     private func stopHaptics() {
+        joyCons.stopTaps()
         try? hapticPlayer?.stop(atTime: CHHapticTimeImmediate)
         hapticEngine?.stop()
         hapticPlayer = nil
         hapticEngine = nil
     }
 
-    private static func tapPattern() throws -> CHHapticPattern {
-        let events = BilateralTicks.hapticTaps.map { tap in
+    static func tapPattern(for sides: Set<BilateralTicks.Side>) throws -> CHHapticPattern {
+        let events = BilateralTicks.hapticTaps(for: sides).map { tap in
             CHHapticEvent(
                 eventType: .hapticTransient,
                 parameters: [
@@ -232,17 +277,22 @@ final class NullAmbientAudio: SessionAmbientAudioPlaying {
     private(set) var isPlaying = false
     private(set) var lastSyncSound: Bool?
     private(set) var lastSyncHaptics: Bool?
+    private(set) var lastSyncJoyCon: Bool?
+    private(set) var joyConPlan = JoyConTapper.Plan()
+    var onJoyConPlanChange: (@MainActor (JoyConTapper.Plan) -> Void)?
     private(set) var syncCount = 0
     private(set) var stopCount = 0
 
     func sync(
         sound: Bool,
         haptics: Bool,
+        joyCon: Bool,
         isRunning: Bool,
         isPaused: Bool,
         isInBackground: Bool
     ) {
         syncCount += 1
+        lastSyncJoyCon = joyCon
         lastSyncSound = sound
         lastSyncHaptics = haptics
         isPlaying = AmbientAudioPolicy.shouldPlay(
@@ -251,6 +301,12 @@ final class NullAmbientAudio: SessionAmbientAudioPlaying {
             isPaused: isPaused,
             isInBackground: isInBackground
         )
+    }
+
+    /// Test hook: pretend these Joy-Cons are paired.
+    func setPlan(_ plan: JoyConTapper.Plan) {
+        joyConPlan = plan
+        onJoyConPlanChange?(plan)
     }
 
     func stop(fade: Bool) {

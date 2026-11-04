@@ -33,6 +33,10 @@ final class SessionViewModel: ObservableObject {
     /// Opt-in local ambient pad during sessions (bundled only — no streaming).
     @Published var ambientMusicEnabled: Bool = false
     @Published var hapticTicksEnabled: Bool = false
+    /// Opt-in: paired Joy-Cons play the taps.
+    @Published var joyConEnabled: Bool = false
+    @Published private(set) var joyConPlan = JoyConTapper.Plan()
+    var joyConStatus: String { JoyConTapper.status(joyConPlan) }
     /// System denied notifications while toggle is on (Still honesty).
     @Published private(set) var sessionEndAlertsDenied: Bool = false
     /// Brief post-session message for wellness micro-feedback (cleared by UI).
@@ -212,6 +216,10 @@ final class SessionViewModel: ObservableObject {
         sessionRemindersEnabled = AppPreferences.sessionRemindersEnabled(defaults: defaults)
         ambientMusicEnabled = AppPreferences.ambientMusicEnabled(defaults: defaults)
         hapticTicksEnabled = AppPreferences.hapticTicksEnabled(defaults: defaults)
+        joyConEnabled = AppPreferences.joyConEnabled(defaults: defaults)
+        joyConPlan = self.ambientAudio.joyConPlan
+        self.ambientAudio.onJoyConPlanChange = { [weak self] plan in self?.joyConPlan = plan }
+        if joyConEnabled { syncAmbientAudio() }
         // Off → resolved (no schedule). On → wait for fetch before any schedule.
         sessionEndAlertsAuthResolved = !sessionEndAlertsEnabled
         // Cold launch: hydrate denied before BG schedule (async on device)
@@ -972,11 +980,19 @@ final class SessionViewModel: ObservableObject {
         syncAmbientAudio()
     }
 
+    /// Opt-in: paired Joy-Cons play the taps. The phone keeps any side they miss.
+    func setJoyConEnabled(_ enabled: Bool) {
+        joyConEnabled = enabled
+        AppPreferences.setJoyConEnabled(enabled, defaults: defaults)
+        syncAmbientAudio()
+    }
+
     /// Keep optional ambience in sync with session / scene (never required for stim).
     private func syncAmbientAudio() {
         ambientAudio.sync(
             sound: ambientMusicEnabled,
             haptics: hapticTicksEnabled,
+            joyCon: joyConEnabled,
             isRunning: isRunning,
             isPaused: isPaused,
             isInBackground: isInBackground

@@ -66,8 +66,11 @@
 		B10000000000000000000028 /* SoftStart.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000028 /* SoftStart.swift */; };
 		B2000000000000000000000A /* SoftStartTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SoftStartTests.swift */; };
 		B2000000000000000000000D /* BilateralTicksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* BilateralTicksTests.swift */; };
+		B20000000000000000000010 /* JoyConTapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* JoyConTapperTests.swift */; };
 		B2000000000000000000000E /* LinkQualityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* LinkQualityTests.swift */; };
 		B10000000000000000000033 /* BilateralTicks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000033 /* BilateralTicks.swift */; };
+		B10000000000000000000040 /* JoyConTapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000040 /* JoyConTapper.swift */; };
+		B10000000000000000000041 /* JoyConHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000041 /* JoyConHaptics.swift */; };
 		B10000000000000000000034 /* LinkQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000034 /* LinkQuality.swift */; };
 		B10000000000000000000060 /* DeviceInfoParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000060 /* DeviceInfoParser.swift */; };
 		B20000000000000000000030 /* DeviceInfoParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* DeviceInfoParserTests.swift */; };
@@ -160,8 +163,11 @@
 		A10000000000000000000028 /* SoftStart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftStart.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* SoftStartTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftStartTests.swift; sourceTree = "<group>"; };
 		A2000000000000000000000D /* BilateralTicksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BilateralTicksTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000010 /* JoyConTapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoyConTapperTests.swift; sourceTree = "<group>"; };
 		A2000000000000000000000E /* LinkQualityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkQualityTests.swift; sourceTree = "<group>"; };
 		A10000000000000000000033 /* BilateralTicks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BilateralTicks.swift; sourceTree = "<group>"; };
+		A10000000000000000000040 /* JoyConTapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoyConTapper.swift; sourceTree = "<group>"; };
+		A10000000000000000000041 /* JoyConHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoyConHaptics.swift; sourceTree = "<group>"; };
 		A10000000000000000000034 /* LinkQuality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkQuality.swift; sourceTree = "<group>"; };
 		A10000000000000000000060 /* DeviceInfoParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfoParser.swift; sourceTree = "<group>"; };
 		A20000000000000000000030 /* DeviceInfoParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfoParserTests.swift; sourceTree = "<group>"; };
@@ -250,6 +256,7 @@
 				A1000000000000000000002F /* BreathPhasePresentation.swift */,
 				A10000000000000000000030 /* AmbientAudioPolicy.swift */,
 				A10000000000000000000033 /* BilateralTicks.swift */,
+				A10000000000000000000040 /* JoyConTapper.swift */,
 				A10000000000000000000034 /* LinkQuality.swift */,
 				A10000000000000000000060 /* DeviceInfoParser.swift */,
 			);
@@ -271,6 +278,7 @@
 				A1000000000000000000002D /* OpenPulseIntentRelay.swift */,
 				A1000000000000000000002E /* SessionReminderScheduler.swift */,
 				A10000000000000000000031 /* SessionAmbientAudio.swift */,
+				A10000000000000000000041 /* JoyConHaptics.swift */,
 				A10000000000000000000021 /* MindfulMinutesStore.swift */,
 			);
 			path = Services;
@@ -332,6 +340,7 @@
 				A20000000000000000000009 /* LiveActivityPresentationTests.swift */,
 				A2000000000000000000000A /* SoftStartTests.swift */,
 				A2000000000000000000000D /* BilateralTicksTests.swift */,
+				A20000000000000000000010 /* JoyConTapperTests.swift */,
 				A2000000000000000000000E /* LinkQualityTests.swift */,
 				A20000000000000000000030 /* DeviceInfoParserTests.swift */,
 				A2000000000000000000000B /* MindfulSessionRangeTests.swift */,
@@ -513,6 +522,8 @@
 				B1000000000000000000002F /* BreathPhasePresentation.swift in Sources */,
 				B10000000000000000000030 /* AmbientAudioPolicy.swift in Sources */,
 				B10000000000000000000033 /* BilateralTicks.swift in Sources */,
+				B10000000000000000000040 /* JoyConTapper.swift in Sources */,
+				B10000000000000000000041 /* JoyConHaptics.swift in Sources */,
 				B10000000000000000000034 /* LinkQuality.swift in Sources */,
 				B10000000000000000000060 /* DeviceInfoParser.swift in Sources */,
 				B10000000000000000000031 /* SessionAmbientAudio.swift in Sources */,
@@ -534,6 +545,7 @@
 				B20000000000000000000009 /* LiveActivityPresentationTests.swift in Sources */,
 				B2000000000000000000000A /* SoftStartTests.swift in Sources */,
 				B2000000000000000000000D /* BilateralTicksTests.swift in Sources */,
+				B20000000000000000000010 /* JoyConTapperTests.swift in Sources */,
 				B2000000000000000000000E /* LinkQualityTests.swift in Sources */,
 				B20000000000000000000030 /* DeviceInfoParserTests.swift in Sources */,
 				B2000000000000000000000B /* MindfulSessionRangeTests.swift in Sources */,

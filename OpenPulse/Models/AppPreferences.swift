@@ -13,6 +13,7 @@ enum AppPreferences {
     static let sessionReminderEveningHourKey = "prefs.sessionReminderEveningHour"
     static let ambientMusicEnabledKey = "prefs.ambientMusicEnabled"
     static let hapticTicksEnabledKey = "prefs.hapticTicksEnabled"
+    static let joyConEnabledKey = "prefs.joyConEnabled"
 
     static func hasCompletedOnboarding(defaults: UserDefaults = .standard) -> Bool {
         defaults.bool(forKey: onboardingCompletedKey)
@@ -131,6 +132,15 @@ enum AppPreferences {
 
     static func setHapticTicksEnabled(_ enabled: Bool, defaults: UserDefaults = .standard) {
         defaults.set(enabled, forKey: hapticTicksEnabledKey)
+    }
+
+    /// Opt-in: paired Joy-Cons play the left and right taps. Off by default.
+    static func joyConEnabled(defaults: UserDefaults = .standard) -> Bool {
+        defaults.bool(forKey: joyConEnabledKey)
+    }
+
+    static func setJoyConEnabled(_ enabled: Bool, defaults: UserDefaults = .standard) {
+        defaults.set(enabled, forKey: joyConEnabledKey)
     }
 }
 
