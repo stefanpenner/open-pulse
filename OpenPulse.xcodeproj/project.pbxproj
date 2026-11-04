@@ -18,6 +18,7 @@
 		B10000000000000000000009 /* ActionButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000009 /* ActionButtonView.swift */; };
 		B1000000000000000000000A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000A /* Theme.swift */; };
 		B1000000000000000000000B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000B /* Assets.xcassets */; };
+		B10000000000000000000099 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000099 /* PrivacyInfo.xcprivacy */; };
 		B1000000000000000000000C /* StimulationMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000D /* StimulationMode.swift */; };
 		B1000000000000000000000D /* ModeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000E /* ModeEngine.swift */; };
 		B1000000000000000000000F /* BreathingGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* BreathingGuideView.swift */; };
@@ -66,17 +67,11 @@
 		B10000000000000000000028 /* SoftStart.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000028 /* SoftStart.swift */; };
 		B2000000000000000000000A /* SoftStartTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SoftStartTests.swift */; };
 		B2000000000000000000000D /* BilateralTicksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* BilateralTicksTests.swift */; };
-		B20000000000000000000010 /* JoyConTapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* JoyConTapperTests.swift */; };
-		B20000000000000000000051 /* JoyConViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000051 /* JoyConViewModelTests.swift */; };
-		B20000000000000000000050 /* JoyConRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000050 /* JoyConRoutingTests.swift */; };
 		B20000000000000000000040 /* DeviceModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000040 /* DeviceModeTests.swift */; };
 		B20000000000000000000041 /* DeviceModeSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000041 /* DeviceModeSessionTests.swift */; };
 		B10000000000000000000070 /* DeviceMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000070 /* DeviceMode.swift */; };
 		B2000000000000000000000E /* LinkQualityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* LinkQualityTests.swift */; };
 		B10000000000000000000033 /* BilateralTicks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000033 /* BilateralTicks.swift */; };
-		B10000000000000000000040 /* JoyConTapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000040 /* JoyConTapper.swift */; };
-		B10000000000000000000080 /* JoyConPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000080 /* JoyConPairing.swift */; };
-		B10000000000000000000041 /* JoyConHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000041 /* JoyConHaptics.swift */; };
 		B10000000000000000000034 /* LinkQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000034 /* LinkQuality.swift */; };
 		B10000000000000000000060 /* DeviceInfoParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000060 /* DeviceInfoParser.swift */; };
 		B20000000000000000000030 /* DeviceInfoParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* DeviceInfoParserTests.swift */; };
@@ -121,6 +116,7 @@
 		A1000000000000000000000A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		A1000000000000000000000B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1000000000000000000000C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000099 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A1000000000000000000000D /* StimulationMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StimulationMode.swift; sourceTree = "<group>"; };
 		A1000000000000000000000E /* ModeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngine.swift; sourceTree = "<group>"; };
 		A10000000000000000000010 /* BreathingGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingGuideView.swift; sourceTree = "<group>"; };
@@ -169,17 +165,11 @@
 		A10000000000000000000028 /* SoftStart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftStart.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* SoftStartTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftStartTests.swift; sourceTree = "<group>"; };
 		A2000000000000000000000D /* BilateralTicksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BilateralTicksTests.swift; sourceTree = "<group>"; };
-		A20000000000000000000010 /* JoyConTapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoyConTapperTests.swift; sourceTree = "<group>"; };
-		A20000000000000000000051 /* JoyConViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoyConViewModelTests.swift; sourceTree = "<group>"; };
-		A20000000000000000000050 /* JoyConRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoyConRoutingTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000040 /* DeviceModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceModeTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000041 /* DeviceModeSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceModeSessionTests.swift; sourceTree = "<group>"; };
 		A10000000000000000000070 /* DeviceMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMode.swift; sourceTree = "<group>"; };
 		A2000000000000000000000E /* LinkQualityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkQualityTests.swift; sourceTree = "<group>"; };
 		A10000000000000000000033 /* BilateralTicks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BilateralTicks.swift; sourceTree = "<group>"; };
-		A10000000000000000000040 /* JoyConTapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoyConTapper.swift; sourceTree = "<group>"; };
-		A10000000000000000000080 /* JoyConPairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoyConPairing.swift; sourceTree = "<group>"; };
-		A10000000000000000000041 /* JoyConHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoyConHaptics.swift; sourceTree = "<group>"; };
 		A10000000000000000000034 /* LinkQuality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkQuality.swift; sourceTree = "<group>"; };
 		A10000000000000000000060 /* DeviceInfoParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfoParser.swift; sourceTree = "<group>"; };
 		A20000000000000000000030 /* DeviceInfoParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfoParserTests.swift; sourceTree = "<group>"; };
@@ -234,6 +224,7 @@
 			children = (
 				A10000000000000000000001 /* OpenPulseApp.swift */,
 				A1000000000000000000000C /* Info.plist */,
+				A10000000000000000000099 /* PrivacyInfo.xcprivacy */,
 				A1000000000000000000000B /* Assets.xcassets */,
 				C10000000000000000000009 /* Resources */,
 				C10000000000000000000003 /* Models */,
@@ -268,8 +259,6 @@
 				A1000000000000000000002F /* BreathPhasePresentation.swift */,
 				A10000000000000000000030 /* AmbientAudioPolicy.swift */,
 				A10000000000000000000033 /* BilateralTicks.swift */,
-				A10000000000000000000040 /* JoyConTapper.swift */,
-				A10000000000000000000080 /* JoyConPairing.swift */,
 				A10000000000000000000070 /* DeviceMode.swift */,
 				A10000000000000000000034 /* LinkQuality.swift */,
 				A10000000000000000000060 /* DeviceInfoParser.swift */,
@@ -292,7 +281,6 @@
 				A1000000000000000000002D /* OpenPulseIntentRelay.swift */,
 				A1000000000000000000002E /* SessionReminderScheduler.swift */,
 				A10000000000000000000031 /* SessionAmbientAudio.swift */,
-				A10000000000000000000041 /* JoyConHaptics.swift */,
 				A10000000000000000000021 /* MindfulMinutesStore.swift */,
 			);
 			path = Services;
@@ -354,9 +342,6 @@
 				A20000000000000000000009 /* LiveActivityPresentationTests.swift */,
 				A2000000000000000000000A /* SoftStartTests.swift */,
 				A2000000000000000000000D /* BilateralTicksTests.swift */,
-				A20000000000000000000010 /* JoyConTapperTests.swift */,
-				A20000000000000000000051 /* JoyConViewModelTests.swift */,
-				A20000000000000000000050 /* JoyConRoutingTests.swift */,
 				A20000000000000000000040 /* DeviceModeTests.swift */,
 				A20000000000000000000041 /* DeviceModeSessionTests.swift */,
 				A2000000000000000000000E /* LinkQualityTests.swift */,
@@ -478,6 +463,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B1000000000000000000000B /* Assets.xcassets in Resources */,
+				B10000000000000000000099 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -540,9 +526,6 @@
 				B1000000000000000000002F /* BreathPhasePresentation.swift in Sources */,
 				B10000000000000000000030 /* AmbientAudioPolicy.swift in Sources */,
 				B10000000000000000000033 /* BilateralTicks.swift in Sources */,
-				B10000000000000000000040 /* JoyConTapper.swift in Sources */,
-				B10000000000000000000080 /* JoyConPairing.swift in Sources */,
-				B10000000000000000000041 /* JoyConHaptics.swift in Sources */,
 				B10000000000000000000070 /* DeviceMode.swift in Sources */,
 				B10000000000000000000034 /* LinkQuality.swift in Sources */,
 				B10000000000000000000060 /* DeviceInfoParser.swift in Sources */,
@@ -565,9 +548,6 @@
 				B20000000000000000000009 /* LiveActivityPresentationTests.swift in Sources */,
 				B2000000000000000000000A /* SoftStartTests.swift in Sources */,
 				B2000000000000000000000D /* BilateralTicksTests.swift in Sources */,
-				B20000000000000000000010 /* JoyConTapperTests.swift in Sources */,
-				B20000000000000000000051 /* JoyConViewModelTests.swift in Sources */,
-				B20000000000000000000050 /* JoyConRoutingTests.swift in Sources */,
 				B20000000000000000000040 /* DeviceModeTests.swift in Sources */,
 				B20000000000000000000041 /* DeviceModeSessionTests.swift in Sources */,
 				B2000000000000000000000E /* LinkQualityTests.swift in Sources */,
@@ -765,7 +745,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -800,7 +780,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -821,7 +801,7 @@
 				DEVELOPMENT_TEAM = T93925EZUT;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulseTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -843,7 +823,7 @@
 				DEVELOPMENT_TEAM = T93925EZUT;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulseTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -874,7 +854,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse.OpenPulseWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -905,7 +885,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.stefanpenner.OpenPulse.OpenPulseWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

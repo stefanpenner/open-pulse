@@ -115,7 +115,7 @@ enum SessionEndNotifier {
         center.getNotificationSettings { settings in
             switch settings.authorizationStatus {
             case .notDetermined:
-                center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
                     deliverOnMain(granted, to: completion)
                 }
             case .authorized, .provisional, .ephemeral:
