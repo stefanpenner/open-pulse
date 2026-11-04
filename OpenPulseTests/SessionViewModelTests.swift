@@ -910,9 +910,10 @@ struct StartGateTests {
         mock.becomeReady()
         #expect(vm.isRunning, "short blip reconnect keeps running")
         #expect(vm.offlineSince == nil)
-        // Lead-0 ACK clears durable pending after reprogram
+        // A running off ACK must not drop the durable flag.
         mock.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
+        #expect(vm.pendingDeactivate)
+        #expect(vm.isRunning)
     }
 
     @Test("Long offline auto-pauses and arms durable off")
@@ -1154,6 +1155,7 @@ struct StartGateTests {
         let vm = SessionViewModel(defaults: d, ble: mock)
         #expect(vm.isPaused)
         #expect(!vm.isRunning)
+        #expect(vm.pendingDeactivate, "paused restore forces the off flag")
         #expect(vm.remainingSeconds == 450 || abs(vm.remainingSeconds - 450) <= 2,
                 "remaining=\(vm.remainingSeconds) expected~450 (freeze at lastAlive)")
         #expect(vm.completionBanner == nil)
@@ -1507,9 +1509,9 @@ struct BackgroundSafetyTests {
         // Soft-start first start (strength 5 → initial 3)
         #expect(spy.commands.contains("3\n"), "Custom soft-starts, cmds=\(spy.commands)")
         #expect(!spy.commands.contains("5\n") || spy.commands.last == "5\n")
-        // Pending clears only after lead-0 ACK (not optimistically)
+        #expect(vm.pendingDeactivate, "start arms off before the channel write")
         spy.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
+        #expect(vm.pendingDeactivate, "running off ACK keeps the flag")
         #expect(vm.modeStatus.contains("Easing") || vm.effectiveStrength == 3)
     }
 
@@ -1549,25 +1551,29 @@ struct BackgroundSafetyTests {
         #expect(vm.isRunning)
     }
 
-    @Test("Start keeps sticky pending until lead-0 ACK")
-    @MainActor func startClearsPendingAfterLeadOffAck() {
-        let suiteName = "test.startclear.\(UUID().uuidString)"
+    @Test("Running lead-0 ACK keeps durable off across process death")
+    @MainActor func runningOffAckKeepsPendingAcrossDeath() {
+        let suiteName = "test.deadrun.\(UUID().uuidString)"
         let d = UserDefaults(suiteName: suiteName)!
-        AppPreferences.setPendingDeactivate(true, defaults: d)
         let (vm, spy) = makeVM(defaults: d)
-        #expect(vm.pendingDeactivate)
-        vm.selectMode(.custom)
+        #expect(!vm.pendingDeactivate)
+        vm.selectMode(.stressRelief)
+        vm.strength = 5
         vm.ble.isConnected = true
         vm.ble.isReady = true
         vm.start()
         #expect(vm.isRunning)
         #expect(spy.commands.first == "0\n")
-        // Durable off stays until lead-0 confirms (process death cannot drop sticky off)
-        #expect(vm.pendingDeactivate)
-        #expect(AppPreferences.pendingDeactivate(defaults: d) == true)
+        #expect(vm.pendingDeactivate, "start arms off before a program can apply")
+        #expect(AppPreferences.pendingDeactivate(defaults: d))
         spy.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
-        #expect(AppPreferences.pendingDeactivate(defaults: d) == false)
+        #expect(vm.isRunning)
+        #expect(vm.pendingDeactivate, "running off ACK must not clear the flag")
+        #expect(AppPreferences.pendingDeactivate(defaults: d))
+
+        let (vm2, _) = makeVM(defaults: d)
+        #expect(vm2.pendingDeactivate, "a dead run must keep the off flag")
+        #expect(vm2.isRunning)
     }
 
     @Test("Calm start enqueues absolute off only")
@@ -1576,8 +1582,9 @@ struct BackgroundSafetyTests {
         simulateRunning(vm, mode: .calm, strength: 5)
         #expect(spy.commands == ["0\n"] || spy.commands.first == "0\n")
         #expect(!vm.stimulationActive)
+        #expect(vm.pendingDeactivate, "calm start arms off before stim")
         spy.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
+        #expect(vm.pendingDeactivate)
         #expect(vm.modeStatus == "Inhale")
         #expect(!vm.modeStatus.contains("Paused"))
     }
@@ -1747,13 +1754,13 @@ struct BackgroundSafetyTests {
         vm2.ble.isReady = true
         vm2.flushPendingDeactivateIfNeeded()
         #expect(spy.commands.contains("0\n"))
-        // Durable flag stays true until lead-0 ACK on Start
         #expect(vm2.pendingDeactivate)
         vm2.selectMode(.stressRelief)
         vm2.start()
-        #expect(vm2.pendingDeactivate, "still sticky until off ACK")
+        #expect(vm2.pendingDeactivate, "start keeps the off flag")
         spy.completeWrite("0\n", success: true)
-        #expect(!vm2.pendingDeactivate)
+        #expect(vm2.pendingDeactivate, "running off ACK keeps the flag")
+        #expect(vm2.isRunning)
     }
 
     @Test("Custom channel survives process relaunch")
@@ -1863,13 +1870,15 @@ struct BackgroundSafetyTests {
         vm.selectMode(.stressRelief)
         vm.start()
         #expect(vm.isRunning)
-        // No sticky pending — ACK of lead-0 is session program, not idle off confirm haptic
+        #expect(vm.pendingDeactivate, "start arms off before the program")
+        // Lead-0 of a run is not an idle off confirm.
         spy.completeWrite("0\n", success: true)
+        #expect(vm.pendingDeactivate)
         #expect(vm.deviceOffConfirmedToken == tokenBefore, "fresh Start lead-0 must not fire off haptic")
     }
 
-    @Test("Start with sticky pending: lead-0 ACK clears durable off")
-    @MainActor func startLeadOffClearsStickyPending() {
+    @Test("Start with sticky pending: lead-0 ACK keeps durable off")
+    @MainActor func startLeadOffKeepsStickyPending() {
         let suiteName = "test.offtoken.sticky.\(UUID().uuidString)"
         let d = UserDefaults(suiteName: suiteName)!
         AppPreferences.setPendingDeactivate(true, defaults: d)
@@ -1879,9 +1888,10 @@ struct BackgroundSafetyTests {
         vm.ble.isReady = true
         vm.selectMode(.stressRelief)
         vm.start()
-        #expect(vm.pendingDeactivate, "optimistic clear removed — still sticky")
+        #expect(vm.pendingDeactivate, "start keeps the off flag")
         spy.completeWrite("0\n", success: true)
-        #expect(!vm.pendingDeactivate)
+        #expect(vm.pendingDeactivate, "running off ACK keeps the flag")
+        #expect(vm.isRunning)
     }
 
     @Test("Off ACK while paused clears pending (LA can stop saying stopping)")
@@ -2238,6 +2248,9 @@ struct SessionRestoreTests {
         #expect(vm.remainingSeconds <= 572)
         // Offline restore never claims stim until BLE is ready
         #expect(!vm.stimulationActive)
+        // Disk flag was false. A running restore must arm it before reprogram.
+        #expect(vm.pendingDeactivate)
+        #expect(AppPreferences.pendingDeactivate(defaults: d))
     }
 
     @Test("Sleep restore mid-fade keeps comfort floor and phase anchor")

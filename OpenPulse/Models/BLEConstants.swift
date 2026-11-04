@@ -26,8 +26,6 @@ enum BLEConstants {
 
     /// Hard ceiling for any session (wellness safety / battery comfort).
     static let maxSessionMinutes = 60
-    /// Battery % at/below which UI warns the user.
-    static let lowBatteryThresholdPercent = 15
 
     // Commands (verified on device)
     // 0 = off, A = left only, B = ramp-up to intensity, C = right only, D = bilateral
@@ -41,8 +39,7 @@ enum BLEConstants {
 
     /// Clamps to device range 1…9 before formatting.
     static func strengthCommand(_ level: Int) -> String {
-        let clamped = max(1, min(9, level))
-        return "\(clamped)\n"
+        "\(StrengthPresentation.clamp(level))\n"
     }
 
     // Battery calculation

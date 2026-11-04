@@ -12,10 +12,9 @@ enum PendingOffPresentation {
 
 /// Pure session/hardware safety decisions (testable without CoreBluetooth).
 enum SessionSafety {
-    /// Whether a confirmed write should clear sticky durable pending-off.
-    /// - Idle/paused: clear only when off ACK and no program traffic still queued.
-    /// - Running: start/resume lead-0 may clear sticky off once off is confirmed
-    ///   (even if strength/channel still queued) — never clear optimistically before ACK.
+    /// Whether a confirmed write should clear the durable off flag.
+    /// Idle or paused: clear only when off succeeded and no program write remains.
+    /// Running: never clear. The next tick can send stim after a rest off.
     static func shouldClearPendingDeactivate(
         command: String,
         isRunning: Bool,
@@ -23,8 +22,7 @@ enum SessionSafety {
     ) -> Bool {
         guard isDeactivateCommand(command) else { return false }
         if isRunning {
-            // Lead-0 of active session program — durable off superseded once off lands
-            return true
+            return false
         }
         // Status queries may still be queued; only program traffic blocks clear.
         return !hasPendingProgramWrites

@@ -36,20 +36,20 @@ enum SoftStart {
 
     /// Opening strength for a soft-start (at least 2 below target when target ≥ 3).
     static func initialStrength(target: Int) -> Int {
-        let t = max(1, min(9, target))
+        let t = StrengthPresentation.clamp(target)
         guard t >= 3 else { return t }
         return t - 2
     }
 
     /// Whether soft-start is needed (target is high enough to ease into).
     static func isNeeded(target: Int) -> Bool {
-        let t = max(1, min(9, target))
+        let t = StrengthPresentation.clamp(target)
         return initialStrength(target: t) < t
     }
 
     /// Strength at session elapsed (clamped to target). Pure catch-up for restore.
     static func strength(atElapsed elapsed: Int, target: Int) -> Int {
-        let t = max(1, min(9, target))
+        let t = StrengthPresentation.clamp(target)
         let initial = initialStrength(target: t)
         if initial >= t { return t }
         let e = max(0, elapsed)
@@ -59,7 +59,7 @@ enum SoftStart {
 
     /// Soft-start finished for this elapsed / target.
     static func isComplete(elapsed: Int, target: Int) -> Bool {
-        strength(atElapsed: elapsed, target: target) >= max(1, min(9, target))
+        strength(atElapsed: elapsed, target: target) >= StrengthPresentation.clamp(target)
     }
 
 }

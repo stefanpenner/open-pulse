@@ -40,18 +40,18 @@ struct SessionSafetyTests {
         ))
     }
 
-    @Test("Off ACK while session running clears (start/resume lead-0 supersedes sticky off)")
-    func clearWhileRunningLeadOff() {
-        #expect(SessionSafety.shouldClearPendingDeactivate(
+    @Test("Off ACK while session running does not clear")
+    func noClearWhileRunning() {
+        #expect(!SessionSafety.shouldClearPendingDeactivate(
             command: "0\n",
             isRunning: true,
             hasPendingProgramWrites: true
-        ), "lead-0 ACK clears durable off even if strength still queued")
-        #expect(SessionSafety.shouldClearPendingDeactivate(
+        ), "a queued program can still land after the off ACK")
+        #expect(!SessionSafety.shouldClearPendingDeactivate(
             command: "0\n",
             isRunning: true,
             hasPendingProgramWrites: false
-        ))
+        ), "the next tick can send stim after a rest off")
     }
 
     @Test("Empty pack mid-session should pause when confirmed and not charging")

@@ -33,7 +33,7 @@ enum AppPreferences {
     }
 
     static func saveLastStrength(_ strength: Int, defaults: UserDefaults = .standard) {
-        let clamped = max(1, min(9, strength))
+        let clamped = StrengthPresentation.clamp(strength)
         defaults.set(clamped, forKey: lastStrengthKey)
     }
 

@@ -13,4 +13,10 @@ enum BreathPhasePresentation {
         case .rest: return "Rest"
         }
     }
+
+    /// Circle word. Rest is a quiet gap, so the circle stays blank.
+    static func guideLabel(phase: BreathingPhase?) -> String {
+        if case .rest = phase { return "" }
+        return statusText(phase: phase) ?? ""
+    }
 }

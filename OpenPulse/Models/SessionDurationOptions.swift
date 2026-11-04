@@ -11,7 +11,7 @@ enum SessionDurationOptions {
     /// Active intensity VoiceOver — honest about mid soft ease-in.
     static func activeIntensityAccessibility(effective: Int, target: Int) -> String {
         if effective <= 0 { return "Intensity off" }
-        let t = max(1, min(9, target))
+        let t = StrengthPresentation.clamp(target)
         let e = max(0, min(9, effective))
         if e < t {
             return "Active intensity \(e), easing in toward \(t)"

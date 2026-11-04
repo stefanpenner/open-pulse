@@ -90,8 +90,8 @@ enum BatteryPresentation {
         percent <= 0
     }
 
-    /// Matches `BLEConstants.lowBatteryThresholdPercent` — local so widget target
-    /// can compile presentation without CoreBluetooth BLEConstants.
+    /// Warn at or below this percent.
+    /// The widget compiles this file and does not import CoreBluetooth.
     static let lowBatteryThresholdPercent = 15
 
     /// Low warn unless we *know* the pack is charging (`true` suppresses; `nil`/false still warn).

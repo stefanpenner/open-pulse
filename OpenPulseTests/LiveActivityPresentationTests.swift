@@ -949,6 +949,11 @@ struct LiveActivityPresentationTests {
         #expect(BreathPhasePresentation.statusText(phase: .exhale(progress: 0.8)) == "Exhale")
         #expect(BreathPhasePresentation.statusText(phase: .rest(progress: 0.1)) == "Rest")
         #expect(BreathPhasePresentation.statusText(phase: nil) == nil)
+        #expect(BreathPhasePresentation.guideLabel(phase: .inhale(progress: 0.2)) == "Inhale")
+        #expect(BreathPhasePresentation.guideLabel(phase: .hold(progress: 0.5)) == "Hold")
+        #expect(BreathPhasePresentation.guideLabel(phase: .exhale(progress: 0.8)) == "Exhale")
+        #expect(BreathPhasePresentation.guideLabel(phase: .rest(progress: 0.1)) == "")
+        #expect(BreathPhasePresentation.guideLabel(phase: nil) == "")
     }
 
     @Test("Pending off flushes on ready when idle")

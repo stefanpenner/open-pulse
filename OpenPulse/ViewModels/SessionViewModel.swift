@@ -155,8 +155,9 @@ final class SessionViewModel: ObservableObject {
     /// False until disk restore finishes. The ready publisher emits on subscribe.
     private var acceptsLinkReady = false
 
-    /// When session ends/pauses while disconnected, send deactivate on next ready.
-    /// Backed by UserDefaults so process death cannot leave hardware stim on.
+    /// Durable send-off flag. True for the whole run, and after stop or pause.
+    /// Disk keeps it so the next launch can send off. A dead process cannot send.
+    /// An idle or paused off ACK clears it when no program write remains.
     /// `@Published` so PendingOffBanner dismisses as soon as off ACK lands.
     @Published private(set) var pendingDeactivate = false {
         didSet {
@@ -254,7 +255,7 @@ final class SessionViewModel: ObservableObject {
 
         ble.onWriteSucceeded = { [weak self] cmd in
             guard let self else { return }
-            // Confirmed off while idle — clear sticky pending even if status Q/u still queued
+            // Idle or paused off ACK. A running off ACK does not clear.
             guard SessionSafety.shouldClearPendingDeactivate(
                 command: cmd,
                 isRunning: self.isRunning,
@@ -622,6 +623,8 @@ final class SessionViewModel: ObservableObject {
         pauseStartDate = nil
         backgroundEntryDate = nil
         lastTickElapsed = nil
+        // Arm before the program. A running off ACK does not clear this flag.
+        pendingDeactivate = true
     }
 
     /// Custom eases in on first start when strength warrants. Other modes stay settled.
@@ -664,7 +667,7 @@ final class SessionViewModel: ObservableObject {
         applyCustomStartStatus()
     }
 
-    /// Pending off stays set until the lead-0 write succeeds.
+    /// The run keeps the off flag. A lead-0 ACK does not clear it.
     private func sendStartProgram(_ commands: [String]) {
         if ble.isReady {
             ble.cancelProgramWrites()
@@ -1145,7 +1148,8 @@ final class SessionViewModel: ObservableObject {
         guard ble.isReady else { return }
         isPaused = false
         isRunning = true
-        // Do not clear pendingDeactivate here — lead-0 ACK clears durable off
+        // Arm the off flag. A lead-0 ACK does not clear it.
+        pendingDeactivate = true
 
         // Accumulate paused duration
         if let pauseStart = pauseStartDate {
@@ -1191,8 +1195,8 @@ final class SessionViewModel: ObservableObject {
     }
 
     /// Send deactivate if a prior stop/pause/expire happened while offline / not ready.
-    /// Idempotent off send while pending. Durable flag clears only on confirmed write success
-    /// (when idle/paused) or Start/Resume reprogram.
+    /// Idempotent off send while pending. The flag clears only on an idle or paused off ACK.
+    /// Start and resume keep the flag.
     func flushPendingDeactivateIfNeeded(linkReady: Bool? = nil) {
         let ready = linkReady ?? ble.isReady
         guard pendingDeactivate, ready else { return }
@@ -1418,7 +1422,7 @@ final class SessionViewModel: ObservableObject {
     }
 
     func setStrength(_ value: Int) {
-        let clamped = max(1, min(9, value))
+        let clamped = StrengthPresentation.clamp(value)
         // Slider release / reassert same value must not pin mid-fade or re-write BLE
         guard clamped != strength else {
             if isRunning || isPaused {
@@ -1556,13 +1560,6 @@ final class SessionViewModel: ObservableObject {
     }
 
     // MARK: - Scene Phase
-
-    func scenePhaseHandler(from oldPhase: Any, to newPhase: Any) {
-        // Import SwiftUI's ScenePhase values via string comparison to avoid
-        // importing SwiftUI in this ViewModel. The caller passes ScenePhase values.
-        scenePhaseTransition(wentToBackground: "\(newPhase)" == "background",
-                             returnedToForeground: "\(oldPhase)" == "background" && "\(newPhase)" != "background")
-    }
 
     func handleBackgroundTransition() {
         scenePhaseTransition(wentToBackground: true, returnedToForeground: false)
@@ -1918,8 +1915,9 @@ final class SessionViewModel: ObservableObject {
             return
         }
 
+        // Arm before the program. A running off ACK does not clear the flag.
+        pendingDeactivate = true
         // Absolute program: leading off then phase (comfort after offline/pause/gap).
-        // Pending off clears only on lead-0 ACK (durable across process death).
         if ready {
             ble.cancelProgramWrites()
             ble.sendCommand(BLEConstants.deactivateCommand)
@@ -2055,13 +2053,13 @@ final class SessionViewModel: ObservableObject {
         guard selectedMode == .sleep else { return }
         let d = defaults
         if d.integer(forKey: PersistKey.phaseLengthSeconds) <= 0 {
-            d.set(max(1, sessionTotalDuration / 5), forKey: PersistKey.phaseLengthSeconds)
+            d.set(SleepEngine.phaseLength(totalDuration: sessionTotalDuration), forKey: PersistKey.phaseLengthSeconds)
         }
     }
 
     /// Track last comfort strength so restore mid-fade cannot re-raise (only on change).
     private func persistComfortStrength(_ value: Int) {
-        let clamped = max(1, min(9, value))
+        let clamped = StrengthPresentation.clamp(value)
         if defaults.integer(forKey: PersistKey.lastComfortStrength) == clamped { return }
         defaults.set(clamped, forKey: PersistKey.lastComfortStrength)
     }
@@ -2279,6 +2277,9 @@ final class SessionViewModel: ObservableObject {
             // Restore running state — recalculate from wall clock
             remainingSeconds = outcome.remainingSeconds
             isRunning = true
+            // Arm even when the disk flag is false and offlineSince is nil.
+            // A clean kill has no offline stamp. The next launch must still send off.
+            pendingDeactivate = true
             sessionTotalDuration = totalDuration
             engine = resolveEngine()
             if var eng = engine {

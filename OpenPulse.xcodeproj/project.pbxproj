@@ -43,7 +43,7 @@
 		B1000000000000000000001F /* SessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001F /* SessionActivityAttributes.swift */; };
 		B30000000000000000000001 /* OpenPulseWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* OpenPulseWidgetBundle.swift */; };
 		B30000000000000000000002 /* SessionLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* SessionLiveActivityWidget.swift */; };
-		B30000000000000000000003 /* SessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* SessionActivityAttributes.swift */; };
+		B30000000000000000000003 /* SessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001F /* SessionActivityAttributes.swift */; };
 		B30000000000000000000005 /* LiveActivityPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000027 /* LiveActivityPresentation.swift */; };
 		B30000000000000000000004 /* OpenPulseWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D30000000000000000000001 /* OpenPulseWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B10000000000000000000020 /* DeviceTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000020 /* DeviceTransport.swift */; };
@@ -128,7 +128,6 @@
 		A1000000000000000000001F /* SessionActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActivityAttributes.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* OpenPulseWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPulseWidgetBundle.swift; sourceTree = "<group>"; };
 		A30000000000000000000002 /* SessionLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLiveActivityWidget.swift; sourceTree = "<group>"; };
-		A30000000000000000000003 /* SessionActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActivityAttributes.swift; sourceTree = "<group>"; };
 		A30000000000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D30000000000000000000001 /* OpenPulseWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OpenPulseWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000001 /* ModeEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeEngineTests.swift; sourceTree = "<group>"; };
@@ -332,7 +331,6 @@
 			children = (
 				A30000000000000000000001 /* OpenPulseWidgetBundle.swift */,
 				A30000000000000000000002 /* SessionLiveActivityWidget.swift */,
-				A30000000000000000000003 /* SessionActivityAttributes.swift */,
 				A30000000000000000000008 /* StartSessionControlWidget.swift */,
 				A30000000000000000000004 /* Info.plist */,
 			);
