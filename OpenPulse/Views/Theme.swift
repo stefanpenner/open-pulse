@@ -67,6 +67,8 @@ enum Theme {
     static let screenTitle = Font.title2.weight(.medium)
     /// Still shell hero mode word (STRESS / SLEEP / …)
     static let heroMode = Font.system(.largeTitle, design: .rounded).weight(.light)
+    /// The running clock, the one large item mid-session.
+    static let heroClock = Font.system(size: 72, weight: .thin, design: .rounded).monospacedDigit()
     /// Active remaining time at accessibility sizes (glasses-off / stim-on).
     static let heroTimerA11y = Font.system(.title, design: .monospaced).weight(.semibold)
 

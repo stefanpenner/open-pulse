@@ -26,6 +26,12 @@ struct ActiveSessionLayout: View {
             reduceMotion ? nil : .easeInOut(duration: 0.3),
             value: vm.pendingDeactivate
         )
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                StatusBarView(vm: vm, ownsGlass: false)
+                    .fixedSize()
+            }
+        }
         .sheet(isPresented: $showingInfo) {
             ModeInfoSheet(mode: vm.selectedMode)
                 .presentationDetents([.medium])
@@ -37,9 +43,7 @@ struct ActiveSessionLayout: View {
     private func activeStack(heroHeight: CGFloat?) -> some View {
         VStack(spacing: 0) {
             // Top: session hero area
-            VStack(spacing: 12) {
-                StatusBarView(vm: vm)
-
+            VStack(spacing: Theme.spaceM) {
                 // Incomplete stop/pause off — not mid-run reconnect (session still active)
                 if PendingOffPresentation.shouldShowBanner(
                     isRunning: vm.isRunning,
@@ -53,9 +57,8 @@ struct ActiveSessionLayout: View {
                 // Still: quiet mode word — soft accent, not rainbow chrome
                 HStack(spacing: 6) {
                     Text(vm.sessionTitle)
-                        .font(isA11yType ? .title3.weight(.medium) : .subheadline.weight(.medium))
+                        .font(Theme.screenTitle)
                         .foregroundStyle(Theme.textPrimary.opacity(0.92))
-                        .tracking(isA11yType ? 0.4 : 0.8)
                         .minimumScaleFactor(isA11yType ? 0.85 : 0.85)
                         .lineLimit(isA11yType ? 3 : 2)
                         .multilineTextAlignment(.center)
@@ -88,6 +91,7 @@ struct ActiveSessionLayout: View {
                 if vm.selectedMode.usesBreathingGuide {
                     BreathingGuideView(vm: vm)
                 } else {
+                    LiveTimerStepper(vm: vm, isHero: true)
                     HeroTimerView(vm: vm)
                 }
 
@@ -112,8 +116,8 @@ struct ActiveSessionLayout: View {
                 StrengthCardView(vm: vm, showIdleComfortHint: false)
 
                 // ±time for all modes (engine already anchors Sleep phase / fade)
-                if vm.isRunning || vm.isPaused {
-                    LiveTimerStepper(vm: vm)
+                if vm.selectedMode.usesBreathingGuide {
+                    LiveTimerStepper(vm: vm, isHero: false)
                 }
 
                 if vm.selectedMode == .custom, vm.isRunning {
@@ -132,15 +136,21 @@ struct ActiveSessionLayout: View {
 
 private struct LiveTimerStepper: View {
     @ObservedObject var vm: SessionViewModel
+    /// True when the clock is the main item on screen.
+    let isHero: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var canDecrease: Bool { vm.remainingSeconds > 60 }
     private var isA11yType: Bool { dynamicTypeSize.isAccessibilitySize }
 
+    private var timeFont: Font {
+        if isA11yType { return Theme.heroTimerA11y }
+        return isHero ? Theme.heroClock : .title3.weight(.semibold).monospacedDigit()
+    }
+
     var body: some View {
-        HStack(spacing: 6) {
-            // Glass on controls only
+        HStack(spacing: isHero ?Theme.spaceL : 6) {
             Button { vm.decreaseTimer() } label: {
                 Image(systemName: "minus")
                     .font(.body.weight(.semibold))
@@ -156,17 +166,11 @@ private struct LiveTimerStepper: View {
 
             // Solid hero time field (readable mid-session)
             Text(vm.displayTime)
-                .font(isA11yType ? Theme.heroTimerA11y : .title3.weight(.semibold).monospacedDigit())
+                .font(timeFont)
                 .foregroundStyle(Theme.textPrimary)
                 .minimumScaleFactor(0.75)
                 .lineLimit(1)
                 .frame(minWidth: isA11yType ? 120 : 88)
-                .padding(.vertical, isA11yType ? 10 : 6)
-                .padding(.horizontal, 12)
-                .wellnessContentSurface(
-                    in: .capsule,
-                    color: Theme.contentHeroFill
-                )
                 .contentTransition(reduceMotion ? .identity : .numericText())
                 .animation(reduceMotion ? nil : .default, value: vm.remainingSeconds)
                 .accessibilityLabel(

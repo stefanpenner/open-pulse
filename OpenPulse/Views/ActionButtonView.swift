@@ -18,15 +18,17 @@ struct ActionButtonView: View {
     var body: some View {
         Group {
             if vm.isRunning || vm.isPaused {
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
                     Button(action: { vm.isPaused ? vm.resume() : vm.pause() }) {
-                        Image(systemName: vm.isPaused ? "play.fill" : "pause.fill")
-                            .font(.title3)
+                        Label(vm.isPaused ? "Resume" : "Pause", systemImage: vm.isPaused ? "play.fill" : "pause.fill")
+                            .font(Theme.buttonLabel)
                             .foregroundStyle(.white)
-                            .frame(width: controlSize, height: controlSize)
-                            .contentShape(Circle())
+                            .frame(maxWidth: .infinity)
+                            .frame(height: controlSize)
+                            .contentShape(Capsule())
                     }
-                    .wellnessGlass(.regular.interactive(), in: .circle)
+                    .opacity(vm.isPaused && !vm.canResume ? 0.55 : 1)
+                    .wellnessGlass(.regular.tint(Theme.accentTeal).interactive(), in: .capsule)
                     .disabled(vm.isPaused && !vm.canResume)
                     .accessibilityLabel(vm.isPaused ? "Resume session" : "Pause session")
                     .accessibilityHint(vm.isPaused && !vm.canResume ? "Waiting for device connection" : "")

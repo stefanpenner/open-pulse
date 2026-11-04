@@ -31,7 +31,7 @@ struct HeroTimerView: View {
                     .accessibilityLabel(status)
             }
 
-            // Progress bar — time lives on LiveTimerStepper (single clock hierarchy)
+            // Progress bar — the clock is LiveTimerStepper above
             GeometryReader { geo in
                 Capsule()
                     .fill(Color.white.opacity(0.1))
@@ -60,11 +60,5 @@ struct HeroTimerView: View {
             .accessibilityValue("\(Int((vm.progress * 100).rounded())) percent complete")
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 16)
-        // Solid content field — glass reserved for ± / Start controls
-        .wellnessContentSurface(
-            in: .rect(cornerRadius: Theme.cornerCard),
-            color: Theme.contentHeroFill
-        )
     }
 }
