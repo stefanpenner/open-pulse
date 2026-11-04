@@ -12,59 +12,53 @@ private struct ConnectionChipTransition: ViewModifier {
     }
 }
 
+/// A capsule of glass, or bare padding when a toolbar draws the glass.
+private struct StatusChrome: ViewModifier {
+    let ownsGlass: Bool
+    func body(content: Content) -> some View {
+        if ownsGlass {
+            content
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .wellnessGlass(.regular, in: .capsule)
+        } else {
+            content.padding(.horizontal, 8)
+        }
+    }
+}
+
 struct StatusBarView: View {
     @ObservedObject var vm: SessionViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// When true, connection empty state owns the link story — chip would double VO/copy.
-    var hideConnectionChip: Bool = false
-
-    private var showsBattery: Bool { vm.ble.batteryPercentage != nil }
-    private var showsConnection: Bool { !hideConnectionChip }
-    private var isVisible: Bool { showsConnection || showsBattery }
+    /// False inside a toolbar, which draws its own glass.
+    var ownsGlass: Bool = true
 
     var body: some View {
-        Group {
-            if isVisible {
-                HStack(spacing: 12) {
-                    if showsConnection {
-                        connectionControl
-                            .animation(
-                                reduceMotion ? nil : .easeInOut(duration: 0.3),
-                                value: vm.ble.isConnected
-                            )
-                            .animation(
-                                reduceMotion ? nil : .easeInOut(duration: 0.3),
-                                value: vm.ble.isReady
-                            )
-                            .animation(
-                                reduceMotion ? nil : .easeInOut(duration: 0.3),
-                                value: vm.ble.isBluetoothOff
-                            )
-                    }
+        HStack(spacing: 12) {
+            connectionControl
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: vm.ble.isConnected)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: vm.ble.isReady)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: vm.ble.isBluetoothOff)
 
-                    Spacer(minLength: 0)
+            Spacer(minLength: 0)
 
-                    if vm.ble.isReady, let quality = vm.ble.linkQuality {
-                        linkInfo(quality)
-                    }
-
-                    if let pct = vm.ble.batteryPercentage {
-                        batteryInfo(pct)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .wellnessGlass(.regular, in: .capsule)
-                .sensoryFeedback(trigger: vm.ble.isReady) { old, new in
-                    guard !old && new else { return nil }
-                    return reduceMotion ? .impact(weight: .light) : .success
-                }
-                .sensoryFeedback(trigger: vm.ble.isConnected) { old, new in
-                    guard old && !new else { return nil }
-                    return reduceMotion ? .impact(weight: .light) : .warning
-                }
+            if vm.ble.isReady, let quality = vm.ble.linkQuality {
+                linkInfo(quality)
             }
+
+            if let pct = vm.ble.batteryPercentage {
+                batteryInfo(pct)
+            }
+        }
+        .modifier(StatusChrome(ownsGlass: ownsGlass))
+        .sensoryFeedback(trigger: vm.ble.isReady) { old, new in
+            guard !old && new else { return nil }
+            return reduceMotion ? .impact(weight: .light) : .success
+        }
+        .sensoryFeedback(trigger: vm.ble.isConnected) { old, new in
+            guard old && !new else { return nil }
+            return reduceMotion ? .impact(weight: .light) : .warning
         }
     }
 

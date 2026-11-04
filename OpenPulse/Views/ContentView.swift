@@ -1,13 +1,13 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var vm = SessionViewModel()
+    @StateObject private var vm = UIFixture.current?.makeViewModel() ?? SessionViewModel()
     @State private var showOnboarding: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        _showOnboarding = State(initialValue: !AppPreferences.hasCompletedOnboarding())
+        _showOnboarding = State(initialValue: UIFixture.current == nil && !AppPreferences.hasCompletedOnboarding())
     }
 
     private var isActive: Bool { vm.isRunning || vm.isPaused }
@@ -20,36 +20,38 @@ struct ContentView: View {
     }
 
     var body: some View {
-        ZStack {
-            Theme.backgroundGradient
-                .ignoresSafeArea()
+        NavigationStack {
+            ZStack {
+                Theme.backgroundGradient
+                    .ignoresSafeArea()
 
-            // Soft mode-tinted bloom — Tide Glass: depth without sugar-high gloss
-            RadialGradient(
-                colors: [accentColor.opacity(Theme.modeBloomOpacity), .clear],
-                center: .top,
-                startRadius: 40,
-                endRadius: 420
-            )
-            .ignoresSafeArea()
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: vm.selectedMode)
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: vm.selectedFeeling)
-
-            GlassEffectContainer {
-                Group {
-                    if isActive {
-                        sessionTransition(ActiveSessionLayout(vm: vm))
-                    } else {
-                        sessionTransition(IdleSessionLayout(vm: vm))
-                    }
-                }
-                .padding(.horizontal, Theme.spaceL)
-                .padding(.top, Theme.spaceS)
-                .padding(.bottom, Theme.spaceXL + 4)
-                .animation(
-                    reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.15),
-                    value: isActive
+                // Soft mode-tinted bloom — Tide Glass: depth without sugar-high gloss
+                RadialGradient(
+                    colors: [accentColor.opacity(Theme.modeBloomOpacity), .clear],
+                    center: .top,
+                    startRadius: 40,
+                    endRadius: 420
                 )
+                .ignoresSafeArea()
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: vm.selectedMode)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: vm.selectedFeeling)
+
+                GlassEffectContainer {
+                    Group {
+                        if isActive {
+                            sessionTransition(ActiveSessionLayout(vm: vm))
+                        } else {
+                            sessionTransition(IdleSessionLayout(vm: vm))
+                        }
+                    }
+                    .padding(.horizontal, Theme.spaceL)
+                    .padding(.top, Theme.spaceS)
+                    .padding(.bottom, Theme.spaceXL + 4)
+                    .animation(
+                        reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.15),
+                        value: isActive
+                    )
+                }
             }
         }
         .preferredColorScheme(.dark)

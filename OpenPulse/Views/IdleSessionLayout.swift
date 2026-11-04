@@ -21,27 +21,6 @@ struct IdleSessionLayout: View {
         return vm.selectedMode.accentColor
     }
 
-    /// Quiet logbook line — always present for VoiceOver / hierarchy (never blank strip).
-    private var logbookWhisperText: String {
-        if vm.minutesToday > 0 {
-            return "\(vm.minutesToday) min today"
-        }
-        if vm.ble.isReady && vm.recentSessions.isEmpty {
-            return "Ready for a short session"
-        }
-        if !vm.recentSessions.isEmpty {
-            let week = SessionHistory.minutesThisWeek(defaults: vm.defaults)
-            return "\(week) min this week"
-        }
-        if vm.ble.isBluetoothOff {
-            return "Turn on Bluetooth to begin"
-        }
-        if !vm.ble.isConnected {
-            return "Looking for your Pulsetto"
-        }
-        return "Connecting…"
-    }
-
     var body: some View {
         VStack(spacing: Theme.spaceM) {
             connection
@@ -49,9 +28,9 @@ struct IdleSessionLayout: View {
             durationChoices
             startControl
             strengthDisclosure
-            logbook
             wellnessLine
         }
+        .toolbar { toolbarContent }
         .animation(
             reduceMotion ? nil : .easeInOut(duration: 0.35),
             value: vm.ble.isReady
@@ -80,22 +59,21 @@ struct IdleSessionLayout: View {
             SessionPrivacySettingsSheet(vm: vm)
         }
         .onAppear(perform: seedStrengthDisclosure)
+        .onAppear(perform: openFixtureSheet)
+    }
+
+    /// UI review only: open the sheet the launch fixture names.
+    private func openFixtureSheet() {
+        switch UIFixture.current?.sheet {
+        case .settings: showPrivacySettings = true
+        case .history: showHistory = true
+        case .mode: showModeSheet = true
+        case nil: break
+        }
     }
 
     private var connection: some View {
         VStack(spacing: Theme.spaceM) {
-            StatusBarView(vm: vm, hideConnectionChip: !vm.ble.isReady)
-
-            if !vm.ble.isReady {
-                if reduceMotion {
-                    ConnectionEmptyState(vm: vm)
-                        .transition(.opacity)
-                } else {
-                    ConnectionEmptyState(vm: vm)
-                        .transition(.blurReplace)
-                }
-            }
-
             if vm.pendingDeactivate {
                 if reduceMotion {
                     PendingOffBanner(isReady: vm.ble.isReady)
@@ -142,6 +120,20 @@ struct IdleSessionLayout: View {
         .accessibilityLabel("\(vm.sessionTitle), \(vm.timerMinutes) minutes")
         .accessibilityHint("Opens mode list")
         .disabled(vm.isRunning || vm.isPaused)
+        .overlay(alignment: .topTrailing) { modeInfoButton }
+    }
+
+    /// Info explains the mode, so it sits by the mode name.
+    private var modeInfoButton: some View {
+        Button("About \(vm.sessionTitle)", systemImage: "info") {
+            infoMode = vm.selectedMode == .custom
+                ? .custom
+                : (vm.selectedFeeling?.primaryMode ?? vm.selectedMode)
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .padding(.top, Theme.spaceL)
     }
 
     private var durationChoices: some View {
@@ -224,62 +216,18 @@ struct IdleSessionLayout: View {
         }
     }
 
-    private var logbook: some View {
-        HStack(spacing: 12) {
-            Text(logbookWhisperText)
-                .font(.caption)
-                .foregroundStyle(Theme.textTertiary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
-                .accessibilityLabel(logbookWhisperText)
-
-            Spacer(minLength: 0)
-
-            Button {
-                showHistory = true
-            } label: {
-                Text("History")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Theme.accentTeal.opacity(0.9))
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Session history")
-            .accessibilityHint(
-                vm.recentSessions.isEmpty
-                    ? "No sessions yet. Stored only on this device."
-                    : "Opens your private session log"
-            )
-
-            Button {
-                showPrivacySettings = true
-            } label: {
-                Image(systemName: "gearshape")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Theme.textTertiary)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Privacy settings")
-            .accessibilityHint("Mindful Minutes and session end alerts. On-device only.")
-
-            Button {
-                infoMode = vm.selectedMode == .custom
-                    ? .custom
-                    : (vm.selectedFeeling?.primaryMode ?? vm.selectedMode)
-            } label: {
-                Image(systemName: "info.circle")
-                    .font(.caption)
-                    .foregroundStyle(Theme.textTertiary)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("About \(vm.sessionTitle)")
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            StatusBarView(vm: vm, ownsGlass: false)
+                .fixedSize()
         }
-        .padding(.horizontal, 4)
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            Button("History", systemImage: "clock.arrow.circlepath") { showHistory = true }
+                .accessibilityHint("Opens your private session log")
+            Button("Settings", systemImage: "gearshape") { showPrivacySettings = true }
+                .accessibilityHint("Tapper, Mindful Minutes, and alerts. On-device only.")
+        }
     }
 
     private var wellnessLine: some View {

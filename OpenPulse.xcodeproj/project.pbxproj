@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		3EBD0C7EDD800FA443D888BA /* AutonomicState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87518493F691B82D92474E8 /* AutonomicState.swift */; };
 		B10000000000000000000001 /* OpenPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* OpenPulseApp.swift */; };
+		B100000000000000000000AA /* UIFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000000000000000000AA /* UIFixture.swift */; };
 		B10000000000000000000002 /* BLEConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* BLEConstants.swift */; };
 		B10000000000000000000003 /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* BluetoothManager.swift */; };
 		B10000000000000000000004 /* SessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* SessionViewModel.swift */; };
@@ -30,7 +31,6 @@
 		B10000000000000000000016 /* IntensityWaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* IntensityWaveView.swift */; };
 		B10000000000000000000017 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* AppPreferences.swift */; };
 		B10000000000000000000018 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000018 /* OnboardingView.swift */; };
-		B10000000000000000000019 /* ConnectionEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000019 /* ConnectionEmptyState.swift */; };
 		B1000000000000000000001A /* SessionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001A /* SessionHistory.swift */; };
 		B1000000000000000000001C /* DurationPresetRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001C /* DurationPresetRow.swift */; };
 		B1000000000000000000002B /* SessionDurationOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002B /* SessionDurationOptions.swift */; };
@@ -106,6 +106,7 @@
 
 /* Begin PBXFileReference section */
 		A10000000000000000000001 /* OpenPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPulseApp.swift; sourceTree = "<group>"; };
+		A100000000000000000000AA /* UIFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIFixture.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* BLEConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEConstants.swift; sourceTree = "<group>"; };
 		A10000000000000000000003 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* SessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModel.swift; sourceTree = "<group>"; };
@@ -128,7 +129,6 @@
 		A10000000000000000000016 /* IntensityWaveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntensityWaveView.swift; sourceTree = "<group>"; };
 		A10000000000000000000017 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPreferences.swift; sourceTree = "<group>"; };
 		A10000000000000000000018 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		A10000000000000000000019 /* ConnectionEmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEmptyState.swift; sourceTree = "<group>"; };
 		A1000000000000000000001A /* SessionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistory.swift; sourceTree = "<group>"; };
 		A1000000000000000000001C /* DurationPresetRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationPresetRow.swift; sourceTree = "<group>"; };
 		A1000000000000000000002B /* SessionDurationOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDurationOptions.swift; sourceTree = "<group>"; };
@@ -223,6 +223,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000001 /* OpenPulseApp.swift */,
+				A100000000000000000000AA /* UIFixture.swift */,
 				A1000000000000000000000C /* Info.plist */,
 				A10000000000000000000099 /* PrivacyInfo.xcprivacy */,
 				A1000000000000000000000B /* Assets.xcassets */,
@@ -310,7 +311,6 @@
 				A10000000000000000000015 /* ChannelIndicatorView.swift */,
 				A10000000000000000000016 /* IntensityWaveView.swift */,
 				A10000000000000000000018 /* OnboardingView.swift */,
-				A10000000000000000000019 /* ConnectionEmptyState.swift */,
 				A10000000000000000000024 /* PendingOffBanner.swift */,
 				A1000000000000000000001C /* DurationPresetRow.swift */,
 				A1000000000000000000001D /* SessionHistorySheet.swift */,
@@ -482,6 +482,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B10000000000000000000001 /* OpenPulseApp.swift in Sources */,
+				B100000000000000000000AA /* UIFixture.swift in Sources */,
 				B10000000000000000000002 /* BLEConstants.swift in Sources */,
 				B10000000000000000000003 /* BluetoothManager.swift in Sources */,
 				B10000000000000000000004 /* SessionViewModel.swift in Sources */,
@@ -503,7 +504,6 @@
 				B10000000000000000000016 /* IntensityWaveView.swift in Sources */,
 				B10000000000000000000017 /* AppPreferences.swift in Sources */,
 				B10000000000000000000018 /* OnboardingView.swift in Sources */,
-				B10000000000000000000019 /* ConnectionEmptyState.swift in Sources */,
 				B10000000000000000000024 /* PendingOffBanner.swift in Sources */,
 				B1000000000000000000001A /* SessionHistory.swift in Sources */,
 				B10000000000000000000023 /* SessionSafety.swift in Sources */,
